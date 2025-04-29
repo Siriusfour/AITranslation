@@ -1,0 +1,48 @@
+{"level":"INFO","time":"2025-04-19 15:36:22","msg":"正在开启，监听端口: 2333"}
+{"level":"INFO","time":"2025-04-19 15:38:00","msg":"正在开启，监听端口: 2333"}
+{"level":"INFO","time":"2025-04-19 15:38:13","msg":"服务关闭: 2333"}
+{"level":"INFO","time":"2025-04-19 15:38:18","msg":"正在开启，监听端口: 2333"}
+{"level":"INFO","time":"2025-04-19 15:46:32","msg":"正在开启，监听端口: 2333"}
+{"level":"ERROR","time":"2025-04-19 15:46:32","msg":"listen：2333，启动失败：listen tcp :2333: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted."}
+{"level":"INFO","time":"2025-04-19 15:46:32","msg":"服务关闭: 2333"}
+{"level":"INFO","time":"2025-04-19 15:50:18","msg":"正在开启，监听端口: 2333"}
+{"level":"ERROR","time":"2025-04-19 15:50:18","msg":"listen：2333，启动失败：listen tcp :2333: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted."}
+{"level":"INFO","time":"2025-04-19 15:50:18","msg":"服务关闭: 2333"}
+{"level":"ERROR","time":"2025-04-19 15:52:27","msg":"加载配置文件出错：Config File \"setting\" Not Found in \"[C:\\\\Users\\\\Administrator\\\\Desktop\\\\AITranslatio2\\\\setting.yaml]\""}
+{"level":"ERROR","time":"2025-04-19 15:53:07","msg":"加载配置文件出错：Config File \"setting\" Not Found in \"[C:\\\\Users\\\\Administrator\\\\Desktop\\\\AITranslatio2\\\\AITranslatio_Server\\\\Config\\\\InitConfig.go]\""}
+{"level":"ERROR","time":"2025-04-19 15:53:40","msg":"加载配置文件出错：Config File \"setting\" Not Found in \"[C:\\\\Users\\\\Administrator\\\\Desktop\\\\AITranslatio2\\\\AITranslatio_Server\\\\Config\\\\InitConfig.go]\""}
+{"level":"ERROR","time":"2025-04-19 15:54:09","msg":"加载配置文件出错：Config File \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\AITranslatio2\\\\AITranslatio_Server\\\\Configsetting.yaml\" Not Found in \"[C:\\\\Users\\\\Administrator\\\\Desktop\\\\AITranslatio2\\\\AITranslatio_Server\\\\Config\\\\InitConfig.go]\""}
+{"level":"ERROR","time":"2025-04-19 15:55:16","msg":"加载配置文件出错：Config File \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\AITranslatio2\\\\AITranslatio_Server\\\\Config\\\\setting.yaml\" Not Found in \"[C:\\\\Users\\\\Administrator\\\\Desktop\\\\AITranslatio2\\\\AITranslatio_Server\\\\Config\\\\InitConfig.go]\""}
+{"level":"ERROR","time":"2025-04-19 15:56:36","msg":"加载配置文件出错：Config File \"[absPath + \\\"\\\\\\\\setting.yaml\\\"]\" Not Found in \"[C:\\\\Users\\\\Administrator\\\\Desktop\\\\AITranslatio2\\\\AITranslatio_Server\\\\Config\\\\InitConfig.go]\""}
+{"level":"ERROR","time":"2025-04-19 15:58:09","msg":"加载配置文件出错：Config File \"C:\\\\Users\\\\Administrator\\\\Desktop\\\\AITranslatio2\\\\AITranslatio_Server\\\\Config\\\\setting\" Not Found in \"[C:\\\\Users\\\\Administrator\\\\Desktop\\\\AITranslatio2\\\\AITranslatio_Server\\\\Config\\\\InitConfig.go]\""}
+{"level":"INFO","time":"2025-04-19 15:58:16","msg":"正在开启，监听端口: 7950"}
+{"level":"INFO","time":"2025-04-19 15:58:16","msg":"服务关闭: 7950"}
+{"level":"INFO","time":"2025-04-19 15:58:28","msg":"正在开启，监听端口: 7950"}
+{"level":"INFO","time":"2025-04-19 16:05:19","msg":"服务关闭: 7950"}
+{"level":"INFO","time":"2025-04-19 16:06:57","msg":"正在开启，监听端口: 7950"}
+{"level":"ERROR","time":"2025-04-19 16:06:57","msg":"listen：7950，启动失败：listen tcp :7950: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted."}
+{"level":"INFO","time":"2025-04-19 16:06:57","msg":"服务关闭: 7950"}
+{"level":"INFO","time":"2025-04-19 16:06:59","msg":"正在开启，监听端口: 7950"}
+{"level":"ERROR","time":"2025-04-19 16:06:59","msg":"listen：7950，启动失败：listen tcp :7950: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted."}
+{"level":"INFO","time":"2025-04-19 16:07:20","msg":"服务关闭: 7950"}
+{"level":"INFO","time":"2025-04-19 16:07:25","msg":"正在开启，监听端口: 7950"}
+{"level":"ERROR","time":"2025-04-19 16:07:25","msg":"listen：7950，启动失败：listen tcp :7950: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted."}
+{"level":"INFO","time":"2025-04-19 16:07:47","msg":"服务关闭: 7950"}
+{"level":"INFO","time":"2025-04-19 16:08:04","msg":"正在开启，监听端口: 7950"}
+{"level":"ERROR","time":"2025-04-19 16:08:04","msg":"listen：7950，启动失败：listen tcp :7950: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted."}
+{"level":"INFO","time":"2025-04-19 16:08:29","msg":"服务关闭: 7950"}
+{"level":"INFO","time":"2025-04-19 16:08:50","msg":"正在开启，监听端口: 7950"}
+{"level":"INFO","time":"2025-04-19 16:10:09","msg":"服务关闭: 7950"}
+{"level":"INFO","time":"2025-04-19 16:11:21","msg":"正在开启，监听端口: 7950"}
+{"level":"INFO","time":"2025-04-19 16:11:41","msg":"服务关闭: 7950"}
+{"level":"INFO","time":"2025-04-19 16:18:50","msg":"正在开启，监听端口: 7950"}
+{"level":"INFO","time":"2025-04-19 16:41:59","msg":"服务关闭: 7950"}
+{"level":"INFO","time":"2025-04-19 16:42:00","msg":"正在开启，监听端口: 7950"}
+{"level":"INFO","time":"2025-04-19 16:44:20","msg":"服务关闭: 7950"}
+{"level":"INFO","time":"2025-04-19 16:44:26","msg":"正在开启，监听端口: 7950"}
+{"level":"INFO","time":"2025-04-19 16:46:11","msg":"服务关闭: 7950"}
+{"level":"INFO","time":"2025-04-19 16:48:10","msg":"正在开启，监听端口: 7950"}
+{"level":"INFO","time":"2025-04-19 16:48:39","msg":"服务关闭: 7950"}
+{"level":"INFO","time":"2025-04-19 16:49:08","msg":"正在开启，监听端口: 7950"}
+{"level":"INFO","time":"2025-04-19 17:03:04","msg":"服务关闭: 7950"}
+{"level":"INFO","time":"2025-04-19 17:03:04","msg":"服务关闭: 2333"}

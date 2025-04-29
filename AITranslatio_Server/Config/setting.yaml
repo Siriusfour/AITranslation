@@ -1,0 +1,25 @@
+Mode:
+  develop: true
+
+log:
+  MaxSize: 10    #每个日志文件最大容量，MB
+  MaxBackups: 10 #保留旧文件的最大个数
+
+DB:
+  DNS: root:123456@tcp(127.0.0.1:3306)/aitranslatio?charset=utf8mb4&parseTime=True&loc=Local
+  ConnMaxLifetime:
+  MaxOpenConns: 100
+  MaxIdleConns: 100
+
+key:
+  privateKey: "example_Key"
+  Access_Token_OutTime: 7200    #2小时
+  Refresh_Token_OutTime: 60480  #7天
+
+Redis:
+  DNS: "localhost:6379"
+  DB: 0
+  Password: ""
+
+grpc:
+  DNS: "127.0.0.1:50051"        #192.168.3.205
