@@ -1,0 +1,19 @@
+.inner {
+    height: 420px;
+    width: 250px;
+  
+    margin: 10px;
+  
+    border-radius: 8px;
+  
+  
+    display: flex;
+    flex-direction: column;
+    justify-self: start;
+  }
+  
+  .inner .Translation_btn {
+    width:50% ;
+    height: 20px;
+    color:crimson;
+  }
