@@ -1,4 +1,4 @@
-import RequestAPI from ''
+import RequestAPI from 'request'
 
 
 export function setPageBackgroundColor() {
@@ -46,8 +46,8 @@ console.log(textContent);
 
 
   //2=======================文本数组发送到服务器，获取response
-  RequestAPI.post(url, "123")
-
+  RequestAPI.post()
+  
 
 
   //把返回值插入到Dom页面

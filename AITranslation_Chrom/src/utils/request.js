@@ -1,14 +1,15 @@
-const url = "http://127.0.0.1:7950" // 添加http://协议
 
 const getRequest = (url, data) => request('GET', url, data)
-const postRequest = (url, data) => request('POST', url, data) // 修正拼写错误
+const postRequest = (url, data) => request('POST', url, data) 
 const putRequest = (url, data) => request('PUT', url, data)
 const deleteRequest = (url, data) => request('DELETE', url, data)
-
+const  BaseUrl="127.0.0.1:7950/AITranslation/"
 async function request(type, URL, data) {
-  // 返回Promise以便调用者可以使用.then()
+
+  //1.解密token
+
   try {
-    const response = await fetch(URL, {
+    const response = await fetch(BaseUrl+URL, {
       method: type,
       headers: {
         'Content-Type': 'application/json',
