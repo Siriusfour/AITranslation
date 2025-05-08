@@ -1,7 +1,6 @@
-import RequestAPI from 'request'
+import {RequestAPI} from '../utils/request'
 
 
-export function setPageBackgroundColor() {
   console.log("===========================================");
   
   const allElements = document.body.querySelectorAll('*');
@@ -43,15 +42,8 @@ console.log(textContent);
 
   // 输出结果
   console.log(final);
-
-
-  //2=======================文本数组发送到服务器，获取response
-  RequestAPI.post()
+  console.log(RequestAPI);
   
 
-
-  //把返回值插入到Dom页面
-
-};
-
+  
 

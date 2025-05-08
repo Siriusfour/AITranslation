@@ -1,20 +1,22 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import {setPageBackgroundColor} from './utils/domHandle.js'
+<script  setup>
+import HelloWorld from './components/HelloWorld.vue';
+import { ref } from 'vue'
 
+const status = ref("翻译")
+function changeStatus() {
+ status.value == "翻译" ? status.value = "显示原文" : status.value = "翻译"
+}
 
 
 // 点击按钮
-
-
 async function greet(event) {
-  console.log("==========================",app);
+
   let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   // 向目标页面里注入js方法
   chrome.scripting.executeScript({
     target: { tabId: tab.id },
-    function: setPageBackgroundColor
+    files: ['/assets/AITranslation.js']
   });
 }
 
@@ -30,7 +32,7 @@ async function greet(event) {
       <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
     </a>
   </div>
-  <button @click="greet">Greet</button>
+  <button @click="changeStatus">{{ status }}</button>
   <HelloWorld msg="Vite + Vue" />
 </template>
 

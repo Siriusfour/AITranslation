@@ -6,8 +6,6 @@ const deleteRequest = (url, data) => request('DELETE', url, data)
 const  BaseUrl="127.0.0.1:7950/AITranslation/"
 async function request(type, URL, data) {
 
-  //1.解密token
-
   try {
     const response = await fetch(BaseUrl+URL, {
       method: type,
@@ -29,12 +27,12 @@ async function request(type, URL, data) {
   }
 }
 
-const RequestAPI = {
+export const RequestAPI = {
   get: getRequest,
   post: postRequest,
   put: putRequest,
   delete: deleteRequest
 }
 
-export default RequestAPI
+
 export { url }
