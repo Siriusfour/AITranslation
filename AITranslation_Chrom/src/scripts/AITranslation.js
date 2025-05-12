@@ -1,8 +1,9 @@
 import {RequestAPI} from '../utils/request'
+import {AITranslation} from '../utils/request'
 
 
   console.log("===========================================");
-  
+
   const allElements = document.body.querySelectorAll('*');
   const textContent = document.body.innerText;
 console.log(textContent);
@@ -42,8 +43,10 @@ console.log(textContent);
 
   // 输出结果
   console.log(final);
-  console.log(RequestAPI);
+  console.log(AITranslation);
   
+  AITranslation()
+
 
   
 

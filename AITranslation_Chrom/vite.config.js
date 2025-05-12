@@ -1,8 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { crx } from '@crxjs/vite-plugin'
-// import manifest from './manifest.json' // Node 14 & 16
-import manifest from './manifest.json' assert { type: 'json' } // Node >=17
+import manifest from './manifest.json' assert { type: 'json' } 
 import { resolve } from 'path';
 
 export default defineConfig({
@@ -10,6 +9,8 @@ export default defineConfig({
     vue(),
     crx({ manifest }),
   ],
+
+  
 
   server: {
     hmr: {

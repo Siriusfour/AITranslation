@@ -1,15 +1,20 @@
 <script  setup>
-import HelloWorld from './components/HelloWorld.vue';
 import { ref } from 'vue'
 
-const status = ref("翻译")
+
+
+const value4 = ref('');
+const visible = ref(true);
+const status = ref("翻译页面")
 function changeStatus() {
- status.value == "翻译" ? status.value = "显示原文" : status.value = "翻译"
+ status.value == "翻译页面" ? status.value = "显示原文" : status.value = "翻译页面"
 }
 
 
-// 点击按钮
-async function greet(event) {
+// 点击按钮触发
+async function greet() {
+  changeStatus()
+
 
   let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
@@ -28,12 +33,18 @@ async function greet(event) {
     <a href="https://vite.dev" target="_blank">
       <img src="/vite.svg" class="logo" alt="Vite logo" />
     </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
   </div>
-  <button @click="changeStatus">{{ status }}</button>
-  <HelloWorld msg="Vite + Vue" />
+    <a-space>
+      <a-input-password
+        v-model:value="value4"
+        v-model:visible="visible"
+        placeholder="input password"
+      />
+      <a-button @click="visible = !visible">{{ visible ? 'Hide' : 'Show' }}</a-button>
+    </a-space>
+
+  <button @click="greet" style="margin-top: 30px;">{{ status }}</button>
+
 </template>
 
 <style scoped>

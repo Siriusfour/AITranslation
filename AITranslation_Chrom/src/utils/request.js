@@ -1,38 +1,49 @@
+import OpenAI from "openai";
+import { Prompts } from "./Prompt";
 
 const getRequest = (url, data) => request('GET', url, data)
-const postRequest = (url, data) => request('POST', url, data) 
+const postRequest = (url, data) => request('POST', url, data)
 const putRequest = (url, data) => request('PUT', url, data)
 const deleteRequest = (url, data) => request('DELETE', url, data)
-const  BaseUrl="127.0.0.1:7950/AITranslation/"
+const BaseUrl = "127.0.0.1:7950/AITranslation/"
+const api_key=import.meta.env.VITE_API_KEY
+
+
+//向目标接口发送请求
 async function request(type, URL, data) {
 
-  try {
-    const response = await fetch(BaseUrl+URL, {
-      method: type,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: typeof data === 'object' ? JSON.stringify(data) : data,
-    })
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data_1 = await response.json() // 解析JSON响应
-      
-    console.log('Success:', data_1)
-    return data_1
-  } catch (error) {
-    console.error('Error:', error)
-    throw error // 重新抛出错误以便调用者捕获
-  }
+  const response = await fetch(BaseUrl + URL, {
+    method: type,
+    body: typeof data === 'object' ? JSON.stringify(data) : data,
+  }).then((res) => {
+    console.log(res);
+
+  }).catch((err) => {
+    console.log(err);
+  })
 }
 
-export const RequestAPI = {
-  get: getRequest,
-  post: postRequest,
-  put: putRequest,
-  delete: deleteRequest
+//不需要登陆的翻译接口
+function AITranslation(){
+fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
+  method: 'POST',     
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': api_key
+  },
+  body: JSON.stringify({
+    model: "glm-4-flash-250414",
+    messages: [
+      { "role": "system", "content":  },
+      { "role": "user", "content": "请为我的产品创作一个吸引人的口号" },
+    ]
+  })
+})
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));
 }
 
 
-export { url }
+export { BaseUrl }
+export {AITranslation }
