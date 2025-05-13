@@ -15,7 +15,6 @@ function changeStatus() {
 async function greet() {
   changeStatus()
 
-
   let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   // 向目标页面里注入js方法

@@ -24,24 +24,45 @@ async function request(type, URL, data) {
 }
 
 //不需要登陆的翻译接口
-function AITranslation(){
-fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
-  method: 'POST',     
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': api_key
-  },
-  body: JSON.stringify({
-    model: "glm-4-flash-250414",
-    messages: [
-      { "role": "system", "content":  },
-      { "role": "user", "content": "请为我的产品创作一个吸引人的口号" },
-    ]
-  })
-})
-  .then(response => response.json())
-  .then(data => console.log(data))
-  .catch(error => console.error('Error:', error));
+async function AITranslation(finalTextArrayJson) {
+  try {
+    const textArray = JSON.stringify(finalTextArrayJson);
+    console.log('Input to AITranslation:', textArray);
+
+    const response = await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': api_key
+      },
+      body: JSON.stringify({
+        model: "glm-4-flash-250414",
+        messages: [
+          { role: "system", content: Prompts.deflatePrompts.systemContent },
+          { role: "user", content: textArray }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error('Invalid API response: choices or message missing');
+    }
+
+    const result = data.choices[0].message.content;
+
+    return result;
+  } catch (error) {
+    
+    console.error('AITranslation error:', error);
+    throw error;
+  }
 }
 
 
