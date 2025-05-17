@@ -2,7 +2,14 @@
     "manifest_version": 3,
     "name": "CRXJS Vue Vite Example",
     "version": "1.0.0",
-    "action": { "default_popup": "index.html" },
+    "action": { 
+        "default_popup": "index.html",
+        "default_icon": { 
+        "16": "icons/avatar.png",
+        "24": "icons/avatar.png", 
+        "32": "icons/avatar.png"
+      }
+     },
     "permissions": [
         "storage",
         "activeTab",

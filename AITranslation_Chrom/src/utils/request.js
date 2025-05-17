@@ -55,11 +55,14 @@ async function AITranslation(finalTextArrayJson) {
       throw new Error('Invalid API response: choices or message missing');
     }
 
+  
+
     const result = data.choices[0].message.content;
 
     return result;
+   
   } catch (error) {
-    
+    console.log("err")
     console.error('AITranslation error:', error);
     throw error;
   }

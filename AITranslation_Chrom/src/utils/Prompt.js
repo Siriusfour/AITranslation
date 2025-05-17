@@ -13,10 +13,9 @@ export const Prompts = {
 
     //默认翻译
     deflatePrompts: {
-        systemContent: "你是一个精通中文和英语的大师。我将给你发送一个 JSON 数组，每个对象包含 'EnglishText' 键和一个空值的 'chineseText' 键。请你为每个 'EnglishText' 提供中文翻译，并填入对应的 'chineseText' 键中，不需要多余的对话,人名和专有名词不需要翻译,保持 JSON 格式不变。"
+        systemContent: "你是一个精通中文和英语的大师。我将给你发送一个 JSON 数组，每个对象包含 'EnglishText' 键和一个空值的 'chineseText' 键。请你为每个 'EnglishText' 提供中文翻译，并填入对应的 'chineseText' 键中,人名和专有名词不需要翻译,,如果EnglishText是纯数字或符号则直接忽略， 不需要多余的对话，务必返回一个严格的json数组"
     }
 
 
 }
-
 

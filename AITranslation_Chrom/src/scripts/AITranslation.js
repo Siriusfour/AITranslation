@@ -1,5 +1,6 @@
 import { RequestAPI } from '../utils/request'
 import { AITranslation } from '../utils/request'
+import { handleJsonFromString } from '../utils/handle'
 
 
 console.log("===========================================");
@@ -33,45 +34,42 @@ finalTextArray.forEach((item) => {
 
 
 //  遍历allElements,找到传入字符串匹配的元素
-function findElementsWithText(text) {
-  // 使用 XPath 查询包含完全匹配文本的文本节点
-  const xpath = `//text()[.='${text.replace(/'/g, "\\'")}']`;
-  const result = document.evaluate(
-    xpath,
-    document,
-    null,
-    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-    null
-  );
-
-  // 存储匹配的 DOM 元素
-  const elements = [];
-  for (let i = 0; i < result.snapshotLength; i++) {
-    const textNode = result.snapshotItem(i);
-    // 返回文本节点的父元素（通常是我们想要的 DOM 元素）
-    elements.push(textNode.parentNode);
-  }
-
-  return elements;
+function findElementsWithText(text, allElements) {
+  return Array.from(allElements).find((item) => {
+    return item.textContent.trim() === text;
+  });
 }
 
 (async () => {
   // 获取翻译结果
   console.log("ok!");
   const resultJson = await AITranslation(finalTextArrayJson)
-  const result = JSON.parse(resultJson)
 
-  console.log(result);
+
+  const handleJson = handleJsonFromString(resultJson)
+  console.log(handleJson);
   
-  
+
+  try {
+    var result = JSON.parse(handleJson)
+    console.log(result);
+  } catch (err) {
+    console.log(err);
+  }
+
+console.log(result);
   result.forEach((item) => {
     console.log(item.EnglishText);
-    matchingElements.push(findElementsWithText(item.EnglishText))
+    try{
+      const matches = findElementsWithText(item.EnglishText, allElements);
+      matches.textContent += item.chineseText;
+      matchingElements.push(matches)
+    }catch(err){
+console.log(err);
+    }
   })
 
-console.log('1');
-
-  console.log(matchingElements,"ok!");
+  console.log(result);
 
 })()
 
