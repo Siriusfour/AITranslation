@@ -1,17 +1,6 @@
 <script setup>
 
-function LoginByEmail() {
 
-
-}
-
-function LoginByWX() {
-
-}
-
-function LoginByGithub() {
-
-}
 
 </script>
 

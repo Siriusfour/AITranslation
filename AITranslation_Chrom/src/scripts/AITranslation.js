@@ -62,7 +62,7 @@ console.log(result);
     console.log(item.EnglishText);
     try{
       const matches = findElementsWithText(item.EnglishText, allElements);
-      matches.textContent += item.chineseText;
+      matches.textContent += "<br/>"+item.chineseText;
       matchingElements.push(matches)
     }catch(err){
 console.log(err);
