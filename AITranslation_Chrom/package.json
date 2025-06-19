@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@amap/amap-maps-mcp-server": "^0.0.8",
     "ant-design-vue": "^4.2.6",
     "dotenv": "^16.5.0",
     "element-plus": "^2.9.10",

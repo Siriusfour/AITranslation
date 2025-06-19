@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/yankeguo/zhipu"
 	"go.uber.org/zap"
+	"reflect"
 )
 
 type BaseController struct {
@@ -21,7 +22,6 @@ type BaseController struct {
 
 func NewBaseController() *BaseController {
 	return &BaseController{
-
 		Logger:      Global.Logger,
 		BaseService: BaseService.NewBaseService(),
 	}
@@ -29,17 +29,13 @@ func NewBaseController() *BaseController {
 
 func (BaseController *BaseController) Login(Ctx *gin.Context) {
 	var LoginDTO DTO.LoginDTO
+	var LoginCtx = Ctx
 
-	HttpMessage := &HTTP.Request{
-		Ctx: Ctx,
-		DTO: &LoginDTO,
-	}
-
-	//1.解析http请求,把参数ctx
-	err := HttpMessage.Ctx.ShouldBindBodyWithJSON(&HttpMessage.DTO)
+	//1.解析http请求,把参数从HttpMessage.ctx绑定到HttpMessage.DTO
+	err := LoginCtx.ShouldBindBodyWithJSON(LoginDTO)
 	if err != nil {
 		HTTP.Fail(
-			HttpMessage.Ctx,
+			LoginCtx,
 			HTTP.Response{
 				Staute:  10111, //数据绑定失败错误码
 				Message: fmt.Errorf(" binding data is failed: %w", err).Error(),
@@ -47,8 +43,8 @@ func (BaseController *BaseController) Login(Ctx *gin.Context) {
 		)
 		return
 	}
-
-	BaseService.
+	fmt.Println(reflect.TypeOf(LoginDTO))
+	err = BaseController.BaseService.Login(LoginDTO)
 
 }
 

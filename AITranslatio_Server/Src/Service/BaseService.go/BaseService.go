@@ -3,6 +3,9 @@ package BaseService
 import (
 	"AITranslatio/Global"
 	"AITranslatio/Src/DAO/BaseDAO"
+	"AITranslatio/Src/DTO"
+
+	"fmt"
 	"go.uber.org/zap"
 )
 
@@ -18,6 +21,9 @@ func NewBaseService() *BaseService {
 	}
 }
 
-func (service *BaseService) Login() {
-
+func (service *BaseService) Login(LoginDTO DTO.LoginDTO) error {
+	fmt.Println(LoginDTO)
+	fmt.Println(LoginDTO.UserID)
+	fmt.Print(LoginDTO.Password)
+	return nil
 }

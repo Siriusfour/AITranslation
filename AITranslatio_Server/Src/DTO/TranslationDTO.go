@@ -6,7 +6,7 @@ type TranslationDTO struct {
 
 type LoginDTO struct {
 	UserID       string `json:"UserID" binding:"required"`
-	Password     string `json:"Password" binding:"required"`
-	AccessToken  string `json:"AccessToken" binding:"required"`
-	RefreshToken string `json:"RefreshToken" binding:"required"`
+	Password     string `json:"Password" `
+	AccessToken  string `json:"AccessToken" `
+	RefreshToken string `json:"RefreshToken" `
 }
