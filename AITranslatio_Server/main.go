@@ -24,10 +24,10 @@ func main() {
 	r := gin.New()
 	r.Use(Middleware.Cors())
 
-	Router.InitRouter(r)
-
 	//实例化相关配置
 	cmd.Start()
+
+	Router.InitRouter(r)
 
 	//拿到配置文件的指定端口号
 	stPort := viper.GetString("server.port")

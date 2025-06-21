@@ -5,7 +5,8 @@ type TranslationDTO struct {
 }
 
 type LoginDTO struct {
-	UserID       string `json:"UserID" binding:"required"`
+	UserID       string `json:"UserID"`
+	UUID         string `json:"UUID"` //设备唯一ID
 	Password     string `json:"Password" `
 	AccessToken  string `json:"AccessToken" `
 	RefreshToken string `json:"RefreshToken" `

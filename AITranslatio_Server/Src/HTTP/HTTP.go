@@ -15,7 +15,7 @@ type Request struct {
 
 // Response 返回给客户端的结构体
 type Response struct {
-	Staute int `json:"-"`
+
 	//HTTP状态码的扩展，自定义的扩展码，
 	Code int `json:"code,omitempty"`
 	//本次请求结果的详细描述
@@ -25,7 +25,12 @@ type Response struct {
 	// 请求列表时候返回的总页数
 	Sum int64 `json:"sum,omitempty"`
 	//刷新的token信息
-	Token interface{} `json:"token,omitempty"`
+	Token Tokens `json:"token,omitempty"`
+}
+
+type Tokens struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 type BaseController struct {

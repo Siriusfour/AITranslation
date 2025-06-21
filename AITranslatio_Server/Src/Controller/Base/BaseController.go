@@ -2,20 +2,18 @@ package Base
 
 import (
 	"AITranslatio/Global"
-	HTTP "AITranslatio/Src"
 	"AITranslatio/Src/DTO"
+	"AITranslatio/Src/HTTP"
 	"AITranslatio/Src/Service/BaseService.go"
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/yankeguo/zhipu"
 	"go.uber.org/zap"
-	"reflect"
 )
 
 type BaseController struct {
-	Ctx *gin.Context
-	//errors Utills.MyError
+	Ctx         *gin.Context
 	Logger      *zap.SugaredLogger
 	BaseService *BaseService.BaseService
 }
@@ -28,28 +26,28 @@ func NewBaseController() *BaseController {
 }
 
 func (BaseController *BaseController) Login(Ctx *gin.Context) {
+
 	var LoginDTO DTO.LoginDTO
 	var LoginCtx = Ctx
 
 	//1.解析http请求,把参数从HttpMessage.ctx绑定到HttpMessage.DTO
-	err := LoginCtx.ShouldBindBodyWithJSON(LoginDTO)
+	err := LoginCtx.ShouldBindBodyWithJSON(&LoginDTO)
 	if err != nil {
 		HTTP.Fail(
 			LoginCtx,
 			HTTP.Response{
-				Staute:  10111, //数据绑定失败错误码
+				Code:    10111, //数据绑定失败错误码
 				Message: fmt.Errorf(" binding data is failed: %w", err).Error(),
 			},
 		)
 		return
 	}
-	fmt.Println(reflect.TypeOf(LoginDTO))
-	err = BaseController.BaseService.Login(LoginDTO)
+
+	err = BaseController.BaseService.Login(LoginCtx, &LoginDTO)
 
 }
 
 func (BaseController *BaseController) Translation(ctx *gin.Context) {
-
 	//0.实例化接受ctx参数的DTO结构体
 	var AITranslation DTO.TranslationDTO
 
@@ -64,7 +62,7 @@ func (BaseController *BaseController) Translation(ctx *gin.Context) {
 		HTTP.Fail(
 			HttpMessage.Ctx,
 			HTTP.Response{
-				Staute:  10111, //数据绑定失败错误码
+				Code:    10111, //数据绑定失败错误码
 				Message: fmt.Errorf("open config failed: %w", err).Error(),
 			},
 		)

@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"AITranslatio/Config"
 	"AITranslatio/Global"
+	"AITranslatio/Utils"
 	"fmt"
 )
 
@@ -9,9 +11,8 @@ import (
 //0.初始化配置文件
 //1.初始化路由
 //2.初始化日志组件
-//3.初始化数据库（待定）
-
-import Config "AITranslatio/Config"
+//3.初始化数据库
+//4.初始化存储Token的map
 
 func Start() {
 	fmt.Println("=======")
@@ -28,6 +29,8 @@ func Start() {
 	//======初始化MySQL数据库
 	var err error
 	Global.DB, err = Config.InitDB()
+	Global.TokenMap = Utils.InitTokenMap()
+
 	if err != nil {
 		panic(err)
 	}
