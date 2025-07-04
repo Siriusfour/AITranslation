@@ -3,7 +3,7 @@ package cmd
 import (
 	"AITranslatio/Config"
 	"AITranslatio/Global"
-	"AITranslatio/Utils"
+	"AITranslatio/Utils/UtilsStruct"
 	"fmt"
 )
 
@@ -29,7 +29,9 @@ func Start() {
 	//======初始化MySQL数据库
 	var err error
 	Global.DB, err = Config.InitDB()
-	Global.TokenMap = Utils.InitTokenMap()
+
+	//======初始化存储token和UUID的map
+	Global.TokenMap = UtilsStruct.InitTokenMap()
 
 	if err != nil {
 		panic(err)

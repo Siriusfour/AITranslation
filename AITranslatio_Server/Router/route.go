@@ -1,7 +1,7 @@
 package Router
 
 import (
-	"AITranslatio/Src/Controller/Base"
+	"AITranslatio/Src/Controller/BaseControll"
 	"fmt"
 	"github.com/gin-gonic/gin"
 )
@@ -10,7 +10,7 @@ func InitRouter(r *gin.Engine) {
 
 	//路由分组
 
-	rgBase := r.Group("Attendance/Api/Base")
+	rgBase := r.Group("Attendance/Api/BaseControll")
 
 	//注册所有组别的路由
 	initBasePaltformRouter(rgBase)
@@ -18,7 +18,7 @@ func InitRouter(r *gin.Engine) {
 
 func initBasePaltformRouter(rgBase *gin.RouterGroup) {
 
-	BaseController := Base.NewBaseController()
+	BaseController := BaseControll.NewBaseController()
 	fmt.Println("BaseController:", BaseController.Logger)
 	fmt.Println("BaseController:", BaseController.BaseService)
 	Init_Base_Route(rgBase, BaseController)

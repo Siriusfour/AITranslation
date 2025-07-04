@@ -6,12 +6,18 @@ import (
 	"AITranslatio/Src/DTO"
 	"AITranslatio/Src/HTTP"
 	"AITranslatio/Utils"
+	"AITranslatio/Utils/UtilsStruct"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"go.uber.org/zap"
 	"time"
 )
+
+type UserInfo struct {
+	Nickname string
+	UserID   string
+}
 
 type BaseService struct {
 	Logger  *zap.SugaredLogger
@@ -28,11 +34,10 @@ func NewBaseService() *BaseService {
 func (BaseService *BaseService) Login(ctx *gin.Context, LoginDTO *DTO.LoginDTO) error {
 
 	switch {
-	//验证ak
+	//验证ak，和原设备
 	case LoginDTO.AccessToken != "":
 		{
 			_, err := Utils.ParseToken(Global.PKEY, LoginDTO.AccessToken)
-
 			if err != nil {
 				return err
 			}
@@ -52,14 +57,24 @@ func (BaseService *BaseService) Login(ctx *gin.Context, LoginDTO *DTO.LoginDTO) 
 				return err
 			}
 
-			//验证通过，生成ak，rk返回请求
+			//验证通过，生成ak，rk ，写入map，返回请求
 			AccessToken, err := Utils.GeneratedToken(Global.PKEY, jwt.SigningMethodHS256, LoginDTO, time.Duration(1))
 			RefreshToken, err := Utils.GeneratedToken(Global.PKEY, jwt.SigningMethodHS256, LoginDTO, time.Duration(7))
+			if err != nil {
+				return err
+			}
+
+			Global.TokenMap.TokenMap[LoginDTO.UserID] = &UtilsStruct.TokenInfo{
+				AccessToken:    AccessToken,
+				RefreshToken:   RefreshToken,
+				Revoked:        true,
+				RegisteredTime: time.Now().Format("2006-01-02 15:04"),
+			}
+
 			Tokens := HTTP.Tokens{
 				AccessToken:  AccessToken,
 				RefreshToken: RefreshToken,
 			}
-
 			reponse := HTTP.Response{
 				Code:    10000,
 				Message: "Login Success",
@@ -68,11 +83,10 @@ func (BaseService *BaseService) Login(ctx *gin.Context, LoginDTO *DTO.LoginDTO) 
 			}
 
 			HTTP.OK(ctx, reponse)
-
-			return err
 		}
-
 	}
+
+	//查找用户信息并返回回给controller
 
 	return nil
 }

@@ -41,3 +41,7 @@ func (BaseDAO *BaseDAO) LoginByPassword(UserID string, password string) error {
 	return nil
 
 }
+
+func (BaseDAO *BaseDAO) FindUserInfo(UserID string) error {
+	return nil
+}

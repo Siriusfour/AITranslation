@@ -15,7 +15,6 @@ type Request struct {
 
 // Response 返回给客户端的结构体
 type Response struct {
-
 	//HTTP状态码的扩展，自定义的扩展码，
 	Code int `json:"code,omitempty"`
 	//本次请求结果的详细描述
