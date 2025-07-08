@@ -1,6 +1,7 @@
 package HTTP
 
 import (
+	"AITranslatio/Src/Model"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
@@ -24,12 +25,21 @@ type Response struct {
 	// 请求列表时候返回的总页数
 	Sum int64 `json:"sum,omitempty"`
 	//刷新的token信息
-	Token Tokens `json:"token,omitempty"`
+	Token Tokens `json:"token"`
 }
 
 type Tokens struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
+}
+
+type Branches struct {
+	Branch  *Model.Branch
+	Commits *[]Model.Commit
+}
+type Note struct {
+	Note     *Model.Note
+	Branches []Branches
 }
 
 type BaseController struct {

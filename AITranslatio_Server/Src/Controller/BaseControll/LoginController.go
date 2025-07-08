@@ -82,3 +82,15 @@ func (BaseController *BaseController) Login(Ctx *gin.Context) {
 //		println(res.Choices[0].Message.Content)
 //	}
 //}
+
+func bindingErr(Ctx *gin.Context, err error) {
+
+	HTTP.Fail(
+		Ctx,
+		HTTP.Response{
+			Code:    10111, //数据绑定失败错误码
+			Message: fmt.Errorf(" binding data is failed: %w", err).Error(),
+		},
+	)
+
+}
