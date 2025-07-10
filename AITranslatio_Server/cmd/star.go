@@ -30,7 +30,7 @@ func Start() {
 	var err error
 	Global.DB, err = Config.InitDB()
 
-	//======初始化存储token和UUID的map
+	//======初始化存储token的map
 	Global.TokenMap = UtilsStruct.InitTokenMap()
 
 	if err != nil {

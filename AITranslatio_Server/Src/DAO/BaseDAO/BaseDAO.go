@@ -22,7 +22,7 @@ func New_Base_DAO() *BaseDAO {
 	}
 }
 
-func (BaseDAO *BaseDAO) LoginByPassword(UserID string, password string) error {
+func (BaseDAO *BaseDAO) LoginByPassword(UserID int, password string) error {
 
 	var UserInfo Model.User
 

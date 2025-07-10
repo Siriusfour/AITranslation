@@ -17,13 +17,7 @@ func (BaseController *BaseController) CreateProgramming(Ctx *gin.Context) {
 	//1.解析http请求,把参数从HttpMessage.ctx绑定到HttpMessage.DTO
 	err := NovelCtx.ShouldBindBodyWithJSON(&NovelDTO)
 	if err != nil {
-		HTTP.Fail(
-			NovelCtx,
-			HTTP.Response{
-				Code:    10111, //数据绑定失败错误码
-				Message: fmt.Errorf(" binding data is failed: %w", err).Error(),
-			},
-		)
+		BindingErr(NovelCtx, err, 1001)
 		return
 	}
 
@@ -32,14 +26,14 @@ func (BaseController *BaseController) CreateProgramming(Ctx *gin.Context) {
 		HTTP.Fail(
 			NovelCtx,
 			HTTP.Response{
-				Code:    10112, //数据绑定失败错误码
+				Code:    1101,
 				Message: fmt.Errorf(" createNote is failed: %w", err).Error(),
 			})
 	} else {
 		HTTP.Fail(
 			NovelCtx,
 			HTTP.Response{
-				Code:    2000, //数据绑定失败错误码
+				Code:    2000,
 				Message: "success",
 			})
 	}
@@ -88,30 +82,22 @@ func (BaseController *BaseController) CreateCommit(Ctx *gin.Context) {
 	var CommitCtx = Ctx
 	err := CommitCtx.ShouldBind(&CommitDTO)
 	if err != nil {
-		HTTP.Fail(
-			CommitCtx,
-			HTTP.Response{
-				Code:    10111, //数据绑定失败错误码
-				Message: fmt.Errorf(" binding data is failed: %w", err).Error(),
-			},
-		)
+		BindingErr(Ctx, err, 1001)
 		return
 	}
-
 	err = BaseController.BaseService.CreateCommit(CommitCtx, &CommitDTO)
-
 }
 
 func (BaseController *BaseController) Programming(Ctx *gin.Context) {
 
 	NoteID, exists := Ctx.GetQuery("NoteID")
 	if !exists {
-		bindingErr(Ctx, errors.New("gender is required"))
+		BindingErr(Ctx, errors.New("NoteID is required"), 1001)
 		return
 	}
 	NoteIDNum, err := strconv.Atoi(NoteID)
 	if err != nil {
-		bindingErr(Ctx, errors.New("Failed to parse the data"))
+		BindingErr(Ctx, errors.New("Failed to parse the data"), 1001)
 		return
 	}
 
@@ -122,4 +108,38 @@ func (BaseController *BaseController) Programming(Ctx *gin.Context) {
 		Message: "Success",
 		Data:    HTTPNote,
 	})
+}
+
+func (BaseController *BaseController) ChangeCommit(Ctx *gin.Context) {
+
+	var CommitDTO DTO.CommitDTO
+	var CommitCtx = Ctx
+	err := CommitCtx.ShouldBind(&CommitDTO)
+	if err != nil {
+		BindingErr(Ctx, err, 1001)
+		return
+	}
+
+	err = BaseController.BaseService.ChangeCommit(Ctx, &CommitDTO)
+	if err != nil {
+		return
+	}
+
+}
+
+func (BaseController *BaseController) GetUserInfo(GetUserInfoCtx *gin.Context) {
+
+	//1.解析http请求,把参数从HttpMessage.ctx绑定到HttpMessage.DTO
+	UserID, exists := GetUserInfoCtx.GetQuery("UserID")
+	if !exists {
+		BindingErr(GetUserInfoCtx, errors.New("NoteID is required"), 1001)
+		return
+	}
+	_, err := strconv.Atoi(UserID)
+	if err != nil {
+		BindingErr(GetUserInfoCtx, errors.New("Failed to parse the data"), 1001)
+		return
+	}
+	//BaseController.BaseService.GetUserInfo(NoteIDNum)
+
 }

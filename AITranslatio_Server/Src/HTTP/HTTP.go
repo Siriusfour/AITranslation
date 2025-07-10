@@ -1,6 +1,7 @@
 package HTTP
 
 import (
+	"AITranslatio/Src/DTO"
 	"AITranslatio/Src/Model"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -25,12 +26,7 @@ type Response struct {
 	// 请求列表时候返回的总页数
 	Sum int64 `json:"sum,omitempty"`
 	//刷新的token信息
-	Token Tokens `json:"token"`
-}
-
-type Tokens struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+	Tokens DTO.Auth `json:"token"`
 }
 
 type Branches struct {

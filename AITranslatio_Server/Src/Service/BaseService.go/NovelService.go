@@ -4,7 +4,9 @@ import (
 	"AITranslatio/Src/DTO"
 	"AITranslatio/Src/HTTP"
 	"AITranslatio/Src/Model"
+	"errors"
 	"github.com/gin-gonic/gin"
+	"os"
 	"path/filepath"
 	"strconv"
 )
@@ -116,7 +118,6 @@ func (BaseService *BaseService) Programming(NoteID int) (HTTP.Note, error) {
 		if err != nil {
 			return HTTP.Note{}, err
 		}
-
 		HTTPNote.Branches = append(HTTPNote.Branches, HTTP.Branches{
 			Branch:  &Branch,
 			Commits: Commits,
@@ -126,4 +127,41 @@ func (BaseService *BaseService) Programming(NoteID int) (HTTP.Note, error) {
 
 	//组合成数据返回
 	return HTTPNote, nil
+}
+
+func (BaseService *BaseService) ChangeCommit(Ctx *gin.Context, CommitDTO *DTO.CommitDTO) error {
+
+	//查询数据
+	CommitInfo, Permissions, WriterID, err := BaseService.BaseDAO.ChangeCommit(CommitDTO.CommitID)
+	if err != nil {
+		return err
+	}
+
+	//检查提交者权限
+	if Permissions == 2 {
+		if WriterID != CommitDTO.WriterID {
+			return errors.New("权限不足")
+		}
+	}
+
+	//保存文件，更改提交指向的文件位置,删除原本的数据
+	file, err := Ctx.FormFile("file")
+	if err != nil {
+		return err
+	}
+
+	filename := strconv.Itoa(CommitDTO.WriterID) + "_" + filepath.Base(file.Filename)
+	Filepath := filepath.Join("UpLoad", filename)
+	err = BaseService.BaseDAO.ChangeFile(CommitDTO.CommitID, Filepath)
+	if err != nil {
+		return err
+	}
+
+	err = os.Remove(CommitInfo.FilePath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }

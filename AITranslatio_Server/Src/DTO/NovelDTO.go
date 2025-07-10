@@ -5,7 +5,7 @@ type NovelDTO struct {
 	WriterID     int    `json:"WriterID"  binding:"required"`
 	Introduction string `json:"Introduction"`
 	NoteName     string `json:"NoteName" binding:"required"`
-	Permissions  int    `json:"Permissions"  binding:"required"` // 0-公开所有人都能编辑，1-权限组别可以编辑 2-只有自己可以编辑
+	Permissions  int    `json:"Permissions"  binding:"required"` // 1-公开所有人都能编辑，2-只有自己可以编辑
 }
 
 type Branch struct {
@@ -20,10 +20,15 @@ type Branch struct {
 
 type CommitDTO struct {
 	Auth
+	CommitID     uint   `json:"CommitID"`
 	WriterID     int    `json:"WriterID"  binding:"required"`
 	Introduction string `json:"Introduction"`
 	CommitName   string `json:"CommitName" binding:"required"`
 	BranchID     int    `json:"BranchID" binding:"required"`
 	LastNode     int    `json:"preNode"`
 	NextNode     int    `json:"NextNode"`
+}
+
+type UserInfo struct {
+	UserID int `json:"UserID"  binding:"required"`
 }

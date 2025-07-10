@@ -33,7 +33,7 @@ func InitDB() (*gorm.DB, error) {
 	SqlDB.SetConnMaxLifetime(time.Hour)
 
 	//将数据库的表与user对象同步，有则修改，没有创建
-	err = db.AutoMigrate(&Model.User{}, &Model.Note{}, &Model.Branch{}, &Model.Commit{})
+	err = db.AutoMigrate(&Model.User{}, &Model.Note{}, &Model.Branch{}, &Model.Commit{}, &Model.Team{}, &Model.Members{})
 	if err != nil {
 		panic(err)
 	}

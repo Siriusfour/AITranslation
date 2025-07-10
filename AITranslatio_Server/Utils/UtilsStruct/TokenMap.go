@@ -13,7 +13,7 @@ type TokenInfo struct {
 }
 
 type TokenMap struct {
-	TokenMap map[string]*TokenInfo
+	TokenMap map[int]*TokenInfo
 	ticker   *time.Ticker
 	done     chan struct{}
 	MU       sync.RWMutex
@@ -21,7 +21,7 @@ type TokenMap struct {
 
 func InitTokenMap() *TokenMap {
 	return &TokenMap{
-		TokenMap: make(map[string]*TokenInfo),
+		TokenMap: make(map[int]*TokenInfo),
 		ticker:   nil,
 		done:     make(chan struct{}),
 		MU:       sync.RWMutex{},

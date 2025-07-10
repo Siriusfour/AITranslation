@@ -60,3 +60,30 @@ func (BaseDAO *BaseDAO) FindCommit(BranchID uint) (*[]Model.Commit, error) {
 	}
 	return Commits, nil
 }
+
+// ChangeCommit Todo：修改权限，通过邮箱验证码确认过身份猴
+func (BaseDAO *BaseDAO) ChangeCommit(CommitID uint) (*Model.Commit, int, int, error) {
+	CommitInfo := &Model.Commit{}
+	BranchInfo := &Model.Branch{}
+	result := BaseDAO.orm.Where("CommitID = ?", CommitID).Find(CommitInfo)
+	if result.Error != nil {
+		return &Model.Commit{}, 0, 0, result.Error
+	}
+
+	result = BaseDAO.orm.Where("BranchID = ?", CommitInfo.BranchID).Find(BranchInfo)
+	if result.Error != nil {
+		return &Model.Commit{}, 0, 0, result.Error
+	}
+
+	return CommitInfo, BranchInfo.Permissions, BranchInfo.WriterID, nil
+}
+
+func (BaseDAO *BaseDAO) ChangeFile(CommitID uint, Filepath string) error {
+
+	result := BaseDAO.orm.Model(Model.Commit{}).Where("CommitID", CommitID).Update("FilePath", Filepath)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
+}

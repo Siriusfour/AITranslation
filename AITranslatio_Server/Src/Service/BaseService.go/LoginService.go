@@ -4,11 +4,9 @@ import (
 	"AITranslatio/Global"
 	"AITranslatio/Src/DAO/BaseDAO"
 	"AITranslatio/Src/DTO"
-	"AITranslatio/Src/HTTP"
 	"AITranslatio/Utils"
 	"AITranslatio/Utils/UtilsStruct"
-
-	"github.com/gin-gonic/gin"
+	"errors"
 	"github.com/golang-jwt/jwt"
 	"go.uber.org/zap"
 	"time"
@@ -31,62 +29,37 @@ func NewBaseService() *BaseService {
 	}
 }
 
-func (BaseService *BaseService) Login(ctx *gin.Context, LoginDTO *DTO.LoginDTO) error {
+func (BaseService *BaseService) Login(LoginDTO *DTO.LoginDTO) (error, *DTO.Auth) {
 
-	switch {
-	//验证ak，和原设备
-	case LoginDTO.AccessToken != "":
-		{
-			_, err := Utils.ParseToken(Global.PKEY, LoginDTO.AccessToken)
-			if err != nil {
-				return err
-			}
-			return nil
+	//验证PW,成功的话刷新内存里面的AK,RK，并向客户端返回新的AK.RK
+	if LoginDTO.Password != "" {
+		//查数据库校验PassWord
+		err := BaseService.BaseDAO.LoginByPassword(LoginDTO.UserID, LoginDTO.Password)
+		if err != nil {
+			return errors.New("密码验证错误"), nil
 		}
-	//验证RK,成功的话返回新的AK
-	case LoginDTO.RefreshToken != "":
-		{
 
+		//验证通过，生成ak，rk ，写入map，返回请求
+		AccessToken, err := Utils.GeneratedToken(Global.PKEY, jwt.SigningMethodHS256, LoginDTO.UserID, time.Duration(10000))
+		RefreshToken, err := Utils.GeneratedToken(Global.PKEY, jwt.SigningMethodHS256, LoginDTO.UserID, time.Duration(70000))
+		if err != nil {
+			return err, nil
 		}
-	//验证PW,成功的话返回新的AK.RK
-	case LoginDTO.Password != "":
-		{
-			//调用DAO查数据库校验PassWord
-			err := BaseService.BaseDAO.LoginByPassword(LoginDTO.UserID, LoginDTO.Password)
-			if err != nil {
-				return err
-			}
 
-			//验证通过，生成ak，rk ，写入map，返回请求
-			AccessToken, err := Utils.GeneratedToken(Global.PKEY, jwt.SigningMethodHS256, LoginDTO, time.Duration(1))
-			RefreshToken, err := Utils.GeneratedToken(Global.PKEY, jwt.SigningMethodHS256, LoginDTO, time.Duration(7))
-			if err != nil {
-				return err
-			}
-
-			Global.TokenMap.TokenMap[LoginDTO.UserID] = &UtilsStruct.TokenInfo{
-				AccessToken:    AccessToken,
-				RefreshToken:   RefreshToken,
-				Revoked:        true,
-				RegisteredTime: time.Now().Format("2006-01-02 15:04"),
-			}
-
-			Tokens := HTTP.Tokens{
-				AccessToken:  AccessToken,
-				RefreshToken: RefreshToken,
-			}
-			reponse := HTTP.Response{
-				Code:    10000,
-				Message: "Login Success",
-				Data:    nil,
-				Token:   Tokens,
-			}
-
-			HTTP.OK(ctx, reponse)
+		Global.TokenMap.TokenMap[LoginDTO.UserID] = &UtilsStruct.TokenInfo{
+			AccessToken:    AccessToken,
+			RefreshToken:   RefreshToken,
+			Revoked:        true,                                  //RK是否已经被吊销
+			RegisteredTime: time.Now().Format("2006-01-02 15:04"), //注册时间
 		}
+
+		return nil, &DTO.Auth{
+			AccessToken:  AccessToken,
+			RefreshToken: RefreshToken,
+		}
+
+	} else {
+		return errors.New("请输入密码"), nil
 	}
 
-	//查找用户信息并返回回给controller
-
-	return nil
 }

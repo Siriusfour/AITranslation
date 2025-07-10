@@ -41,7 +41,17 @@ func (BaseController *BaseController) Login(Ctx *gin.Context) {
 		return
 	}
 
-	err = BaseController.BaseService.Login(LoginCtx, &LoginDTO)
+	err, Auth := BaseController.BaseService.Login(&LoginDTO)
+	if err != nil {
+		BindingErr(LoginCtx, err, 1001)
+		return
+	}
+
+	HTTP.OK(LoginCtx, HTTP.Response{
+		Code:    2000,
+		Message: "success",
+		Tokens:  *Auth,
+	})
 
 }
 
@@ -83,14 +93,16 @@ func (BaseController *BaseController) Login(Ctx *gin.Context) {
 //	}
 //}
 
-func bindingErr(Ctx *gin.Context, err error) {
+func BindingErr(Ctx *gin.Context, err error, Code int) {
 
 	HTTP.Fail(
 		Ctx,
 		HTTP.Response{
-			Code:    10111, //数据绑定失败错误码
+			Code:    Code,
 			Message: fmt.Errorf(" binding data is failed: %w", err).Error(),
 		},
 	)
+
+	return
 
 }
