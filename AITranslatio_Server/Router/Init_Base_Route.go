@@ -17,5 +17,5 @@ func Init_Base_Route(rgBase *gin.RouterGroup, BaseController *BaseControll.BaseC
 	//rgBase.GET("API/UserInfo", BaseController.)
 	//rgBase.POST("API/CreateTeam", BaseController.CreateTeam)
 	rgBase.POST("API/JoinTeam", BaseController.JoinTeam) //申请加入一个团队
-
+	rgBase.GET("SSE", BaseController.CreateSSE)
 }

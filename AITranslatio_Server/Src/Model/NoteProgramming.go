@@ -2,7 +2,6 @@ package Model
 
 import (
 	"gorm.io/gorm"
-	"time"
 )
 
 type Note struct {
@@ -37,24 +36,5 @@ type Commit struct {
 	NextNode     int    `gorm:"type:int;not null;column:NextNode"`
 }
 
-type Team struct {
-	gorm.Model
-	TeamName     string `gorm:"type:varchar(255);not null;column:TeamName"`
-	NoteID       uint   `gorm:"type:varchar(255);not null;column:NoteID"`
-	LeaderID     int    `gorm:"type:int;not null;column:LeaderID"`
-	Introduction string `gorm:"type:varchar(255);not null;column:Introduction"`
-}
-
-type Members struct {
-	TeamID       int       `gorm:"type:int;not null;column:TeamID"`
-	MemberID     int       `gorm:"type:int;not null;column:MemberID"`
-	JoinTime     time.Time `gorm:"type:datetime;not null;column:joinTime"`
-	CommitCount  uint      `gorm:"type:int;not null;column:CommitCount"`
-	Introduction string    `gorm:"type:varchar(255);not null;column:Introduction"`
-}
-
-func (Note) TableName() string    { return "Note" }
-func (Branch) TableName() string  { return "Branch" }
-func (Commit) TableName() string  { return "Commit" }
-func (Team) TableName() string    { return "Team" }
-func (Members) TableName() string { return "Members" }
+func (Branch) TableName() string { return "Branch" }
+func (Commit) TableName() string { return "Commit" }

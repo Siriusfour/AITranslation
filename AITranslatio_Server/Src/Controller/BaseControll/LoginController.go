@@ -55,6 +55,13 @@ func (BaseController *BaseController) Login(Ctx *gin.Context) {
 
 }
 
+func (BaseController *BaseController) CreateSSE(CreateSSEctx *gin.Context) {
+	CreateSSEctx.Writer.Header().Set("Content-Type", "text/event-stream")
+	CreateSSEctx.Writer.Header().Set("Cache-Control", "no-cache")
+	CreateSSEctx.Writer.Header().Set("Connection", "keep-alive")
+	CreateSSEctx.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+}
+
 //func (BaseController *BaseController) Translation(ctx *gin.Context) {
 //	//0.实例化接受ctx参数的DTO结构体
 //	var AITranslation DTO.TranslationDTO

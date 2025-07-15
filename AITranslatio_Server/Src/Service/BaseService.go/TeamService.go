@@ -2,9 +2,18 @@ package BaseService
 
 import (
 	"AITranslatio/Src/DTO"
-	"github.com/gin-gonic/gin"
 )
 
 func (BaseService *BaseService) JoinTeam(JoinTeamDTO *DTO.JoinTeamDTO) error {
+
+	//0.申请入库
+	err := BaseService.BaseDAO.JoinTeam(JoinTeamDTO)
+	if err != nil {
+		return err
+	}
+
+	//1.向SSE推送信息
+
+	return nil
 
 }

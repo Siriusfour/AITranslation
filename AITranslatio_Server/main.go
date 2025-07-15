@@ -23,6 +23,7 @@ func main() {
 
 	r := gin.New()
 	r.Use(Middleware.Cors()).Use(Middleware.Auth())
+	//
 
 	//实例化相关配置
 	cmd.Start()
