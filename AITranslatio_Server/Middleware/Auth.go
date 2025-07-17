@@ -23,6 +23,12 @@ func Auth() gin.HandlerFunc {
 		}
 
 		token := c.GetHeader("Authorization")
+		if token == "" {
+			token2, _ := c.Cookie("Authorization")
+
+			token = token2
+		}
+
 		err := Utils.Verify(token)
 		if err != nil {
 

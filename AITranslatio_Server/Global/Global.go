@@ -1,6 +1,7 @@
 package Global
 
 import (
+	"AITranslatio/Utils/SSE"
 	"AITranslatio/Utils/UtilsStruct"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -15,3 +16,4 @@ var DB *gorm.DB
 var RedisClient *redis.Client
 var PKEY = []byte(os.Getenv("PATHEXT"))
 var TokenMap *UtilsStruct.TokenMap
+var SSEClients *SSE.SSEClients

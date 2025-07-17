@@ -1,8 +1,19 @@
 package BaseService
 
 import (
+	"AITranslatio/Global"
 	"AITranslatio/Src/DTO"
 )
+
+func (BaseService *BaseService) CreateTeam(CreateTeamDTO *DTO.CreateTeamDTO) error {
+
+	err := BaseService.BaseDAO.CreateTeam(CreateTeamDTO)
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
 
 func (BaseService *BaseService) JoinTeam(JoinTeamDTO *DTO.JoinTeamDTO) error {
 
@@ -13,6 +24,7 @@ func (BaseService *BaseService) JoinTeam(JoinTeamDTO *DTO.JoinTeamDTO) error {
 	}
 
 	//1.向SSE推送信息
+	Global.SSEClients.SendNotify(JoinTeamDTO.UserID, JoinTeamDTO.Introduction)
 
 	return nil
 

@@ -5,9 +5,11 @@ import (
 	"AITranslatio/Src/DTO"
 	"AITranslatio/Src/HTTP"
 	"AITranslatio/Src/Service/BaseService.go"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"strconv"
 )
 
 type BaseController struct {
@@ -56,10 +58,23 @@ func (BaseController *BaseController) Login(Ctx *gin.Context) {
 }
 
 func (BaseController *BaseController) CreateSSE(CreateSSEctx *gin.Context) {
-	CreateSSEctx.Writer.Header().Set("Content-Type", "text/event-stream")
-	CreateSSEctx.Writer.Header().Set("Cache-Control", "no-cache")
-	CreateSSEctx.Writer.Header().Set("Connection", "keep-alive")
-	CreateSSEctx.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+
+	//获取到URL的参数，解析出UserID
+	ID, exists := CreateSSEctx.GetQuery("UserID")
+	if !exists {
+		BindingErr(CreateSSEctx, errors.New("参数不存在"), 1012)
+	}
+
+	UserID, err := strconv.Atoi(ID)
+	if err != nil {
+		BindingErr(CreateSSEctx, errors.New("参数解析失败！"), 1013)
+	}
+
+	err = Global.SSEClients.CreateSSE(CreateSSEctx, UserID)
+	if err != nil {
+		BindingErr(CreateSSEctx, errors.New("创建SSE链接失败！"), 1014)
+	}
+
 }
 
 //func (BaseController *BaseController) Translation(ctx *gin.Context) {
