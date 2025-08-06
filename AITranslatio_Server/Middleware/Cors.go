@@ -9,10 +9,10 @@ func Cors() gin.HandlerFunc {
 
 	//设置访问规则
 	config := cors.Config{
-		////是否允许所有的站点跨域访问
-		//AllowOriginFunc: func(origin string) bool {
-		//	return true
-		//},
+		//是否允许所有的站点跨域访问
+		AllowOriginFunc: func(origin string) bool {
+			return true
+		},
 		//允许访问的站点列表
 		AllowOrigins: []string{"*"},
 		//允许使用的方法

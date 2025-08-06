@@ -36,7 +36,7 @@ func (BaseController *BaseController) Login(Ctx *gin.Context) {
 		HTTP.Fail(
 			LoginCtx,
 			HTTP.Response{
-				Code:    10111, //数据绑定失败错误码
+				Code:    1000, //数据绑定失败错误码
 				Message: fmt.Errorf(" binding data is failed: %w", err).Error(),
 			},
 		)
@@ -45,7 +45,7 @@ func (BaseController *BaseController) Login(Ctx *gin.Context) {
 
 	err, Auth := BaseController.BaseService.Login(&LoginDTO)
 	if err != nil {
-		BindingErr(LoginCtx, err, 1001)
+		HTTPErr(LoginCtx, err, 1001)
 		return
 	}
 
@@ -62,17 +62,17 @@ func (BaseController *BaseController) CreateSSE(CreateSSEctx *gin.Context) {
 	//获取到URL的参数，解析出UserID
 	ID, exists := CreateSSEctx.GetQuery("UserID")
 	if !exists {
-		BindingErr(CreateSSEctx, errors.New("参数不存在"), 1012)
+		HTTPErr(CreateSSEctx, errors.New("参数不存在"), 1012)
 	}
 
 	UserID, err := strconv.Atoi(ID)
 	if err != nil {
-		BindingErr(CreateSSEctx, errors.New("参数解析失败！"), 1013)
+		HTTPErr(CreateSSEctx, errors.New("参数解析失败！"), 1013)
 	}
 
 	err = Global.SSEClients.CreateSSE(CreateSSEctx, UserID)
 	if err != nil {
-		BindingErr(CreateSSEctx, errors.New("创建SSE链接失败！"), 1014)
+		HTTPErr(CreateSSEctx, errors.New("创建SSE链接失败！"), 1014)
 	}
 
 }
@@ -115,16 +115,26 @@ func (BaseController *BaseController) CreateSSE(CreateSSEctx *gin.Context) {
 //	}
 //}
 
-func BindingErr(Ctx *gin.Context, err error, Code int) {
+func HTTPErr(Ctx *gin.Context, err error, Code int) {
 
 	HTTP.Fail(
 		Ctx,
 		HTTP.Response{
 			Code:    Code,
-			Message: fmt.Errorf(" binding data is failed: %w", err).Error(),
+			Message: fmt.Errorf(" err: %w", err).Error(),
 		},
 	)
-
 	return
+}
+
+func HTTPSuccess(Ctx *gin.Context, data interface{}, Message string) {
+	HTTP.OK(
+		Ctx,
+		HTTP.Response{
+			Code:    2000,
+			Data:    data,
+			Message: Message,
+		},
+	)
 
 }

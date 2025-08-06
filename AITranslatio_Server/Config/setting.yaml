@@ -23,3 +23,11 @@ Redis:
 
 grpc:
   DNS: "127.0.0.1:50051"        #192.168.3.205
+
+
+Login:
+  AkOutTime: 72000  #2小时
+  RkOutTime: 2592000 #3天
+
+
+

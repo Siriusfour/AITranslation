@@ -4,7 +4,6 @@ import (
 	"AITranslatio/Config"
 	"AITranslatio/Global"
 	"AITranslatio/Utils/SSE"
-	"AITranslatio/Utils/UtilsStruct"
 	"fmt"
 )
 
@@ -30,9 +29,6 @@ func Start() {
 	//======初始化MySQL数据库
 	var err error
 	Global.DB, err = Config.InitDB()
-
-	//======初始化存储token的map
-	Global.TokenMap = UtilsStruct.InitTokenMap()
 
 	Global.SSEClients = SSE.InitSSEClients()
 

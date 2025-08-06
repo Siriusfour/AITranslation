@@ -34,7 +34,7 @@ func (BaseDAO *BaseDAO) JoinTeam(JoinTeamDTO *DTO.JoinTeamDTO) error {
 	}
 
 	result := BaseDAO.orm.Create(&JoinTeam)
-	if result != nil {
+	if result.Error != nil {
 		return result.Error
 	}
 
