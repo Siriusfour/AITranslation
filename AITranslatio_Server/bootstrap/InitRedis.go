@@ -1,4 +1,4 @@
-package Config
+package bootstrap
 
 import (
 	"AITranslatio/Global"

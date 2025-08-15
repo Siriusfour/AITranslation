@@ -8,7 +8,6 @@ import (
 func InitRouter(r *gin.Engine) {
 
 	//路由分组
-
 	rgBase := r.Group("Attendance/Api/BaseControll")
 
 	//注册所有组别的路由
@@ -18,6 +17,9 @@ func InitRouter(r *gin.Engine) {
 func initBasePaltformRouter(rgBase *gin.RouterGroup) {
 
 	BaseController := BaseControll.NewBaseController()
+	//AdminController:=AdminController.NewAdminController()
+
 	Init_Base_Route(rgBase, BaseController)
+	//Init_Admin_Route(rgAdmin, AdminController)
 
 }

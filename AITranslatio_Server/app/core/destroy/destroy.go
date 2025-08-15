@@ -1,0 +1,5 @@
+package destroy
+
+func init() {
+
+}

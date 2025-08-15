@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"AITranslatio/Config"
 	"AITranslatio/Global"
 	"AITranslatio/Utils/SSE"
+	"AITranslatio/bootstrap"
 	"fmt"
 )
 
@@ -18,17 +18,17 @@ func Start() {
 	fmt.Println("=======")
 
 	//=======初始化日志组件
-	Global.Logger = Config.InitLogger()
+	Global.Logger = bootstrap.InitLogger()
 
 	//=======初始化系统配置
-	Config.InitConfig()
+	bootstrap.InitConfig()
 
 	//=======初始化redis客户端
-	Config.InitRedis()
+	bootstrap.InitRedis()
 
 	//======初始化MySQL数据库
 	var err error
-	Global.DB, err = Config.InitDB()
+	Global.DB, err = bootstrap.InitDB()
 
 	Global.SSEClients = SSE.InitSSEClients()
 

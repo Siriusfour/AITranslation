@@ -2,8 +2,8 @@ package BaseControll
 
 import (
 	"AITranslatio/Global"
+	"AITranslatio/HTTP/reposen"
 	"AITranslatio/Src/DTO"
-	"AITranslatio/Src/HTTP"
 	"AITranslatio/Src/Service/BaseService.go"
 	"errors"
 	"fmt"
@@ -33,12 +33,10 @@ func (BaseController *BaseController) Login(Ctx *gin.Context) {
 	//1.解析http请求,把参数从HttpMessage.ctx绑定到HttpMessage.DTO
 	err := LoginCtx.ShouldBindBodyWithJSON(&LoginDTO)
 	if err != nil {
-		HTTP.Fail(
+		reposen.Fail(
 			LoginCtx,
-			HTTP.Response{
-				Code:    1000, //数据绑定失败错误码
-				Message: fmt.Errorf(" binding data is failed: %w", err).Error(),
-			},
+			struct{}{},
+			fmt.Errorf(" binding data is failed: %w", err).Error(),
 		)
 		return
 	}
@@ -49,7 +47,7 @@ func (BaseController *BaseController) Login(Ctx *gin.Context) {
 		return
 	}
 
-	HTTP.OK(LoginCtx, HTTP.Response{
+	reposen.OK(LoginCtx, reposen.Response{
 		Code:    2000,
 		Message: "success",
 		Tokens:  *Auth,
@@ -117,9 +115,9 @@ func (BaseController *BaseController) CreateSSE(CreateSSEctx *gin.Context) {
 
 func HTTPErr(Ctx *gin.Context, err error, Code int) {
 
-	HTTP.Fail(
+	reposen.Fail(
 		Ctx,
-		HTTP.Response{
+		reposen.Response{
 			Code:    Code,
 			Message: fmt.Errorf(" err: %w", err).Error(),
 		},
@@ -128,9 +126,9 @@ func HTTPErr(Ctx *gin.Context, err error, Code int) {
 }
 
 func HTTPSuccess(Ctx *gin.Context, data interface{}, Message string) {
-	HTTP.OK(
+	reposen.OK(
 		Ctx,
-		HTTP.Response{
+		reposen.Response{
 			Code:    2000,
 			Data:    data,
 			Message: Message,

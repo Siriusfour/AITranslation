@@ -1,8 +1,8 @@
 package BaseService
 
 import (
+	"AITranslatio/HTTP/reposen"
 	"AITranslatio/Src/DTO"
-	"AITranslatio/Src/HTTP"
 	"AITranslatio/Src/Model"
 	"errors"
 	"github.com/gin-gonic/gin"
@@ -99,15 +99,15 @@ func (BaseService *BaseService) CreateCommit(commitCTX *gin.Context, CommitDTO *
 	return nil
 }
 
-func (BaseService *BaseService) Programming(NoteID int) (HTTP.Note, error) {
+func (BaseService *BaseService) Programming(NoteID int) (reposen.Note, error) {
 
-	HTTPNote := HTTP.Note{}
-	HTTPNote.Branches = []HTTP.Branches{}
+	HTTPNote := reposen.Note{}
+	HTTPNote.Branches = []reposen.Branches{}
 
 	//查询该项目的记录
 	note, err := BaseService.BaseDAO.FindNote(NoteID)
 	if err != nil {
-		return HTTP.Note{}, err
+		return reposen.Note{}, err
 	}
 	HTTPNote.Note = &note
 
@@ -116,9 +116,9 @@ func (BaseService *BaseService) Programming(NoteID int) (HTTP.Note, error) {
 	for _, Branch := range *Branches {
 		Commits, err := BaseService.BaseDAO.FindCommit(Branch.ID)
 		if err != nil {
-			return HTTP.Note{}, err
+			return reposen.Note{}, err
 		}
-		HTTPNote.Branches = append(HTTPNote.Branches, HTTP.Branches{
+		HTTPNote.Branches = append(HTTPNote.Branches, reposen.Branches{
 			Branch:  &Branch,
 			Commits: Commits,
 		})

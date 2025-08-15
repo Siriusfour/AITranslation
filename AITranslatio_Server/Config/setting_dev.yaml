@@ -12,7 +12,7 @@ DB:
   MaxIdleConns: 100
 
 key:
-  privateKey: "example_Key"
+  privateKey: "example_Dev_Key"
   Access_Token_OutTime: 7200    #2小时
   Refresh_Token_OutTime: 60480  #7天
 
@@ -22,12 +22,9 @@ Redis:
   Password: ""
 
 grpc:
-  DNS: "127.0.0.1:5001"        #192.168.3.205
+  DNS: "127.0.0.1:50051"        #192.168.3.205
 
 
 Login:
   AkOutTime: 72000  #2小时
   RkOutTime: 2592000 #3天
-
-
-

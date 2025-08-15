@@ -1,8 +1,8 @@
 package BaseControll
 
 import (
+	"AITranslatio/HTTP/reposen"
 	"AITranslatio/Src/DTO"
-	"AITranslatio/Src/HTTP"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -23,16 +23,16 @@ func (BaseController *BaseController) CreateProgramming(Ctx *gin.Context) {
 
 	err = BaseController.BaseService.CreateNovelProgramming(&NovelDTO)
 	if err != nil {
-		HTTP.Fail(
+		reposen.Fail(
 			NovelCtx,
-			HTTP.Response{
+			reposen.Response{
 				Code:    1101,
 				Message: fmt.Errorf(" createNote is failed: %w", err).Error(),
 			})
 	} else {
-		HTTP.Fail(
+		reposen.Fail(
 			NovelCtx,
-			HTTP.Response{
+			reposen.Response{
 				Code:    2000,
 				Message: "success",
 			})
@@ -48,9 +48,9 @@ func (BaseController *BaseController) CreateBranch(Ctx *gin.Context) {
 	//1.解析http请求,把参数从HttpMessage.ctx绑定到HttpMessage.DTO
 	err := BranchCtx.ShouldBindBodyWithJSON(&BranchlDTO)
 	if err != nil {
-		HTTP.Fail(
+		reposen.Fail(
 			BranchCtx,
-			HTTP.Response{
+			reposen.Response{
 				Code:    10111, //数据绑定失败错误码
 				Message: fmt.Errorf(" binding data is failed: %w", err).Error(),
 			},
@@ -60,16 +60,16 @@ func (BaseController *BaseController) CreateBranch(Ctx *gin.Context) {
 
 	err = BaseController.BaseService.CreateBranch(&BranchlDTO)
 	if err != nil {
-		HTTP.Fail(
+		reposen.Fail(
 			BranchCtx,
-			HTTP.Response{
+			reposen.Response{
 				Code:    10112, //数据绑定失败错误码
 				Message: fmt.Errorf(" createBranch is failed: %w", err).Error(),
 			})
 	} else {
-		HTTP.Fail(
+		reposen.Fail(
 			BranchCtx,
-			HTTP.Response{
+			reposen.Response{
 				Code:    2000, //数据绑定失败错误码
 				Message: "success",
 			})
@@ -103,7 +103,7 @@ func (BaseController *BaseController) Programming(Ctx *gin.Context) {
 
 	HTTPNote, err := BaseController.BaseService.Programming(NoteIDNum)
 
-	HTTP.OK(Ctx, HTTP.Response{
+	reposen.OK(Ctx, reposen.Response{
 		Code:    2000,
 		Message: "Success",
 		Data:    HTTPNote,

@@ -5,9 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/golang-jwt/jwt"
 	"strconv"
 	"time"
+
+	"github.com/golang-jwt/jwt"
 )
 
 type TokenInfo struct {
