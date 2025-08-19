@@ -1,7 +1,7 @@
 package Router
 
 import (
-	"AITranslatio/Src/Controller/BaseControll"
+	"AITranslatio/HTTP/Controller/BaseControll"
 	"github.com/gin-gonic/gin"
 )
 

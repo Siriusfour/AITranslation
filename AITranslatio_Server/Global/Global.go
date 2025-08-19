@@ -12,5 +12,5 @@ var Logger *zap.SugaredLogger
 var DB *gorm.DB
 var RedisClient *redis.Client
 var PKEY = []byte(os.Getenv("PATHEXT"))
-
 var SSEClients *SSE.SSEClients
+var DataFormt = "2006-01-02 15:04:05"

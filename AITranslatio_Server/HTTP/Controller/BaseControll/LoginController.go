@@ -47,11 +47,11 @@ func (BaseController *BaseController) Login(Ctx *gin.Context) {
 		return
 	}
 
-	reposen.OK(LoginCtx, reposen.Response{
-		Code:    2000,
-		Message: "success",
-		Tokens:  *Auth,
-	})
+	//reposen.OK(LoginCtx, reposen.Response{
+	//	Code:    2000,
+	//	Message: "success",
+	//	Tokens:  *Auth,
+	//})
 
 }
 

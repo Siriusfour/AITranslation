@@ -67,7 +67,7 @@ func ErrorSystem(context *gin.Context, data interface{}, Message string) {
 func TokenErrorParam(context *gin.Context, data interface{}, Message string, wrongParam interface{}) {
 	ReturnResponse(context, http.StatusUnauthorized, Global.ValidatorParamsCheckFailCode, Global.ValidatorParamsCheckFailMsg, wrongParam)
 }
-
+ 
 // ErrorTokenAuthFail token权限校验失败
 func ErrorTokenAuthFail(c *gin.Context) {
 	ReturnResponse(c, http.StatusUnauthorized, http.StatusUnauthorized, Global.ErrorsNoAuthorization, "")
