@@ -13,6 +13,9 @@ func WebRegisterValidator() {
 	var key string
 
 	key = Global.ValidatorPrefix + "login"
-	containers.Set(key, validators)
+	containers.Set(key, validators.Login{})
+
+	key = Global.ValidatorPrefix + "register"
+	containers.Set(key, validators.Register{})
 
 }

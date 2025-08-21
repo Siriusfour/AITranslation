@@ -11,6 +11,7 @@ const (
 	ErrorsSoftLinkCreateFail        string = "自动创建软连接失败,请以管理员身份运行客户端(开发环境为goland等，生产环境检查命令执行者权限), " +
 		"最后一个可能：如果您是360用户，请退出360相关软件，才能保证go语言创建软连接函数： os.Symlink() 正常运行"
 	ErrorsSoftLinkDeleteFail string = "删除软软连接失败"
+	ErrorGinSetTrustProxy    string = "Gin 设置信任代理服务器出错"
 
 	ErrorsFuncEventAlreadyExists   string = "注册函数类事件失败，键名已经被注册"
 	ErrorsFuncEventNotRegister     string = "没有找到键名对应的函数"
@@ -42,6 +43,8 @@ const (
 	ErrorsTokenInvalid      string = "无效的token"
 	ErrorsTokenNotActiveYet string = "token 尚未激活"
 	ErrorsTokenMalFormed    string = "token 格式不正确"
+	JwtTokenFormatErrMsg    string = "提交的 token 格式错误"            //提交的 token 格式错误
+	JwtTokenMustValid       string = "token为必填项,请在请求header部分提交!" //提交的 token 格式错误
 
 	//snowflake
 	ErrorsSnowflakeGetIdFail string = "获取snowflake唯一ID过程发生错误"
@@ -67,4 +70,7 @@ const (
 	ErrorCasbinCreateAdaptFail        string = "casbin NewAdapterByDBUseTableName 发生错误："
 	ErrorCasbinCreateEnforcerFail     string = "casbin NewEnforcer 发生错误："
 	ErrorCasbinNewModelFromStringFail string = "NewModelFromString 调用时出错："
+
+	ValidatorParamsCheckFailMsg string = "参数校验失败"
+	ServerOccurredErrorMsg      string = "服务器内部发生代码执行错误, "
 )

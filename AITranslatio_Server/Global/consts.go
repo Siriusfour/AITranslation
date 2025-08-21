@@ -4,32 +4,18 @@ package Global
 const (
 	// 进程被结束
 	ProcessKilled string = "收到信号，进程被结束"
-	// 表单验证器前缀
-	ValidatorPrefix              string = "Form_Validator_"
-	ValidatorParamsCheckFailCode int    = -400300
-	ValidatorParamsCheckFailMsg  string = "参数校验失败"
+
+	//校验器相关
+	ValidatorParamsCheckFailCode int = -400300
 
 	//服务器代码发生错误
-	ServerOccurredErrorCode int    = -500100
-	ServerOccurredErrorMsg  string = "服务器内部发生代码执行错误, "
-	GinSetTrustProxyError   string = "Gin 设置信任代理服务器出错"
+	ServerOccurredErrorCode int = -500100
 
 	// token相关
-	JwtTokenOK            int    = 200100                      //token有效
-	JwtTokenInvalid       int    = -400100                     //无效的token
-	JwtTokenExpired       int    = -400101                     //过期的token
-	JwtTokenFormatErrCode int    = -400102                     //提交的 token 格式错误
-	JwtTokenFormatErrMsg  string = "提交的 token 格式错误"            //提交的 token 格式错误
-	JwtTokenMustValid     string = "token为必填项,请在请求header部分提交!" //提交的 token 格式错误
-
-	//SnowFlake 雪花算法
-	StartTimeStamp = int64(1483228800000) //开始时间截 (2017-01-01)
-	MachineIdBits  = uint(10)             //机器id所占的位数
-	SequenceBits   = uint(12)             //序列所占的位数
-	//MachineIdMax   = int64(-1 ^ (-1 << MachineIdBits)) //支持的最大机器id数量
-	SequenceMask   = int64(-1 ^ (-1 << SequenceBits)) //
-	MachineIdShift = SequenceBits                     //机器id左移位数
-	TimestampShift = SequenceBits + MachineIdBits     //时间戳左移位数
+	JwtTokenOK            int = 200100  //token有效
+	JwtTokenInvalid       int = -400100 //无效的token
+	JwtTokenExpired       int = -400101 //过期的token
+	JwtTokenFormatErrCode int = -400102 //提交的 token 格式错误
 
 	// CURD 常用业务状态码
 	CurdStatusOkCode         int    = 200
@@ -72,4 +58,9 @@ const (
 	CaptchaCheckOkMsg             string = "验证码校验通过"
 	CaptchaCheckFailCode          int    = -400355
 	CaptchaCheckFailMsg           string = "验证码校验失败"
+	ValidatorPrefix               string = "Form_Validator_" // 表单验证器前缀
+	ConfigKeyPrefix               string = "ConfigKey_"
 )
+
+// 变量
+var BasePath string

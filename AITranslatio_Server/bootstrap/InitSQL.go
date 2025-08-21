@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"AITranslatio/Src/Model"
+	"AITranslatio/Src/Model/user"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -33,7 +34,7 @@ func InitDB() (*gorm.DB, error) {
 	SqlDB.SetConnMaxLifetime(time.Hour)
 
 	//将数据库的表与user对象同步，有则修改，没有创建
-	err = db.AutoMigrate(&Model.User{}, &Model.Note{}, &Model.Branch{}, &Model.Commit{}, &Model.Team{}, &Model.Members{}, &Model.JoinTeamApplication{})
+	err = db.AutoMigrate(&user.User{}, &Model.Note{}, &Model.Branch{}, &Model.Commit{}, &Model.Team{}, &Model.Members{}, &Model.JoinTeamApplication{})
 	if err != nil {
 		panic(err)
 	}

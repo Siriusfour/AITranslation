@@ -2,7 +2,7 @@ package BaseDAO
 
 import (
 	"AITranslatio/Global"
-	"AITranslatio/Src/Model"
+	"AITranslatio/Src/Model/user"
 	"errors"
 	"fmt"
 	"go.uber.org/zap"
@@ -24,7 +24,7 @@ func New_Base_DAO() *BaseDAO {
 
 func (BaseDAO *BaseDAO) LoginByPassword(UserID int, password string) error {
 
-	var UserInfo Model.User
+	var UserInfo user.User
 
 	fmt.Println(BaseDAO)
 
