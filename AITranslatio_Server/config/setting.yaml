@@ -1,15 +1,15 @@
 Mode:
-  develop: true
+  Develop: true
 
 log:
   MaxSize: 10    #每个日志文件最大容量，MB
   MaxBackups: 10 #保留旧文件的最大个数
 
-
-
+DB:
+  Type: 1  #1=启动mysql，2=启动PosetgreSQL
 
 key:
-  privateKey: "example_Key"
+  PrivateKey: "example_Key"
   Access_Token_OutTime: 7200    #2小时
   Refresh_Token_OutTime: 60480  #7天
 

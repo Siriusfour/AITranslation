@@ -3,7 +3,6 @@ package Global
 import (
 	"AITranslatio/Utils/SSE"
 	"AITranslatio/config/interf"
-
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"

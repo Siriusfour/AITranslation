@@ -1,4 +1,5 @@
 DB:
+  Mode : 0
   MySQL:
     Write:
       Host: "127.0.0.1"
@@ -12,7 +13,7 @@ DB:
       MaxOpenConns: 128
       ConnMaxLifetime: 60    # 连接不活动时的最大生存时间(秒)
 
-      IsOpenReadDb: 0                     # 是否开启读写分离配置（1=开启、0=关闭），IsOpenReadDb=1,Read 部分参数有效，否则Read部分参数直接忽略
+      IsOpenReadDB: 0                     # 是否开启读写分离配置（1=开启、0=关闭），IsOpenReadDb=1,Read 部分参数有效，否则Read部分参数直接忽略
 
     Read:
       Host: "127.0.0.1"

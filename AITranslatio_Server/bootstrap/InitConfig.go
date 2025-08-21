@@ -1,13 +1,14 @@
-package config
+package bootstrap
 
 import (
+	"AITranslatio/Global"
 	"AITranslatio/config/interf"
 	"AITranslatio/config/json"
 	"AITranslatio/config/yaml"
 	"fmt"
 )
 
-func InitConfig(configTYpe string, filename string) interf.ConfigInterface {
+func InitConfig(configTYpe string, filename string) {
 
 	var config interf.ConfigInterface
 
@@ -19,7 +20,7 @@ func InitConfig(configTYpe string, filename string) interf.ConfigInterface {
 		fmt.Println("====yaml====")
 
 		y := &yaml.YamlType{}
-		config = y.CreateConfig(filename)
+		Global.Config = y.CreateConfig(filename)
 
 	case "json":
 		fmt.Println("====json====")
@@ -28,5 +29,7 @@ func InitConfig(configTYpe string, filename string) interf.ConfigInterface {
 
 	}
 
-	return config
+	//初始化DB文件
+	Global.DB_Config = config.Clone("DB")
+
 }
