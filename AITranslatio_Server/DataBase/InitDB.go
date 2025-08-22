@@ -4,22 +4,45 @@ import (
 	"AITranslatio/Global"
 	"errors"
 	"fmt"
+	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	gormLog "gorm.io/gorm/logger"
 	"strings"
 )
 
 func initMySQL_Client() (client *gorm.DB, err error) {
 	SQL_Type := "MySQL"
-	IsOpenReadDB := Global.DB_Config.GetString("DB." + SQL_Type + "IsOpenReadDB")
-	return getDbDialector(SQL_Type, IsOpenReadDB)
+	IsOpenReadDB := Global.DB_Config.GetInt("DB." + SQL_Type + "IsOpenReadDB")
+	return GetSqlDriver(SQL_Type, IsOpenReadDB)
 }
 
 func initPostgreSQL_Client() {
 
 }
 
-// 获取一个数据库方言(Dialector),通俗的说就是根据不同的连接参数，获取具体的一类数据库的连接指针
+// 获取数据库驱动, 可以通过options 动态参数连接任意多个数据库
+func GetSqlDriver(sqlType string, readDbIsOpen int, dbConf ...ConfigParams) (*gorm.DB, error) {
+
+	var dbDialector gorm.Dialector
+	if val, err := getDbDialector(sqlType, "Write", dbConf...); err != nil {
+		Global.Logger.Error(Global.ErrorsDialectorDbInitFail+sqlType, zap.Error(err))
+	} else {
+		dbDialector = val
+	}
+	gormDb, err := gorm.Open(dbDialector, &gorm.Config{
+		SkipDefaultTransaction: true,
+		PrepareStmt:            true,
+		Logger:                 redefineLog(sqlType), //拦截、接管 gorm v2 自带日志
+	})
+	if err != nil {
+		//gorm 数据库驱动初始化失败
+		return nil, err
+	}
+	return gormDb, nil
+}
+
+// 根据不同的连接参数，获取具体的一类数据库的连接指针
 func getDbDialector(sqlType, readWrite string, dbConf ...ConfigParams) (gorm.Dialector, error) {
 	var dbDialector gorm.Dialector
 	dsn := getDsn(sqlType, readWrite, dbConf...)
@@ -94,4 +117,10 @@ func getDsn(sqlType, readWrite string, dbConf ...ConfigParams) string {
 		return fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=disable TimeZone=Asia/Shanghai", Host, Port, DataBase, User, Pass)
 	}
 	return ""
+}
+
+func redefineLog(sqlType string) gormLog.Interface {
+
+	createCustomGormLog(sqlType)
+
 }
