@@ -1,6 +1,7 @@
 package Global
 
 const (
+	ServerOccurredErrorMsg string = "服务器内部发生代码执行错误, "
 	//系统部分
 	ErrorsContainerKeyAlreadyExists string = "该键已经注册在容器中了"
 	ErrorsPublicNotExists           string = "public 目录不存在"
@@ -33,21 +34,26 @@ const (
 	ErrorsRedisInitConnFail string = "初始化redis连接池失败"
 	ErrorsRedisAuthFail     string = "Redis Auth 鉴权失败，密码错误"
 	ErrorsRedisGetConnFail  string = "Redis 从连接池获取一个连接失败，超过最大重试次数"
+	ErrorRedisGetDATA       string = "获取数据失败"
 	// 表单参数验证器未通过时的错误
 	ErrorsValidatorNotExists      string = "不存在的验证器"
 	ErrorsValidatorTransInitFail  string = "validator的翻译器初始化错误"
 	ErrorNotAllParamsIsBlank      string = "该接口不允许所有参数都为空,请按照接口要求提交必填参数"
 	ErrorsValidatorBindParamsFail string = "验证器绑定参数失败"
+	ValidatorParamsCheckFailMsg   string = "参数校验失败"
 
 	//token部分
-	ErrorsTokenInvalid      string = "无效的token"
-	ErrorsTokenNotActiveYet string = "token 尚未激活"
-	ErrorsTokenMalFormed    string = "token 格式不正确"
-	JwtTokenFormatErrMsg    string = "提交的 token 格式错误"            //提交的 token 格式错误
-	JwtTokenMustValid       string = "token为必填项,请在请求header部分提交!" //提交的 token 格式错误
+	ErrorsTokenInvalid               string = "无效的token"
+	ErrorsTokenNotActiveYet          string = "token 尚未激活"
+	ErrorGeneratedTokenIsFail        string = "生成token失败"
+	ErrorsTokenIsDifferentPlaceLogin string = "该账户已经被异地登录"
+	ErrorsTokenMalFormed             string = "token 格式不正确"
+	JwtTokenFormatErrMsg             string = "提交的 token 格式错误"            //提交的 token 格式错误
+	JwtTokenMustValid                string = "token为必填项,请在请求header部分提交!" //提交的 token 格式错误
 
 	//snowflake
 	ErrorsSnowflakeGetIdFail string = "获取snowflake唯一ID过程发生错误"
+
 	// websocket
 	ErrorsWebsocketOnOpenFail                 string = "websocket onopen 发生阶段错误"
 	ErrorsWebsocketUpgradeFail                string = "websocket Upgrade 协议升级, 发生错误"
@@ -71,6 +77,13 @@ const (
 	ErrorCasbinCreateEnforcerFail     string = "casbin NewEnforcer 发生错误："
 	ErrorCasbinNewModelFromStringFail string = "NewModelFromString 调用时出错："
 
-	ValidatorParamsCheckFailMsg string = "参数校验失败"
-	ServerOccurredErrorMsg      string = "服务器内部发生代码执行错误, "
+	//Password部分
+	ErrorPasswordOrSaltIsEmpty string = "密码不可为空！"
+	ErrorPasswordHashIsFail    string = "hash处理失败："
+
+	//通用错误
+	ErrorAssert string = "类型断言失败"
+
+	//业务部分
+	ErrorRegisterIsFail string = "注册失败:"
 )

@@ -11,14 +11,21 @@ import (
 	"strings"
 )
 
-func initMySQL_Client() (client *gorm.DB, err error) {
+func InitMySQL_Client() (client *gorm.DB, err error) {
 	SQL_Type := "MySQL"
-	IsOpenReadDB := Global.DB_Config.GetInt("DB." + SQL_Type + "IsOpenReadDB")
+	IsOpenReadDB := Global.DB_Config.GetInt("MySQL_DB." + SQL_Type + "IsOpenReadDB")
+	return GetSqlDriver(SQL_Type, IsOpenReadDB)
+}
+func InitPostgreSQL_Client() (client *gorm.DB, err error) {
+	SQL_Type := "PostgreSQL"
+	IsOpenReadDB := Global.DB_Config.GetInt("MySQL_DB." + SQL_Type + "IsOpenReadDB")
 	return GetSqlDriver(SQL_Type, IsOpenReadDB)
 }
 
-func initPostgreSQL_Client() {
-
+func InitSQLServer_Client() (client *gorm.DB, err error) {
+	SQL_Type := "SQLServer"
+	IsOpenReadDB := Global.DB_Config.GetInt("MySQL_DB." + SQL_Type + "IsOpenReadDB")
+	return GetSqlDriver(SQL_Type, IsOpenReadDB)
 }
 
 // 获取数据库驱动, 可以通过options 动态参数连接任意多个数据库
@@ -33,7 +40,7 @@ func GetSqlDriver(sqlType string, readDbIsOpen int, dbConf ...ConfigParams) (*go
 	gormDb, err := gorm.Open(dbDialector, &gorm.Config{
 		SkipDefaultTransaction: true,
 		PrepareStmt:            true,
-		Logger:                 redefineLog(sqlType), //拦截、接管 gorm v2 自带日志
+		Logger:                 redefineLog(sqlType),
 	})
 	if err != nil {
 		//gorm 数据库驱动初始化失败
@@ -47,6 +54,7 @@ func getDbDialector(sqlType, readWrite string, dbConf ...ConfigParams) (gorm.Dia
 	var dbDialector gorm.Dialector
 	dsn := getDsn(sqlType, readWrite, dbConf...)
 	switch strings.ToLower(sqlType) {
+
 	case "mysql":
 		dbDialector = mysql.Open(dsn)
 	//case "postgres"
@@ -112,15 +120,20 @@ func getDsn(sqlType, readWrite string, dbConf ...ConfigParams) string {
 	case "mysql":
 		return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=false&loc=Local", User, Pass, Host, Port, DataBase, Charset)
 	case "sqlserver", "mssql":
-		return fmt.Sprintf("server=%s;port=%d;database=%s;user id=%s;password=%s;encrypt=disable", Host, Port, DataBase, User, Pass)
+		return fmt.Sprintf("server=%s;port=%d;database=%s;UserModel id=%s;password=%s;encrypt=disable", Host, Port, DataBase, User, Pass)
 	case "postgresql", "postgre", "postgres":
-		return fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=disable TimeZone=Asia/Shanghai", Host, Port, DataBase, User, Pass)
+		return fmt.Sprintf("host=%s port=%d dbname=%s UserModel=%s password=%s sslmode=disable TimeZone=Asia/Shanghai", Host, Port, DataBase, User, Pass)
 	}
 	return ""
 }
-
 func redefineLog(sqlType string) gormLog.Interface {
 
-	createCustomGormLog(sqlType)
-
+	return createCustomGormLog(sqlType,
+		SetInfoStrFormat("[info] %s\n"),
+		SetInfoStrFormat("[info] %s\n"),
+		SetWarnStrFormat("[warn] %s\n"),
+		SetErrStrFormat("[error] %s\n"),
+		SetTraceStrFormat("[traceStr] %s [%.3fms] [rows:%v] %s\n"),
+		SetTraceWarnStrFormat("[traceWarn] %s %s [%.3fms] [rows:%v] %s\n"),
+		SetTraceErrStrFormat("[traceErr] %s %s [%.3fms] [rows:%v] %s\n"))
 }

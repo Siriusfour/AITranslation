@@ -1,7 +1,6 @@
 package container
 
 import (
-	"AITranslatio/Global"
 	"log"
 	"strings"
 	"sync"
@@ -11,7 +10,7 @@ var containerMap sync.Map
 
 type Container struct{}
 
-// CreateContainersFactory 创建一个容器工厂
+// CreateContainersFactory 创建一个容器工厂（interface）
 func CreateContainersFactory() *Container {
 	return &Container{}
 
@@ -23,9 +22,8 @@ func (c *Container) Set(key string, value interface{}) (res bool) {
 		containerMap.Store(key, value)
 		res = true
 	} else {
-		log.Fatal(Global.ErrorCasbinCanNotUseDbPtr + ",请解决键名重复问题,相关键：" + key)
+		log.Fatal("键名重复,请解决键名重复问题,相关键：" + key)
 	}
-
 	return
 }
 

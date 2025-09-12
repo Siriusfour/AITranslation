@@ -1,25 +1,18 @@
 package Router
 
 import (
-	"AITranslatio/HTTP/Controller/BaseControll"
 	"github.com/gin-gonic/gin"
 )
 
 func InitRouter(r *gin.Engine) {
 
 	//路由分组
-	rgBase := r.Group("Attendance/Api/BaseControll")
+	rgBase := r.Group("/Note/Api")        // 基础crud业务的路由组
+	rgNotAuth := rgBase.Group("/NotAuth") // 不需要token验证的路由组
+	rgAuth := rgBase.Group("/Auth")       // token 相关操作的路由组
+	rgFile := rgBase.Group("/File")       //资源操作相关路由组
+	rgCaptcha := rgBase.Group("/Captcha") // 验证码 相关操作的路由组
 
 	//注册所有组别的路由
-	initBasePaltformRouter(rgBase)
-}
-
-func initBasePaltformRouter(rgBase *gin.RouterGroup) {
-
-	BaseController := BaseControll.NewBaseController()
-	//AdminController:=AdminController.NewAdminController()
-
-	Init_Base_Route(rgBase, BaseController)
-	//Init_Admin_Route(rgAdmin, AdminController)
 
 }

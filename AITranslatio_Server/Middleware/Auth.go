@@ -1,12 +1,12 @@
 package Middleware
 
 import (
-	"AITranslatio/HTTP/reposen"
-	"AITranslatio/Utils"
+	"AITranslatio/Utils/token"
 	"github.com/gin-gonic/gin"
 	"strings"
 )
 
+// token校验
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
@@ -24,14 +24,8 @@ func Auth() gin.HandlerFunc {
 
 		token := c.GetHeader("Authorization")
 
-		err := Utils.Verify(token)
+		err := token.Verify(token)
 		if err != nil {
-
-			reposen.Fail(c, reposen.Response{
-				Code:    1001,
-				Message: "认证失败：" + err.Error(),
-			})
-
 			return
 		}
 		c.Next()

@@ -1,40 +1,24 @@
 package bootstrap
 
-func InitDB(DB_Type int) {
-	//LogMode := logger.Info
-	//if !viper.GetBool("Mode.develop") {
-	//	LogMode = logger.Error
-	//}
-	//db, err := gorm.Open(mysql.Open(viper.GetString("DB.DNS")), &gorm.Config{
-	//	NamingStrategy: schema.NamingStrategy{
-	//		SingularTable: true,
-	//		TablePrefix:   "sys_",
-	//	},
-	//	Logger: logger.Default.LogMode(LogMode),
-	//})
-	//
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//SqlDB, _ := db.DB()
-	//SqlDB.SetMaxIdleConns(viper.GetInt("DB.MaxIdleConns"))
-	//SqlDB.SetMaxOpenConns(viper.GetInt("DB.MaxOpenConns"))
-	//SqlDB.SetConnMaxLifetime(time.Hour)
-	//
-	////将数据库的表与user对象同步，有则修改，没有创建
-	//err = db.AutoMigrate(&user.User{}, &Model.Note{}, &Model.Branch{}, &Model.Commit{}, &Model.Team{}, &Model.Members{}, &Model.JoinTeamApplication{})
-	//if err != nil {
-	//	panic(err)
-	//}
-	//return db, nil
+import "AITranslatio/Global"
+import "AITranslatio/DataBase"
 
-	//初始化MySQL
-	if DB_Type == 0 {
+func InitDB() {
 
-		//初始化PostgreSQL
-	} else {
+	if Global.DB_Config.GetInt("IsInitGlobalGormMysql") == 1 {
+		MySQL_Client, err := DataBase.InitMySQL_Client()
+		if err != nil {
+			return
+		}
+		Global.MySQL_Client = MySQL_Client
+	}
 
+	if Global.DB_Config.GetInt("IsInitGlobalGormPostgreSql") == 1 {
+		PostgreSQL_Client, err := DataBase.InitPostgreSQL_Client()
+		if err != nil {
+			return
+		}
+		Global.PostgreSQL_Client = PostgreSQL_Client
 	}
 
 }

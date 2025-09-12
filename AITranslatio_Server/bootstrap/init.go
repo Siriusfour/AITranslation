@@ -1,14 +1,15 @@
 package bootstrap
 
 import (
-	"AITranslatio/Global"
-	"AITranslatio/HTTP/validator/comon"
+	"AITranslatio/app/http/validator/comon"
 	"flag"
 )
 
 func init() {
 
-	//1.检查项目必须的非编译目录是否存在，避免编译后调用的时候缺失相关目录，接收命令行启动参数
+	//todo 0.检查项目必须的非编译目录是否存在，避免编译后调用的时候缺失相关目录，
+
+	//1. 接收命令行启动参数
 	configType := *(flag.String("config-type", "yaml", "type of config file (e.g., yaml)"))
 	configFile := *(flag.String("config", "default.yml", "path to config file"))
 	flag.Parse()
@@ -20,7 +21,7 @@ func init() {
 	InitConfig(configType, configFile)
 
 	//初始化SQL数据库
-	InitDB(Global.Config.GetInt("DB.Type"))
+	InitDB()
 
 	//初始化日志组件
 	InitLogger()

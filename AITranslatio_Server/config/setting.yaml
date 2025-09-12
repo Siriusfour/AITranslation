@@ -22,9 +22,9 @@ grpc:
   DNS: "127.0.0.1:5001"        #192.168.3.205
 
 
-Login:
-  AkOutTime: 72000  #2小时
-  RkOutTime: 2592000 #3天
+Token:
+  AkOutTime: 3     #3小时
+  RkOutTime: 3*24   #3天
 
 
 
