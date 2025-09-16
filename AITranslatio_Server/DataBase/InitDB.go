@@ -2,6 +2,7 @@ package DataBase
 
 import (
 	"AITranslatio/Global"
+	"AITranslatio/Global/CustomErrors"
 	"errors"
 	"fmt"
 	"go.uber.org/zap"
@@ -33,7 +34,7 @@ func GetSqlDriver(sqlType string, readDbIsOpen int, dbConf ...ConfigParams) (*go
 
 	var dbDialector gorm.Dialector
 	if val, err := getDbDialector(sqlType, "Write", dbConf...); err != nil {
-		Global.Logger.Error(Global.ErrorsDialectorDbInitFail+sqlType, zap.Error(err))
+		Global.Logger.Error(CustomErrors.ErrorsDialectorDbInitFail+sqlType, zap.Error(err))
 	} else {
 		dbDialector = val
 	}
@@ -60,7 +61,7 @@ func getDbDialector(sqlType, readWrite string, dbConf ...ConfigParams) (gorm.Dia
 	//case "postgres"
 
 	default:
-		return nil, errors.New(Global.ErrorsDbDriverNotExists + sqlType)
+		return nil, errors.New(CustomErrors.ErrorsDbDriverNotExists + sqlType)
 	}
 	return dbDialector, nil
 }

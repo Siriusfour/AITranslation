@@ -1,21 +1,23 @@
 package comon
 
 import (
-	"AITranslatio/Global"
+	"AITranslatio/Global/Consts"
 	"AITranslatio/app/core/container"
-	validators2 "AITranslatio/app/http/validator/validators"
+	validators "AITranslatio/app/http/validator/validators"
 )
 
-func WebRegisterValidator() {
+func RegisterValidator() {
 
 	containers := container.CreateContainersFactory()
 
 	var key string
 
-	key = Global.ValidatorPrefix + "login"
-	containers.Set(key, validators2.Login{})
+	key = Consts.ValidatorPrefix + "Login"
+	containers.Set(key, validators.LoginDTO{})
 
-	key = Global.ValidatorPrefix + "register"
-	containers.Set(key, validators2.Register{})
+	key = Consts.ValidatorPrefix + "Register"
+	containers.Set(key, validators.RegisterDTO{})
 
+	key = Consts.ValidatorPrefix + "WebAuthn"
+	//containers.Set(key, validators.WebAuthn{})
 }

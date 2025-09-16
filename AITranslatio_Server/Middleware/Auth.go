@@ -1,7 +1,7 @@
 package Middleware
 
 import (
-	"AITranslatio/Utils/token"
+	tokenUtil "AITranslatio/Utils/token"
 	"github.com/gin-gonic/gin"
 	"strings"
 )
@@ -24,7 +24,7 @@ func Auth() gin.HandlerFunc {
 
 		token := c.GetHeader("Authorization")
 
-		err := token.Verify(token)
+		err := tokenUtil.Verify(token)
 		if err != nil {
 			return
 		}

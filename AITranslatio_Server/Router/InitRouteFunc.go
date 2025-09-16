@@ -1,26 +1,32 @@
 package Router
 
 import (
-	"AITranslatio/app/http/Controller/NotAuth"
+	"AITranslatio/Global/Consts"
+	"AITranslatio/app/http/validator/comon/factory"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
-func InitBaseRoute(rgBase *gin.RouterGroup, BaseController *NotAuth.BaseController) {
-	rgBase.POST("API/Login", BaseController.Login)
-	rgBase.POST("API/CreateNoteProgramming", BaseController.CreateProgramming)
-	rgBase.POST("API/CreateBranch", BaseController.CreateBranch)
-	rgBase.POST("API/CreateCommit", BaseController.CreateCommit)
-	rgBase.GET("API/GetProgramming", BaseController.Programming)
-	rgBase.GET("API/ChangeCommit", BaseController.ChangeCommit)
-	rgBase.POST("API/CreateTeam", BaseController.CreateTeam) //创建一个团队
-	rgBase.POST("API/JoinTeam", BaseController.JoinTeam)     //申请加入一个团队
-	rgBase.GET("API/SSE", BaseController.CreateSSE)          //创建SSE链接，
+func InitNotAuthRoute(rg *gin.RouterGroup) {
+	rg.POST("/Login", factory.Create(Consts.ValidatorPrefix+"Login"))
+	rg.POST("/Register", factory.Create(Consts.ValidatorPrefix+"Register"))
+	//rg.POST("/WebAuthn", factory.Create(Consts.ValidatorPrefix+"login"))
+	rg.POST("/", func(context *gin.Context) {
+		context.String(http.StatusOK, "HelloWorld,这是后端模块")
+	})
 }
 
 func InitAuthRoute(rgBase *gin.RouterGroup) {}
 
-func InitNotAuthRoute(rgBase *gin.RouterGroup) {}
-
 func InitFilesRoute(rgBase *gin.RouterGroup) {}
 
 func InitCaptchaRoute(rgBase *gin.RouterGroup) {}
+
+//rg.POST("/CreateNoteProgramming", Controller.CreateProgramming)
+//rg.POST("/CreateBranch", Controller.CreateBranch)
+//rg.POST("/CreateCommit", Controller.CreateCommit)
+//rg.GET("/GetProgramming", Controller.Programming)
+//rg.GET("/ChangeCommit", Controller.ChangeCommit)
+//rg.POST("/CreateTeam", Controller.CreateTeam) //创建一个团队
+//rg.POST("/JoinTeam", Controller.JoinTeam)     //申请加入一个团队
+//rg.GET("/SSE", Controller.CreateSSE)

@@ -2,15 +2,12 @@ package bootstrap
 
 import (
 	"AITranslatio/Global"
-	"AITranslatio/config/interf"
 	"AITranslatio/config/json"
 	"AITranslatio/config/yaml"
 	"fmt"
 )
 
 func InitConfig(configTYpe string, filename string) {
-
-	var config interf.ConfigInterface
 
 	switch configTYpe {
 	case "ini":
@@ -23,7 +20,7 @@ func InitConfig(configTYpe string, filename string) {
 		Global.Config = y.CreateConfig(filename)
 
 		//初始化DB文件
-		Global.DB_Config = config.Clone("DB.yaml")
+		Global.DB_Config = Global.Config.Clone("DB.yaml")
 
 	case "json":
 		fmt.Println("====json====")

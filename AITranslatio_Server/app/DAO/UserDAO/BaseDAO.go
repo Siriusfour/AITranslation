@@ -18,7 +18,7 @@ func CreateDAOfactory(sqlType string) *UserDAO {
 }
 
 // 通过密码登录
-func (DAO *UserDAO) LoginByPassword(UserID int, password string) error {
+func (DAO *UserDAO) LoginByPassword(UserID int64, password string) error {
 
 	var UserInfo UserModel.User
 
@@ -33,4 +33,13 @@ func (DAO *UserDAO) LoginByPassword(UserID int, password string) error {
 
 	return nil
 
+}
+
+func (DAO *UserDAO) LoginByAccessToken(AccessToken string) error {
+	return nil
+
+}
+
+func (DAO *UserDAO) LoginByRefreshToken(RefreshToken string) error {
+	return nil
 }

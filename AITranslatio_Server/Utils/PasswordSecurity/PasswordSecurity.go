@@ -1,7 +1,7 @@
 package PasswordSecurity
 
 import (
-	"AITranslatio/Global"
+	"AITranslatio/Global/CustomErrors"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
@@ -30,12 +30,12 @@ func (Generator *PasswordGenerator) GenerateSalt(length int) (string, error) {
 func (Generator *PasswordGenerator) HashPasswordWithSalt(Password string, Salt string) (string, error) {
 
 	if Salt == "" || Password == "" {
-		return "", errors.New(Global.ErrorPasswordOrSaltIsEmpty)
+		return "", errors.New(CustomErrors.ErrorPasswordOrSaltIsEmpty)
 	}
 
 	HashPasswordWithSalt, err := bcrypt.GenerateFromPassword([]byte(Password+Salt), Generator.cost)
 	if err != nil {
-		return "", errors.New(Global.ErrorPasswordHashIsFail + err.Error())
+		return "", errors.New(CustomErrors.ErrorPasswordHashIsFail + err.Error())
 	}
 
 	return string(HashPasswordWithSalt), nil

@@ -1,6 +1,16 @@
 package NotAuthDTO
 
 type RegisterDTO struct {
-	UserName string
-	Password string
+	UserID    int64
+	UserName  string
+	Password  string
+	Salt      string
+	Email     string
+	EamilCode string
+	PublicKey string
+
+	//验证webAuthn随机数的数据
+	Verify    string
+	Timestamp int64
+	Domain    string
 }

@@ -1,7 +1,7 @@
 package interf
 
 import (
-	"AITranslatio/Global"
+	"AITranslatio/Global/Consts"
 	"AITranslatio/app/core/container"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
@@ -49,7 +49,7 @@ func (Confige *ConfigFile) ConfigFileChangeListen() {
 func (Config *ConfigFile) Clone(fileName string) ConfigInterface {
 
 	CloneConfigFile := *Config
-	CloneConfigFile.Viper.SetConfigFile(fileName)
+	CloneConfigFile.Viper.SetConfigName(fileName)
 	CloneConfigFile.Mu = &sync.Mutex{}
 	if err := CloneConfigFile.Viper.ReadInConfig(); err != nil {
 		log.Fatal("clone config is fail" + err.Error())
@@ -60,7 +60,7 @@ func (Config *ConfigFile) Clone(fileName string) ConfigInterface {
 
 func (Confige *ConfigFile) Get(keyName string) interface{} {
 	if Confige.KeyIsExistsCache(keyName) {
-		value := configContainer.Get(Global.ConfigKeyPrefix + keyName)
+		value := configContainer.Get(Consts.ConfigKeyPrefix + keyName)
 		return value
 	}
 
@@ -163,7 +163,7 @@ func (y *ConfigFile) GetStringSlice(keyName string) []string {
 
 func (Confige *ConfigFile) KeyIsExistsCache(keyName string) bool {
 
-	_, ok := configContainer.KeyIsExists(Global.ConfigKeyPrefix + keyName)
+	_, ok := configContainer.KeyIsExists(Consts.ConfigKeyPrefix + keyName)
 
 	if ok {
 		return true
@@ -179,11 +179,11 @@ func (Confige *ConfigFile) Cache(keyName string, value interface{}) bool {
 	//如果不存在于SMap，则调用set写入该key-value
 	ok := Confige.KeyIsExistsCache(keyName)
 	if !ok {
-		configContainer.Set(Global.ConfigKeyPrefix+keyName, value)
+		configContainer.Set(Consts.ConfigKeyPrefix+keyName, value)
 	}
 	return true
 }
 
 func (Confige *ConfigFile) clearCache() {
-	configContainer.FuzzyDelete(Global.ConfigKeyPrefix)
+	configContainer.FuzzyDelete(Consts.ConfigKeyPrefix)
 }

@@ -7,7 +7,7 @@ type TranslationDTO struct {
 type LoginDTO struct {
 	Auth
 	UserID   int    `json:"UserID" binding:"required"`
-	Password string `json:"PasswordSecurity" binding:"required"`
+	Password string `json:"PasswordSecurity"`
 }
 
 type Auth struct {

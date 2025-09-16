@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-var Logger *zap.SugaredLogger
+var Logger *zap.Logger
 var MySQL_Client *gorm.DB
 var PostgreSQL_Client *gorm.DB
 var SQLserver_Client *gorm.DB

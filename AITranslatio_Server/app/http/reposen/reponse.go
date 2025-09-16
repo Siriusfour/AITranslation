@@ -1,7 +1,8 @@
 package reposen
 
 import (
-	"AITranslatio/Global"
+	"AITranslatio/Global/Consts"
+	"AITranslatio/Global/CustomErrors"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
@@ -38,7 +39,7 @@ type BaseController struct {
 }
 
 // HttpResponse 设置响应的 JSON 数据和 http 状态码，并向客户端返回默认的状态码
-func ReturnResponse(ctx *gin.Context, HttpCode int, ServerCode int, Message string, Data interface{}) {
+func ReturnResponse(ctx *gin.Context, HttpCode int, ServerCode int, Message string, Data ...interface{}) {
 	ctx.JSON(HttpCode, Response{
 		ServerCode,
 		Message,
@@ -59,21 +60,21 @@ func OK(context *gin.Context, data interface{}, Message string) {
 
 // ErrorSystem 服务器代码错误
 func ErrorSystem(context *gin.Context, data interface{}, Message string) {
-	ReturnResponse(context, http.StatusInternalServerError, Global.ServerOccurredErrorCode, Global.ServerOccurredErrorMsg+Message, data)
+	ReturnResponse(context, http.StatusInternalServerError, Consts.ServerOccurredErrorCode, CustomErrors.ServerOccurredErrorMsg+Message, data)
 }
 
 // TokenErrorParam token解析失败
 func TokenErrorParam(context *gin.Context, data interface{}, Message string, wrongParam interface{}) {
-	ReturnResponse(context, http.StatusUnauthorized, Global.ValidatorParamsCheckFailCode, Global.ValidatorParamsCheckFailMsg, wrongParam)
+	ReturnResponse(context, http.StatusUnauthorized, Consts.ValidatorParamsCheckFailCode, CustomErrors.ValidatorParamsCheckFailMsg, wrongParam)
 }
 
 // ErrorTokenAuthFail token权限校验失败
 func ErrorTokenAuthFail(c *gin.Context) {
-	ReturnResponse(c, http.StatusUnauthorized, http.StatusUnauthorized, Global.ErrorsNoAuthorization, "")
+	ReturnResponse(c, http.StatusUnauthorized, http.StatusUnauthorized, CustomErrors.ErrorsNoAuthorization, "")
 }
 
 // ErrorParam 参数校验错误
 func ErrorParam(c *gin.Context, wrongParam interface{}) {
-	ReturnResponse(c, http.StatusBadRequest, Global.ValidatorParamsCheckFailCode, Global.ValidatorParamsCheckFailMsg, wrongParam)
+	ReturnResponse(c, http.StatusBadRequest, Consts.ValidatorParamsCheckFailCode, CustomErrors.ValidatorParamsCheckFailMsg)
 
 }

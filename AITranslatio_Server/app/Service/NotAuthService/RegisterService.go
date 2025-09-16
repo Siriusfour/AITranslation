@@ -2,6 +2,7 @@ package NotAuthService
 
 import (
 	"AITranslatio/Global"
+	"AITranslatio/Global/CustomErrors"
 	"AITranslatio/Utils/PasswordSecurity"
 	"AITranslatio/Utils/SnowFlak"
 	"AITranslatio/Utils/token"
@@ -10,9 +11,20 @@ import (
 	"errors"
 )
 
-func (Service *NotAuthService) Register(UserName, Email, EmailCode, Password string) (*NotAuthDTO.Auth, error) {
+func (Service *NotAuthService) Register(DTO *NotAuthDTO.RegisterDTO) (*NotAuthDTO.Auth, error) {
 
 	// TODO 1.验证邮箱验证码是否有效（是否存在于redis）
+
+	// TODO 2.验证随机树是否有效 （是否存在于redis）
+	//var Challenge = &WebAuthn.Challenge{
+	//	Verify:    DTO.Verify,
+	//	Timestamp: DTO.Timestamp,
+	//	Domain:    DTO.Domain,
+	//}
+	//
+	//if ok, err := WebAuthn.VerifyChallenge(Challenge); err != nil || !ok {
+	//	return nil, err
+	//}
 
 	p := PasswordSecurity.CreatePasswordGeneratorFactory(12)
 
@@ -23,7 +35,7 @@ func (Service *NotAuthService) Register(UserName, Email, EmailCode, Password str
 	}
 
 	//password+salt进行bcrypt加密
-	withSalt, err := p.HashPasswordWithSalt(Password, salt)
+	HashPasswordWithSalt, err := p.HashPasswordWithSalt(DTO.Password, salt)
 	if err != nil {
 		return nil, err
 	}
@@ -31,10 +43,15 @@ func (Service *NotAuthService) Register(UserName, Email, EmailCode, Password str
 	//调用雪花算法生成唯一UserID
 	UserID := SnowFlak.CreateSnowflakeFactory().GetId()
 
+	//补完DTO
+	DTO.UserID = UserID
+	DTO.Salt = salt
+	DTO.Password = HashPasswordWithSalt
+
 	//调用DAO存储在库中
-	err = UserDAO.CreateDAOfactory("mysql").Register(UserID, UserName, Email, EmailCode, withSalt, salt)
+	err = UserDAO.CreateDAOfactory("mysql").Register(DTO)
 	if err != nil {
-		return nil, errors.New(Global.ErrorRegisterIsFail + err.Error())
+		return nil, errors.New(CustomErrors.ErrorRegisterIsFail + err.Error())
 	}
 
 	//生成token

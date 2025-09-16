@@ -1,23 +1,21 @@
 package UserDAO
 
 import (
-	"AITranslatio/Global"
-	"AITranslatio/Utils/token"
 	"AITranslatio/app/Model/UserModel"
 	"AITranslatio/app/http/DTO/NotAuthDTO"
-	"errors"
 	"gorm.io/gorm"
 )
 
-func (DAO *UserDAO) Register(UserID int64, UserName, Email, EmailCode, HashPassword, Salt string) error {
+func (DAO *UserDAO) Register(DTO *NotAuthDTO.RegisterDTO) error {
 
 	RegisterData := &UserModel.User{
-		UserID:   UserID,
-		Nickname: UserName,
-		Password: HashPassword,
-		Salt:     Salt,
-		Email:    Email,
-		Model:    gorm.Model{},
+		UserID:    DTO.UserID,
+		Nickname:  DTO.UserName,
+		Password:  DTO.Password,
+		Salt:      DTO.Salt,
+		Email:     DTO.Email,
+		Model:     gorm.Model{},
+		PublicKey: DTO.PublicKey,
 	}
 
 	//在数据库增加用户
@@ -26,4 +24,5 @@ func (DAO *UserDAO) Register(UserID int64, UserName, Email, EmailCode, HashPassw
 		return result.Error
 	}
 
+	return nil
 }

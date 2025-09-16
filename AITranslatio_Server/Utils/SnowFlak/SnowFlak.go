@@ -2,6 +2,7 @@ package SnowFlak
 
 import (
 	"AITranslatio/Global"
+	"AITranslatio/Global/Consts"
 	"go.uber.org/zap"
 	"sync"
 	"time"
@@ -33,7 +34,7 @@ func (s *SnowFlake) GetId() int64 {
 
 	//同毫秒内发号
 	if now == s.timestamp {
-		s.sequence = (s.sequence + 1) & Global.SequenceMask
+		s.sequence = (s.sequence + 1) & Consts.SequenceMask
 		if s.sequence == 0 {
 			now = waitNextMillis(s.timestamp)
 		}
@@ -55,7 +56,7 @@ func (s *SnowFlake) GetId() int64 {
 			// 小回拨：沿用 lastTs 作为逻辑时间，并推进序列
 			Global.Logger.Warn("snowflake clock rollback (minor), using logical time", zap.Int64("diff_ms", diff), zap.Int64("last_ts", s.timestamp))
 			now = s.timestamp
-			s.sequence = (s.sequence + 1) & Global.SequenceMask
+			s.sequence = (s.sequence + 1) & Consts.SequenceMask
 			if s.sequence == 0 {
 				now = waitNextMillis(s.timestamp)
 			}
@@ -69,7 +70,7 @@ func (s *SnowFlake) GetId() int64 {
 
 	s.timestamp = now
 
-	r := (now-Global.StartTimeStamp)<<Global.TimestampShift | (s.machineId << Global.MachineIdShift) | (s.sequence)
+	r := (now-Consts.StartTimeStamp)<<Consts.TimestampShift | (s.machineId << Consts.MachineIdShift) | (s.sequence)
 
 	return r
 }

@@ -11,11 +11,11 @@ func init() {
 
 	//1. 接收命令行启动参数
 	configType := *(flag.String("config-type", "yaml", "type of config file (e.g., yaml)"))
-	configFile := *(flag.String("config", "default.yml", "path to config file"))
+	configFile := *(flag.String("config", "setting.yaml", "path to config file"))
 	flag.Parse()
 
 	//2.注册表单校验容器
-	comon.WebRegisterValidator()
+	comon.RegisterValidator()
 
 	//3.初始化config文件,DBconfig文件
 	InitConfig(configType, configFile)

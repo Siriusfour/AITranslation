@@ -2,6 +2,7 @@ package NotAuthService
 
 import (
 	"AITranslatio/Global"
+	"AITranslatio/Global/CustomErrors"
 	"AITranslatio/Utils/token"
 	"AITranslatio/app/DAO/UserDAO"
 	"AITranslatio/app/http/DTO/NotAuthDTO"
@@ -22,7 +23,7 @@ func CreateNotAuthService() *NotAuthService {
 
 type NotAuthService struct{}
 
-func (Service *NotAuthService) LoginByPassWord(UserID int, PassWord string) (error, *NotAuthDTO.Auth) {
+func (Service *NotAuthService) LoginByPassWord(UserID int64, PassWord string) (error, *NotAuthDTO.Auth) {
 
 	//验证PW,成功的话刷新内存里面的AK,RK，并向客户端返回新的AK.RK
 	//查数据库校验PassWord
@@ -37,7 +38,7 @@ func (Service *NotAuthService) LoginByPassWord(UserID int, PassWord string) (err
 	RefreshToken, errRk := token.CreateTokenFactory(Global.Config.GetInt("Token.AkOutTime")).GeneratedToken(UserID)
 
 	if errAk != nil && errRk != nil {
-		return errors.New(Global.ErrorGeneratedTokenIsFail + ":" + errAk.Error() + "," + errRk.Error()), nil
+		return errors.New(CustomErrors.ErrorGeneratedTokenIsFail + ":" + errAk.Error() + "," + errRk.Error()), nil
 	}
 
 	TokenInfo := &token.Token{
@@ -46,7 +47,7 @@ func (Service *NotAuthService) LoginByPassWord(UserID int, PassWord string) (err
 		RegisteredTime: Global.DataFormt, //注册时间
 	}
 
-	err = Global.RedisClient.HMSet(context.Background(), "userID_"+strconv.Itoa(UserID), TokenInfo).Err()
+	err = Global.RedisClient.HMSet(context.Background(), "userID_"+strconv.FormatInt(UserID, 10), TokenInfo).Err()
 	if err != nil {
 		return err, nil
 	}

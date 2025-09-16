@@ -2,6 +2,7 @@ package token
 
 import (
 	"AITranslatio/Global"
+	"AITranslatio/Global/CustomErrors"
 	"context"
 	"errors"
 	"fmt"
@@ -62,12 +63,12 @@ func ParseToken(PKey []byte, VerifyToken string) error {
 
 	//0  1
 	if !token.Valid {
-		return errors.New(Global.ErrorsTokenInvalid)
+		return errors.New(CustomErrors.ErrorsTokenInvalid)
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return errors.New(Global.ErrorAssert)
+		return errors.New(CustomErrors.ErrorAssert)
 	}
 
 	//2
@@ -75,11 +76,11 @@ func ParseToken(PKey []byte, VerifyToken string) error {
 	userID := int(claims["UserID"].(float64))
 	err = Global.RedisClient.HGetAll(context.Background(), "userID_"+strconv.Itoa(userID)).Scan(&TokenFromRedis)
 	if err != nil {
-		return errors.New(Global.ErrorRedisGetDATA + ":" + err.Error())
+		return errors.New(CustomErrors.ErrorRedisGetDATA + ":" + err.Error())
 	}
 
 	if TokenFromRedis.RefreshToken == "" && TokenFromRedis.AccessToken == "" {
-		return errors.New(Global.ErrorsTokenNotActiveYet)
+		return errors.New(CustomErrors.ErrorsTokenNotActiveYet)
 	}
 
 	//3

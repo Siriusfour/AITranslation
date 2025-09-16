@@ -1,13 +1,12 @@
 package validators
 
 type BaseField struct {
-	UserID       int
-	PassWord     string
-	AccessToken  string
-	RefreshToken string
+	UserID   int
+	PassWord string
+	Auth
 }
 
 type Auth struct {
-	AccessToken  string
-	RefreshToken string
+	AccessToken  string `json:"AccessToken"`
+	RefreshToken string `json:"RefreshToken"`
 }

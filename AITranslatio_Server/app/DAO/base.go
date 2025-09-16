@@ -2,6 +2,8 @@ package DAO
 
 import (
 	"AITranslatio/Global"
+	"AITranslatio/Global/CustomErrors"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"strings"
 )
@@ -15,14 +17,14 @@ func ChooseDB_Conn(sqlType string) *gorm.DB {
 	case "mysql":
 
 		if Global.MySQL_Client == nil {
-			Global.Logger.Error(Global.ErrorsGormNotInitGlobalPointer, sqlType)
+			Global.Logger.Error(CustomErrors.ErrorsGormNotInitGlobalPointer, zap.String("sqlType", sqlType))
 		}
 
 		DB_Client = Global.MySQL_Client
 
 	case "postgressql":
 		if Global.PostgreSQL_Client == nil {
-			Global.Logger.Error(Global.ErrorsGormNotInitGlobalPointer, sqlType)
+			Global.Logger.Error(CustomErrors.ErrorsGormNotInitGlobalPointer, zap.String("sqlType", sqlType))
 		}
 
 		DB_Client = Global.PostgreSQL_Client

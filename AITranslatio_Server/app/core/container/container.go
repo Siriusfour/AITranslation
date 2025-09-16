@@ -17,9 +17,9 @@ func CreateContainersFactory() *Container {
 }
 
 // Set  1.设置
-func (c *Container) Set(key string, value interface{}) (res bool) {
-	if value, exists := c.KeyIsExists(key); exists == false {
-		containerMap.Store(key, value)
+func (c *Container) Set(key string, fn interface{}) (res bool) {
+	if _, exists := c.KeyIsExists(key); exists == false {
+		containerMap.Store(key, fn)
 		res = true
 	} else {
 		log.Fatal("键名重复,请解决键名重复问题,相关键：" + key)

@@ -16,7 +16,7 @@
 {"level":"INFO","time":"2025-08-06 11:36:34","msg":"正在开启，监听端口: 7950"}
 {"level":"INFO","time":"2025-08-06 11:37:46","msg":"正在开启，监听端口: 7950"}
 {"level":"INFO","time":"2025-08-06 11:38:15","msg":"正在开启，监听端口: 7950"}
-{"level":"ERROR","time":"2025-08-06 11:38:41","msg":"listen：7950，停止服务失败：context deadline exceeded"}
+{"level":"ERROR","time":"2025-08-06 11:38:41","msg":"listen：7950，停止服务失败：RegisterContext deadline exceeded"}
 {"level":"INFO","time":"2025-08-06 11:38:41","msg":"服务关闭: 7950"}
 {"level":"INFO","time":"2025-08-06 11:38:50","msg":"正在开启，监听端口: 7950"}
 {"level":"INFO","time":"2025-08-06 11:39:11","msg":"服务关闭: 7950"}
