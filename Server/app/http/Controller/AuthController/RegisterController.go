@@ -1,4 +1,4 @@
-package Auth
+package AuthController
 
 import (
 	"AITranslatio/Global/Consts"

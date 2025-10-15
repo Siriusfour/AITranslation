@@ -2,7 +2,7 @@ package GinRelease
 
 import (
 	"AITranslatio/Global"
-	"AITranslatio/Global/CustomErrors"
+	"AITranslatio/Global/MyErrors"
 	"AITranslatio/app/http/reposen"
 	"errors"
 	"fmt"
@@ -28,7 +28,7 @@ func CustomRecovery() gin.HandlerFunc {
 	return gin.RecoveryWithWriter(DefaultErrorWriter, func(c *gin.Context, err interface{}) {
 		// 这里针对发生的panic等异常进行统一响应即可
 		// 这里的 err 数据类型为 ：runtime.boundsError  ，需要转为普通数据类型才可以输出
-		reposen.ErrorSystem(c, fmt.Sprintf("%s", err))
+		reposen.ErrorSystem(c, fmt.Errorf("CustomRecovery:%w", err))
 	})
 }
 
@@ -38,6 +38,6 @@ type PanicExceptionRecord struct{}
 func (p *PanicExceptionRecord) Write(b []byte) (n int, err error) {
 	errStr := string(b)
 	err = errors.New(errStr)
-	Global.Logger.Error(CustomErrors.ServerOccurredErrorMsg, zap.String("errStrace", errStr))
+	Global.Logger.Error(MyErrors.ServerOccurredErrorMsg, zap.String("errStrace", errStr))
 	return len(errStr), err
 }

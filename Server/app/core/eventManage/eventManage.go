@@ -2,7 +2,7 @@ package eventManage
 
 import (
 	"AITranslatio/Global"
-	"AITranslatio/Global/CustomErrors"
+	"AITranslatio/Global/MyErrors"
 	"strings"
 	"sync"
 )
@@ -29,7 +29,7 @@ func (e *eventManage) Set(key string, value interface{}) bool {
 
 	if _, exist := e.Get(key); exist == true {
 
-		Global.Logger.Error(CustomErrors.ErrorsFuncEventAlreadyExists, "keyName:"+key)
+		Global.Logger.Error(MyErrors.ErrorsFuncEventAlreadyExists, "keyName:"+key)
 
 		return false
 
@@ -58,11 +58,11 @@ func (e *eventManage) Call(key string, arg ...interface{}) {
 		if fn, ok := fn.(func(...interface{})); ok {
 			fn(arg...)
 		} else {
-			Global.Logger.Error(CustomErrors.ErrorsFuncEventNotCall, "key:"+key+"-相关函数无法调用")
+			Global.Logger.Error(MyErrors.ErrorsFuncEventNotCall, "key:"+key+"-相关函数无法调用")
 		}
 
 	} else {
-		Global.Logger.Error(CustomErrors.ErrorsFuncEventNotRegister, "key:"+key+"-相关函数未注册")
+		Global.Logger.Error(MyErrors.ErrorsFuncEventNotRegister, "key:"+key+"-相关函数未注册")
 
 	}
 

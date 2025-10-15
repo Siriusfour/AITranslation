@@ -1,13 +1,21 @@
 Mode:
-  Develop: false
+  Develop : true
+  Product : false  #production
   DoMain : "suis.com"
 
 HttpServer:
   Port: ":3008"
+  TrustProxies: #设置gin可以信任的代理服务器(例如 nginx 前置代理服务器),详情参见文档：https://www.yuque.com/xiaofensinixidaouxiang/bkfhct/vmobe7
+    IsOpen: 0                       # 可选值（0 或者 1）,如果 go 服务是被 nginx 代理，建议该值设置为 1，将 nginx 代理及机器的ip添加到 ProxyServerList 列表
+    # nginx 代理服务器ip地址
+    ProxyServerList:
+      - "192.168.10.1"
+      - "192.168.10.2"
+
+
 
 Logs:
   Path: "/Storage/Logs/Gin.log"                  #设置 gin 框架的接口访问日志
-     #设置GoSkeleton项目骨架运行时日志文件名，注意该名称不要与上一条重复 ,避免和 gin 框架的日志掺杂一起，造成混乱。
   TextFormat: "json"                                #记录日志的格式，参数选项：console、json ， console 表示一般的文本格式
   TimePrecision: "millisecond"                         #记录日志时，相关的时间精度，该参数选项：second  、 millisecond ， 分别表示 秒 和 毫秒 ,默认为毫秒级别
   MaxSize: 10                                           #每个日志的最大尺寸(以MB为单位）， 超过该值，系统将会自动进行切割
@@ -16,35 +24,29 @@ Logs:
   Compress: false                                      #日志备份时，是否进行压缩
 
 
-
-key:
-  PrivateKey: "example_Key"
-  Access_Token_OutTime: 7200    #2小时
-  Refresh_Token_OutTime: 60480  #7天
-
 WebAuthn :
   rp :
     name: "Suis笔记小说共享网"
-    ID : "Suis.love"
+    ID : "http://localhost:5173"
   Attestation : "none"  #认证器证明类型
   CryptoType : -7          #服务器支持的加密类型
   AuthenticatorAttachment: "platform "  #用户端向认证器验证身份的类型
   TimeOut : 300
   fmt : "none"
-
-
+  Challenge_TTL : 1  #1分钟
 
 Redis:
   DNS: "localhost:6379"
   DB: 0
   Password: ""
 
+
 grpc:
   DNS: "127.0.0.1:5001"        #192.168.3.205
 
 Token:
   AkOutTime: 3     #3小时
-  RkOutTime: 3*24   #3天
+  RkOutTime: 72   #3天
 
 
 SnowFlake:
@@ -111,3 +113,47 @@ DB:
       SetMaxOpenConns: 128
       SetConnMaxLifetime: 60
 
+RabbitMq:
+  HelloWorld:
+    #消息服务器地址、账号、密码， / (斜杠)表示默认的虚拟主机，如果是开发者自己创建的，直接追加在 / (斜杠)后面即可，例如：amqp://账号:密码@ip地址:5672/ginskeleton
+    Addr: "amqp://账号:密码@ip地址:5672/"
+    QueueName: "helloword_queue"
+    Durable: false                                        #消息是否持久化
+    ConsumerChanNumber: 2                                 #消费者通道数量（允许一个消费者使用几个连接通道消费、处理消息）
+    OffLineReconnectIntervalSec: 5                        #消费者掉线后,重连间隔的秒数
+    RetryCount: 5                                         #消费者掉线后,尝试重连最大次数
+  WorkQueue:
+    Addr: "amqp://账号:密码@ip地址:5672/"  #参照前文地址说明
+    QueueName: "work_queue"
+    Durable: false                                        #消息是否持久化
+    ConsumerChanNumber: 2                                 #消费者通道数量（允许一个消费者使用几个连接通道消费、处理消息）
+    OffLineReconnectIntervalSec: 5                        #消费者掉线后,重连间隔的秒数
+    RetryCount: 5                                         #消费者掉线后,尝试重连最大次数
+  PublishSubscribe:
+    Addr: "amqp://账号:密码@ip地址:5672/"   #消息服务器地址、账号、密码
+    ExchangeType: "fanout"
+    ExchangeName: "fanout_exchange"                       #即时消息队列名称，
+    DelayedExchangeName: "delayed_fanout_exchange"        #延迟消息队列名称，必须事先在rabbitmq 服务器管理端手动创建
+    Durable: false                                        #消息是否持久化，如果初始化的是延迟消息队列,那么该参数会被程序强制设置为 true
+    QueueName: ""                                         #队列名称，为空 表示所有订阅的消费者（consumer）都可以接受到同样的消息，如果设置名称，会导致只有最后一个启动的消费者能接受到消息。
+    ConsumerChanNumber: 1                                 #消费者通道数量（发布、订阅模式消费者使用一个通道，避免多个通道重复收到数据）
+    OffLineReconnectIntervalSec: 10                       #消费者掉线后,重连间隔的秒数
+    RetryCount: 5                                         #消费者掉线后,尝试重连最大次数
+  Routing:
+    Addr: "amqp://账号:密码@ip地址:5672/"   #参照前文地址说明
+    ExchangeType: "direct"
+    ExchangeName: "direct_exchange"
+    DelayedExchangeName: "delayed_direct_exchange"        #延迟消息队列名称，必须事先在rabbitmq 服务器管理端手动创建
+    Durable: false                                        #消息是否持久化，如果初始化的是延迟消息队列,那么该参数会被程序强制设置为 true
+    QueueName: ""
+    OffLineReconnectIntervalSec: 10                       #消费者掉线后,重连间隔的秒数
+    RetryCount: 5                                         #消费者掉线后,尝试重连最大次数
+  Topics:
+    Addr: "amqp://账号:密码@ip地址:5672/"   #参照前文地址说明
+    ExchangeType: "topic"
+    ExchangeName: "topic_exchange"
+    DelayedExchangeName: "delayed_topic_exchange"         #延迟消息队列名称，必须事先在rabbitmq 服务器管理端手动创建
+    Durable: false                                        #消息是否持久化，如果初始化的是延迟消息队列,那么该参数会被程序强制设置为 true
+    QueueName: ""
+    OffLineReconnectIntervalSec: 10                       #消费者掉线后,重连间隔的秒数
+    RetryCount: 5

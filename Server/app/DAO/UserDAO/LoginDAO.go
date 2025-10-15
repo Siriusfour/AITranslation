@@ -3,8 +3,7 @@ package UserDAO
 import (
 	"AITranslatio/Utils/PasswordSecurity"
 	"AITranslatio/app/DAO"
-	"AITranslatio/app/Model/UserModel"
-	"errors"
+	"AITranslatio/app/Model/User"
 	"gorm.io/gorm"
 )
 
@@ -21,15 +20,15 @@ func CreateDAOFactory(sqlType string) *UserDAO {
 // 通过密码登录
 func (DAO *UserDAO) LoginByPassword(Email string, password string) (int64, error) {
 
-	var UserInfo UserModel.User
+	var UserInfo User.User
 
-	result := DAO.DB_Client.Table("User").Raw("select * from User where Email = ? limit 1", Email).Scan(&UserInfo)
+	result := DAO.DB_Client.Table("User").Where("Email = ?", Email).First(&UserInfo)
 	if result.Error != nil {
 		return 0, result.Error
 	}
 
-	if PasswordSecurity.CreatePasswordGeneratorFactory().ValidatePasswordWithSalt(UserInfo.Password, password, UserInfo.Salt) {
-		return 0, errors.New("密码错误！")
+	if err := PasswordSecurity.CreatePasswordGeneratorFactory(12).ValidatePasswordWithSalt(UserInfo.Password, password, UserInfo.Salt); err != nil {
+		return 0, err
 	}
 
 	return UserInfo.UserID, nil

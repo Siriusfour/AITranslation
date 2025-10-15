@@ -1,6 +1,4 @@
-package CustomErrors
-
-import "errors"
+package MyErrors
 
 const (
 	ServerOccurredErrorMsg string = "服务器内部发生代码执行错误, "
@@ -48,11 +46,6 @@ const (
 
 	//token部分
 
-
-
-
-
-
 	//snowflake
 	ErrorsSnowflakeGetIdFail string = "获取snowflake唯一ID过程发生错误"
 
@@ -83,11 +76,8 @@ const (
 	ErrorPasswordOrSaltIsEmpty string = "密码不可为空！"
 	ErrorPasswordHashIsFail    string = "hash处理失败："
 
-	//通用错误
-	ErrorAssert string = "类型断言失败"
-
 	//业务部分
 	ErrorRegisterIsFail     string = "注册失败:"
 	ErrorGetUserIDIsFail    string = "获取用户ID失败："
 	ErrorGetChallengeIsFail string = "获取随机挑战失败"
-
+)

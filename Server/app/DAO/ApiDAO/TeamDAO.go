@@ -1,39 +1,50 @@
-package BaseDAO
+package ApiDAO
 
 import (
-	"AITranslatio/app/Model/team"
-	"AITranslatio/app/http/DTO"
+	"AITranslatio/Global"
+	"AITranslatio/app/DAO"
+	"AITranslatio/app/Model/Team"
+	"fmt"
+	"gorm.io/gorm"
 )
 
-func (BaseDAO *BaseDAO) CreateTeam(CreateTeamDTO *DTO.CreateTeamDTO) error {
+type ApiDAO struct {
+	DB_Client *gorm.DB
+}
 
-	CreateTea := team.Team{
-		LeaderID:     CreateTeamDTO.UserID,
-		TeamName:     CreateTeamDTO.TeamName,
-		Introduction: CreateTeamDTO.Introduction,
-		NoteID:       CreateTeamDTO.NoteID,
+func CreateDAOFactory(sqlType string) *ApiDAO {
+	return &ApiDAO{
+		DB_Client: DAO.ChooseDB_Conn(sqlType),
+	}
+}
+
+func (ApiDAO *ApiDAO) CreateTeam(leaderID int64, teamName string, introduction string) error {
+
+	CreateTea := Team.Team{
+		LeaderID:     leaderID,
+		TeamName:     teamName,
+		Introduction: introduction,
 	}
 
-	result := BaseDAO.orm.Create(&CreateTea)
-	if result != nil {
-		return result.Error
+	result := Global.MySQL_Client.Create(&CreateTea)
+	if result.Error != nil {
+		return fmt.Errorf("DAO层CreateTeam调用失败:%w", result.Error)
 	}
 
 	return nil
 
 }
 
-func (BaseDAO *BaseDAO) JoinTeam(JoinTeamDTO *DTO.JoinTeamDTO) error {
+func (ApiDAO *ApiDAO) JoinTeam(FromUserID int64, TeamID int, Introduction string) error {
 
-	JoinTeam := team.JoinTeamApplication{
-		ApplicationID:       JoinTeamDTO.UserID,
-		ApplicationNickName: JoinTeamDTO.NickName,
-		TeamID:              JoinTeamDTO.JoinTeamID,
-		Introduction:        JoinTeamDTO.Introduction,
-		Status:              0,
+	JoinTeam := Team.JoinTeamApplication{
+		FromUserID:   FromUserID,
+		TeamID:       TeamID,
+		Introduction: Introduction,
+		Status:       0,
 	}
 
-	result := BaseDAO.orm.Create(&JoinTeam)
+	result := Global.MySQL_Client.Create(&JoinTeam)
 	if result.Error != nil {
 		return result.Error
 	}

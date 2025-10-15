@@ -14,7 +14,7 @@ var MySQL_Client *gorm.DB
 var PostgreSQL_Client *gorm.DB
 var SQLserver_Client *gorm.DB
 var RedisClient *redis.Client
-var PKEY = []byte(os.Getenv("PATHEXT"))
+var EncryptKey = []byte(os.Getenv("PATHEXT"))
 var SSEClients *SSE.SSEClients
 var Config interf.ConfigInterface
 var DB_Config interf.ConfigInterface

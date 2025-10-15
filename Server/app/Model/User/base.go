@@ -1,7 +1,10 @@
-package UserModel
+package User
+
+import "gorm.io/gorm"
 
 type User struct {
-	UserID    int64  `gorm:"type:int64;not null;column:UserID"`
+	gorm.Model
+	UserID    int64  `gorm:"type:BIGINT;not null;column:UserID"`
 	Nickname  string `gorm:"type:varchar(255);not null;column:NickName"`
 	Password  string `gorm:"type:varchar(255);not null;column:Password"`
 	Salt      string `gorm:"type:varchar(255);not null;column:Salt"`
@@ -10,5 +13,5 @@ type User struct {
 }
 
 func (u *User) TableName() string {
-	return "User"
+	return "user"
 }

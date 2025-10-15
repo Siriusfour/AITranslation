@@ -1,13 +1,13 @@
 package UserDAO
 
 import (
-	"AITranslatio/app/Model/UserModel"
+	"AITranslatio/app/Model/User"
 	"AITranslatio/app/http/DTO/NotAuthDTO"
 )
 
 func (DAO *UserDAO) Register(DTO *NotAuthDTO.RegisterDTO) error {
 
-	RegisterData := &UserModel.User{
+	RegisterData := &User.User{
 		UserID:   DTO.UserID,
 		Nickname: DTO.UserName,
 		Password: DTO.Password,

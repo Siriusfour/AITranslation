@@ -2,7 +2,7 @@ package AuthService
 
 import (
 	"AITranslatio/Global/Consts"
-	"AITranslatio/Global/CustomErrors"
+	"AITranslatio/Global/MyErrors"
 	"AITranslatio/Utils/PasswordSecurity"
 	"AITranslatio/Utils/SnowFlak"
 	"AITranslatio/Utils/token"
@@ -51,7 +51,7 @@ func (Service *AuthService) Register(DTO *NotAuthDTO.RegisterDTO) (*NotAuthDTO.A
 	//调用DAO存储在库中
 	err = UserDAO.CreateDAOFactory("mysql").Register(DTO)
 	if err != nil {
-		return nil, errors.New(CustomErrors.ErrorRegisterIsFail + err.Error())
+		return nil, errors.New(MyErrors.ErrorRegisterIsFail + err.Error())
 	}
 
 	//生成token

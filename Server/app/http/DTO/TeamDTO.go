@@ -1,10 +1,10 @@
 package DTO
 
 type JoinTeamDTO struct {
-	UserID       int    `json:"UserID"  binding:"required"`
+	FromUserID   int64  `json:"UserID"  binding:"required"`
 	Introduction string `json:"Introduction"`
 	NickName     string `json:"NickName" binding:"required"`
-	JoinTeamID   int    `json:"JoinTeamID"  binding:"required"`
+	TeamID       int    `json:"TeamID"   binding:"required"`
 }
 
 type CreateTeamDTO struct {

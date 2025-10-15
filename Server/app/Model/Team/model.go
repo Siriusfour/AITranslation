@@ -1,4 +1,4 @@
-package team
+package Team
 
 import (
 	"gorm.io/gorm"
@@ -9,13 +9,14 @@ type Team struct {
 	gorm.Model
 	TeamName     string `gorm:"type:varchar(255);not null;column:TeamName"`
 	NoteID       uint   `gorm:"type:varchar(255);not null;column:NoteID"`
-	LeaderID     int    `gorm:"type:int;not null;column:LeaderID"`
+	LeaderID     int64  `gorm:"type:int;not null;column:LeaderID"`
 	Introduction string `gorm:"type:varchar(255);not null;column:Introduction"`
+	TeamID       uint   `gorm:"type:int;not null;column:TeamID;primaryKey;autoIncrement"`
 }
 
 type Members struct {
 	gorm.Model
-	MemberID     int       `gorm:"type:int;not null;column:MemberID"`
+	UserID       int       `gorm:"type:int;not null;column:UserID"`
 	JoinTime     time.Time `gorm:"type:datetime;not null;column:joinTime"`
 	CommitCount  uint      `gorm:"type:int;not null;column:CommitCount"`
 	Introduction string    `gorm:"type:varchar(255);not null;column:Introduction"`
@@ -23,13 +24,13 @@ type Members struct {
 
 type JoinTeamApplication struct {
 	gorm.Model
-	ApplicationID       int    `gorm:"type:varchar(255);not null;column:ApplicationID"`
-	ApplicationNickName string `gorm:"type:varchar(255);not null;column:ApplicationNickName"`
-	TeamID              int    `gorm:"type:varchar(255);not null;column:TeamID"`
-	Introduction        string `gorm:"type:varchar(255);not null;column:Introduction"`
-	Status              int    `gorm:"type:varchar(255);not null;column:Status"`
+	ID           uint   `gorm:"type:int;not null;column:ID;primaryKey;autoIncrement"`
+	FromUserID   int64  `gorm:"type:BIGINT;not null;column:FromUserID"`
+	TeamID       int    `gorm:"type:varchar(255);not null;column:TeamID"`
+	Introduction string `gorm:"type:varchar(255);not null;column:Introduction"`
+	Status       int    `gorm:"type:int;not null;column:Status"`
 }
 
-func (JoinTeamApplication) TableName() string { return "JoinTeamApplication" }
+func (JoinTeamApplication) TableName() string { return "Join_Team_Application" }
 func (Team) TableName() string                { return "Team" }
 func (Members) TableName() string             { return "Members" }

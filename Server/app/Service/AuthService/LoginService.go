@@ -2,14 +2,13 @@ package AuthService
 
 import (
 	"AITranslatio/Global/Consts"
-	"AITranslatio/Global/CustomErrors"
 	"AITranslatio/Utils/token"
 	"AITranslatio/app/DAO/UserDAO"
 	"AITranslatio/app/http/DTO/NotAuthDTO"
-	"errors"
+	"fmt"
 )
 
-func CreateNotAuthService() *AuthService {
+func CreateAuthService() *AuthService {
 
 	return &AuthService{}
 }
@@ -23,7 +22,7 @@ func (Service *AuthService) LoginByPassWord(Email string, PassWord string) (erro
 	DAO := UserDAO.CreateDAOFactory("mysql")
 	UserID, err := DAO.LoginByPassword(Email, PassWord)
 	if err != nil {
-		return errors.New("登录失败："), nil
+		return fmt.Errorf("登录失败：%w", err), nil
 	}
 
 	//验证通过，生成ak，rk ，写入redis，返回请求
@@ -31,7 +30,7 @@ func (Service *AuthService) LoginByPassWord(Email string, PassWord string) (erro
 	RefreshToken, errRk := token.CreateTokenFactory(Consts.RefreshToken, UserID).GeneratedToken()
 
 	if errAk != nil && errRk != nil {
-		return errors.New(CustomErrors.ErrorGeneratedTokenIsFail + ":" + errAk.Error() + "," + errRk.Error()), nil
+		return fmt.Errorf("登录失败：%w", errAk), nil
 	}
 
 	return nil, &NotAuthDTO.Auth{

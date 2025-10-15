@@ -3,7 +3,7 @@ import './style.css'
 import Antd from 'ant-design-vue';
 import App from './App.vue';
 import 'ant-design-vue/dist/reset.css';
-import {router} from './components/router'
+import {router} from './components/router.js'
 
 console.log(import.meta.env.VITE_API_KEY);
 

@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { Prompts } from "./Prompt";
+import { Prompts } from "./Prompt.js";
 
 const getRequest = (url, data) => request('GET', url, data)
 const postRequest = (url, data) => request('POST', url, data)
@@ -52,7 +52,7 @@ async function AITranslation(finalTextArrayJson) {
 
 
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error('Invalid API response: choices or message missing');
+      throw new Error('Invalid Api response: choices or message missing');
     }
 
   

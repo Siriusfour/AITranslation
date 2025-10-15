@@ -2,7 +2,10 @@ package DataBase
 
 import (
 	"AITranslatio/Global"
-	"AITranslatio/Global/CustomErrors"
+	"AITranslatio/Global/MyErrors"
+	"AITranslatio/app/Model/Team"
+	"AITranslatio/app/Model/User"
+
 	"errors"
 	"fmt"
 	"go.uber.org/zap"
@@ -35,21 +38,28 @@ func GetSqlDriver(sqlType string, readDbIsOpen int, dbConf ...ConfigParams) (*go
 
 	var dbDialector gorm.Dialector
 	if val, err := getDbDialector(sqlType, "Write", dbConf...); err != nil {
-		Global.Logger.Error(CustomErrors.ErrorsDialectorDbInitFail+sqlType, zap.Error(err))
+		Global.Logger.Error(MyErrors.ErrorsDialectorDbInitFail+sqlType, zap.Error(err))
 	} else {
 		dbDialector = val
 	}
 	MyLogger := redefineLog(sqlType)
-	fmt.Println(MyLogger)
+
 	gormDb, err := gorm.Open(dbDialector, &gorm.Config{
 		SkipDefaultTransaction: true,
 		PrepareStmt:            true,
 		Logger:                 MyLogger,
 	})
+
 	if err != nil {
 		//gorm 数据库驱动初始化失败
 		return nil, err
 	}
+
+	err = gormDb.AutoMigrate(&Team.Team{}, &User.User{}, &Team.JoinTeamApplication{})
+	if err != nil {
+		return nil, fmt.Errorf("gorm自动建表失败:%w", err)
+	}
+
 	return gormDb, nil
 }
 
@@ -64,7 +74,7 @@ func getDbDialector(sqlType, readWrite string, dbConf ...ConfigParams) (gorm.Dia
 	//case "postgres"
 
 	default:
-		return nil, errors.New(CustomErrors.ErrorsDbDriverNotExists + sqlType)
+		return nil, errors.New(MyErrors.ErrorsDbDriverNotExists + sqlType)
 	}
 	return dbDialector, nil
 }

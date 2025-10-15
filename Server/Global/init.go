@@ -2,7 +2,7 @@ package Global
 
 import (
 	"AITranslatio/Global/Consts"
-	"AITranslatio/Global/CustomErrors"
+	"AITranslatio/Global/MyErrors"
 	"log"
 	"os"
 	"strings"
@@ -18,7 +18,7 @@ func init() {
 			Consts.BasePath = curPath
 		}
 	} else {
-		log.Fatal(CustomErrors.ErrorsBasePath)
+		log.Fatal(MyErrors.ErrorsBasePath)
 	}
 
 }

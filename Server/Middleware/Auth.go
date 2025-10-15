@@ -11,7 +11,7 @@ func Auth() gin.HandlerFunc {
 
 		token := c.GetHeader("Authorization")
 
-		err := tokenUtil.CreateTokenFactory(1, 1).ParseToken(token)
+		err := tokenUtil.ParseToken(token)
 		if err != nil {
 			return
 		}

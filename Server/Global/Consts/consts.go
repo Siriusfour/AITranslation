@@ -2,8 +2,8 @@ package Consts
 
 // 这里定义的常量，一般是具有错误代码+错误说明组成，一般用于接口返回
 type Alg struct {
-	KeyType string
-	Alg     int
+	Type string
+	Alg  int
 }
 
 const (
@@ -86,6 +86,15 @@ const (
 	AlgRS256 = -257 // RSASSA-PKCS1-v1_5 with SHA-256
 	AlgEdDSA = -8   // EdDSA
 
+	//服务器环境
+	// 1.生产环境 2.开发环境 3.预发布环境 4.单元测试环境
+	production  string = "production"
+	development string = "development"
+	staging     string = "staging"
+	test        string = "test"
+
+	//redis相关
+	Redis_UserID_seesion string = ""
 )
 
 // 变量

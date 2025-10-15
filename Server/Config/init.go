@@ -3,7 +3,7 @@ package Config
 import (
 	"AITranslatio/Config/interf"
 	"AITranslatio/Global/Consts"
-	"AITranslatio/Global/CustomErrors"
+	"AITranslatio/Global/MyErrors"
 	"github.com/spf13/viper"
 	"sync"
 )
@@ -16,7 +16,7 @@ func CreateConfigFactory(FileName string, Type string) interf.ConfigInterface {
 	yamlConfig.SetConfigName(FileName)
 
 	if err := yamlConfig.ReadInConfig(); err != nil {
-		panic(CustomErrors.ErrorsConfigYamlNotExists + err.Error())
+		panic(MyErrors.ErrorsConfigYamlNotExists + err.Error())
 	}
 
 	return &interf.ConfigFile{

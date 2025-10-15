@@ -1,5 +1,6 @@
 Mode:
-  develop: true
+  Develop : false
+  production : true
 
 log:
   MaxSize: 10    #每个日志文件最大容量，MB

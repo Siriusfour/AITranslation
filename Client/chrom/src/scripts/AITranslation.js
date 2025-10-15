@@ -1,6 +1,6 @@
-import { RequestAPI } from '../utils/request'
-import { AITranslation } from '../utils/request'
-import { handleJsonFromString } from '../utils/handle'
+import { RequestAPI } from '../utils/request.js'
+import { AITranslation } from '../utils/request.js'
+import { handleJsonFromString } from '../utils/handle.js'
 
 
 console.log("===========================================");

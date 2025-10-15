@@ -2,9 +2,11 @@ package validators
 
 import (
 	"AITranslatio/Global/Consts"
-	"AITranslatio/app/http/Controller/Auth"
+	"AITranslatio/app/http/Controller/AuthController"
 	"AITranslatio/app/http/reposen"
 	"AITranslatio/app/http/validator/comon/data_transfer"
+	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,15 +23,15 @@ func (DTO RegisterDTO) CheckParams(RegisterContext *gin.Context) {
 
 	//1.基础绑定验证
 	if err := RegisterContext.ShouldBindJSON(&DTO); err != nil {
-		reposen.ErrorTokenAuthFail(RegisterContext)
+		reposen.ErrorParam(RegisterContext, fmt.Errorf("参数基础绑定验证", err))
 	}
 
 	//2.使用调用控制器
 	extraAddBindDataContext := data_transfer.DataAddContext(DTO, Consts.ValidatorPrefix, RegisterContext)
 	if extraAddBindDataContext == nil {
-		reposen.ErrorTokenAuthFail(RegisterContext)
+		reposen.ErrorSystem(RegisterContext, errors.New("DataAddContext无法绑定到*gin.contex"))
 	} else {
-		(&Auth.NotAuthController{}).Register(extraAddBindDataContext)
+		(&AuthController.AuthController{}).Register(extraAddBindDataContext)
 	}
 
 }

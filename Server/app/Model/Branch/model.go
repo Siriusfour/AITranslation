@@ -1,4 +1,4 @@
-package branch
+package Branch
 
 import "gorm.io/gorm"
 

@@ -4,23 +4,22 @@ import (
 	"AITranslatio/Global/Consts"
 	"AITranslatio/app/http/validator/comon/factory"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
-func InitNotAuthRoute(rg *gin.RouterGroup) {
-	rg.POST("/Login", factory.Create(Consts.ValidatorPrefix+"Login"))
+func InitAuthRoute(rg gin.IRoutes) {
+	rg.POST("/Login", factory.Create(Consts.ValidatorPrefix+"Login")) //在全局容器里面找到Login验证器
 	rg.POST("/Register", factory.Create(Consts.ValidatorPrefix+"Register"))
-	//rg.POST("/WebAuthn", factory.Create(Consts.ValidatorPrefix+"login"))
-	rg.POST("/", func(context *gin.Context) {
-		context.String(http.StatusOK, "HelloWorld,这是后端模块")
-	})
-}
-
-func InitBaseRoute(rg *gin.RouterGroup) {
+	rg.POST("/WebAuthn", factory.Create(Consts.ValidatorPrefix+"WebAuthn"))
+	rg.POST("/VerifyWebAuthn", factory.Create(Consts.ValidatorPrefix+"VerifyWebAuthn"))
 	rg.GET("/ApplicationWebAuthn", factory.Create(Consts.ValidatorPrefix+"WebAuthn"))
 }
 
-func InitAuthRoute(rgBase *gin.RouterGroup) {}
+func InitBaseRoute(rg gin.IRoutes) {
+
+	rg.POST("/Team/Create", factory.Create(Consts.ValidatorPrefix+"TeamCreate"))
+	rg.POST("/Team/Join", factory.Create(Consts.ValidatorPrefix+"Join"))
+
+}
 
 func InitFilesRoute(rgBase *gin.RouterGroup) {}
 

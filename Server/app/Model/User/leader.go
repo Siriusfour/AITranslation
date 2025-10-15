@@ -1,1 +1,1 @@
-package UserModel
+package User

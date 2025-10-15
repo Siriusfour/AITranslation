@@ -7,7 +7,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
-	"strconv"
+	"fmt"
 	"time"
 )
 
@@ -26,6 +26,7 @@ type Config struct {
 	Attestation      string //认证器类型
 	Attachment       string //认证器证明方式
 	TimeOut          time.Duration
+	ChallengeTTL     int64
 }
 
 type WebAuthn struct {
@@ -33,7 +34,7 @@ type WebAuthn struct {
 	Challenge string
 }
 
-func CreateWebAuthnConfigFactory(UseName, Email string) *WebAuthn {
+func CreateWebAuthnConfigFactory(UserID int64, UseName, Email string) *WebAuthn {
 	return &WebAuthn{
 		Config: Config{
 			Name:             Global.Config.GetString("WebAuthn.rp.Name"),
@@ -43,12 +44,13 @@ func CreateWebAuthnConfigFactory(UseName, Email string) *WebAuthn {
 			Attestation:      Global.Config.GetString("WebAuthn.Attestation"),
 			Attachment:       Global.Config.GetString("WebAuthn.AuthenticatorAttachment"),
 			TimeOut:          time.Second * time.Duration(Global.Config.GetInt("WebAuthn.TimeOut")),
+			UserID:           UserID,
+			ChallengeTTL:     time.Now().Add(time.Hour * time.Duration(Global.Config.GetInt("WebAuthn.Challenge_TTL"))).Unix(),
 		},
-		//Challenge:"",
 	}
 }
 
-func (w *WebAuthn) CreateChallenge(UserID int64) error {
+func (w *WebAuthn) CreateChallenge() error {
 	// 生成随机部分
 	randomPart := make([]byte, 24)
 	_, err := rand.Read(randomPart)
@@ -68,14 +70,20 @@ func (w *WebAuthn) CreateChallenge(UserID int64) error {
 
 	w.Challenge = challenge
 
-	//把随机数存放在redis,有效期为5分钟
-	Global.RedisClient.Set(context.Background(), strconv.FormatInt(UserID, 10), challenge, 5*time.Minute)
+	// 使用事务 Pipeline
+	Key := fmt.Sprintf("UserID:%d", w.Config.UserID)
+
+	pipe := Global.RedisClient.TxPipeline()
+	pipe.HSet(context.Background(), Key, map[string]interface{}{
+		"challenge":         w.Challenge,
+		"challenge_OutTime": w.Config.ChallengeTTL,
+	})
+
+	_, err = pipe.Exec(context.Background())
+	if err != nil {
+		return fmt.Errorf("存储会话失败: %w", err)
+	}
 
 	return nil
 
 }
-
-//
-//func (w *WebAuthn) VerifyChallenge(Challenge string) (bool, error) {
-//
-//}

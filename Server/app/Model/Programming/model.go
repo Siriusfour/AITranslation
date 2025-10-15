@@ -1,4 +1,4 @@
-package programming
+package Programming
 
 import (
 	"gorm.io/gorm"

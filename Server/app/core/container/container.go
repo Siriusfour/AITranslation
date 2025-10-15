@@ -13,7 +13,6 @@ type Container struct{}
 // CreateContainersFactory 创建一个容器工厂（interface）
 func CreateContainersFactory() *Container {
 	return &Container{}
-
 }
 
 // Set  1.设置
@@ -37,7 +36,6 @@ func (c *Container) Get(key string) interface{} {
 	if value, exists := c.KeyIsExists(key); exists {
 		return value
 	}
-
 	return nil
 }
 
