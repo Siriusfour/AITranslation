@@ -14,7 +14,8 @@ var (
 
 // 基础错误
 var (
-	ErrorAssert = errors.New("类型断言失败")
+	ErrorAssert        = errors.New("类型断言失败")
+	ErrorDB_FindIsFail = errors.New("数据库查找失败")
 )
 
 // webAthun错误

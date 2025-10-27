@@ -19,15 +19,22 @@ func RegisterValidator() {
 	key = "Register"
 	containers.Set(Consts.ValidatorPrefix+key, validators_Auth.RegisterDTO{})
 
-	key = "WebAuthn"
-	containers.Set(Consts.ValidatorPrefix+key, validators_Auth.WebAuthnDTO{})
+	key = "ApplicationWebAuthn"
+	containers.Set(Consts.ValidatorPrefix+key, validators_Auth.ApplicationWebAuthnDTO{})
 
-	key = "VerifyWebAuthn"
-	containers.Set(Consts.ValidatorPrefix+key, validators_Auth.VerifyWebAuthnDTO{})
+	key = "RegisterWebAuthn"
+	containers.Set(Consts.ValidatorPrefix+key, validators_Auth.RegisterWebAuthnDTO{})
+
+	key = "GetUserAllCredential"
+	containers.Set(Consts.ValidatorPrefix+key, validators_Auth.GetUserAllCredentialDTO{})
+
+	key = "LoginByWebAuthn"
+	containers.Set(Consts.ValidatorPrefix+key, validators_Auth.LoginByWebAuthnDTO{})
 
 	key = "TeamCreate"
 	containers.Set(Consts.ValidatorPrefix+key, validators_Team.TeamDTO{})
 
 	key = "Join"
 	containers.Set(Consts.ValidatorPrefix+key, validators_Team.JoinDTO{})
+
 }

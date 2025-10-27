@@ -34,6 +34,7 @@ WebAuthn :
   TimeOut : 300
   fmt : "none"
   Challenge_TTL : 1  #1分钟
+  RPID : "localhost"
 
 Redis:
   DNS: "localhost:6379"

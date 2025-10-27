@@ -10,26 +10,33 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type WebAuthnDTO struct{}
+type ApplicationWebAuthnDTO struct{}
 
-type VerifyWebAuthnDTO struct {
-	RawID             string `json:"rawId"`
-	ID                string `json:"id"`
-	Type              string `json:"type"`
-	ClientDataJSON    string `json:"clientDataJSON"`    // Base64URL
-	AttestationObject string `json:"attestationObject"` // Base64URL
+type GetUserAllCredentialDTO struct{}
 
+type LoginByWebAuthnDTO struct {
+	RawID    string `json:"rawId"`
+	ID       string `json:"id"`
+	Type     string `json:"type"`
+	Response struct {
+		ClientDataJSON    string `json:"clientDataJSON"`
+		AttestationObject string `json:"authenticatorData"`
+		Signature         string `json:"signature"`
+	} `json:"response"`
 }
 
-func (DTO WebAuthnDTO) CheckParams(WebAuthnContext *gin.Context) {
+type RegisterWebAuthnDTO struct {
+	RawID    string `json:"rawId"`
+	ID       string `json:"id"`
+	Type     string `json:"type"`
+	Response struct {
+		ClientDataJSON    string `json:"clientDataJSON"`
+		AttestationObject string `json:"attestationObject"`
+	} `json:"response"`
+}
 
-	//1.基础绑定验证
-	//if err := WebAuthnContext.ShouldBindJSON(&DTO); err != nil {
-	//	reposen.ErrorParam(WebAuthnContext, fmt.Errorf("参数基础校验失败%w", err))
-	//	return
-	//}
-
-	//2.使用调用控制器
+func (DTO ApplicationWebAuthnDTO) CheckParams(WebAuthnContext *gin.Context) {
+	//使用调用控制器
 	extraAddBindDataContext := data_transfer.DataAddContext(DTO, Consts.ValidatorPrefix, WebAuthnContext)
 	if extraAddBindDataContext == nil {
 		reposen.ErrorSystem(WebAuthnContext, errors.New("DataAddContext无法绑定到*gin.contex"))
@@ -38,7 +45,7 @@ func (DTO WebAuthnDTO) CheckParams(WebAuthnContext *gin.Context) {
 	}
 }
 
-func (DTO VerifyWebAuthnDTO) CheckParams(WebAuthnContext *gin.Context) {
+func (DTO RegisterWebAuthnDTO) CheckParams(WebAuthnContext *gin.Context) {
 	//1.基础绑定验证
 	if err := WebAuthnContext.ShouldBindJSON(&DTO); err != nil {
 		reposen.ErrorParam(WebAuthnContext, fmt.Errorf("参数基础校验失败%w", err))
@@ -50,6 +57,33 @@ func (DTO VerifyWebAuthnDTO) CheckParams(WebAuthnContext *gin.Context) {
 	if extraAddBindDataContext == nil {
 		reposen.ErrorSystem(WebAuthnContext, errors.New("DataAddContext无法绑定到*gin.contex"))
 	} else {
-		(&AuthController.AuthController{}).VerifyWebAuthn(extraAddBindDataContext)
+		(&AuthController.AuthController{}).WebAuthnToRegister(extraAddBindDataContext)
+	}
+}
+
+func (DTO LoginByWebAuthnDTO) CheckParams(WebAuthnContext *gin.Context) {
+	//1.基础绑定验证
+	if err := WebAuthnContext.ShouldBindJSON(&DTO); err != nil {
+		reposen.ErrorParam(WebAuthnContext, fmt.Errorf("参数基础校验失败%w", err))
+		return
+	}
+
+	//2.使用调用控制器
+	extraAddBindDataContext := data_transfer.DataAddContext(DTO, Consts.ValidatorPrefix, WebAuthnContext)
+	if extraAddBindDataContext == nil {
+		reposen.ErrorSystem(WebAuthnContext, errors.New("DataAddContext无法绑定到*gin.contex"))
+	} else {
+		(&AuthController.AuthController{}).WebAuthnByLogin(extraAddBindDataContext)
+	}
+}
+
+func (DTO GetUserAllCredentialDTO) CheckParams(WebAuthnContext *gin.Context) {
+
+	//2.使用调用控制器
+	extraAddBindDataContext := data_transfer.DataAddContext(DTO, Consts.ValidatorPrefix, WebAuthnContext)
+	if extraAddBindDataContext == nil {
+		reposen.ErrorSystem(WebAuthnContext, errors.New("DataAddContext无法绑定到*gin.contex"))
+	} else {
+		(&AuthController.AuthController{}).GetUserAllCredential(extraAddBindDataContext)
 	}
 }

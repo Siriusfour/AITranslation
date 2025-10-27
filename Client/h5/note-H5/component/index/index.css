@@ -218,16 +218,21 @@ form input.submit:hover {
 }
 /*用STEAM PSN XBOX替换原先APPLE GOOGLE FACEBOOK图标*/
 .options ul li:nth-child(1) a:hover {
-    background-color: #171a21;
+    background-color:#107c10;
 }
 
 .options ul li:nth-child(2) a:hover {
-    background-color: #00439c;
+    background-color:  #00439c;
 }
 
 .options ul li:nth-child(3) a:hover {
-    background-color: #107c10;
+    background-color:  #171a21;
 }
+
+.options ul li:nth-child(4) a:hover {
+    background-color:  #171a21;
+}
+
 
 input::placeholder {
     color: #999; /* 占位符文本颜色 */

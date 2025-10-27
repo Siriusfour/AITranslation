@@ -1,6 +1,7 @@
 package AuthService
 
 import (
+	"AITranslatio/Global/Consts"
 	"AITranslatio/Global/MyErrors"
 	"AITranslatio/Utils/WebAuthn"
 	WebAuthn_Verify "AITranslatio/Utils/WebAuthn/Verify"
@@ -10,6 +11,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type CredentialOptions struct {
+	Challenge  string               `json:"Challenge"`
+	AllowCreds []UserDAO.Credential `json:"AllowCreds"`
+}
+
+// 申请一个WebAuthn密钥
 func (Service *AuthService) ApplicationWebAuthn(UserID int64) (*WebAuthn.WebAuthn, error) {
 
 	//获取userName和Email
@@ -33,12 +40,45 @@ func (Service *AuthService) ApplicationWebAuthn(UserID int64) (*WebAuthn.WebAuth
 	return w, nil
 }
 
-func (Service *AuthService) VerifyWebAuthn(WebAuthnCtx *gin.Context) error {
+// 注册时验证WebAuthn密钥
+func (Service *AuthService) VerifyWebAuthnToRegister(WebAuthnCtx *gin.Context) error {
 
-	clientDataHash, err := WebAuthn_Verify.ClinetDataJSON_Verify(WebAuthnCtx)
-	fmt.Println(clientDataHash)
+	err := WebAuthn_Verify.ClientDataJsonVerifyForRegister(WebAuthnCtx)
 	if err != nil {
-		return fmt.Errorf("ClinetDataJSON校验错误%w", err)
+		return fmt.Errorf("WebAuthn注册,ClientData校验错误:%w", err)
+	}
+	err = WebAuthn_Verify.AttestationObjectVerifyForRegister(WebAuthnCtx)
+	if err != nil {
+		return fmt.Errorf("WebAuthn注册,Attestation校验错误:%w", err)
 	}
 	return nil
+}
+
+// 登录时验证WebAuthn
+func (Service *AuthService) WebAuthnToLogin(WebAuthnCtx *gin.Context) error {
+
+	err := WebAuthn_Verify.ClientDataJsonVerifyForLogin(WebAuthnCtx)
+	if err != nil {
+		return fmt.Errorf("WebAuthnd登录,ClientData校验错误:%w", err)
+	}
+	err = WebAuthn_Verify.AttestationObjectVerifyForLogin(WebAuthnCtx)
+	if err != nil {
+		return fmt.Errorf("WebAuthn登录,Attestation校验错误:%w", err)
+	}
+
+	//SignCount++
+
+	return nil
+}
+
+func (Service *AuthService) GetUserAllCredentialDTO(WebAuthnCtx *gin.Context) (*CredentialOptions, error) {
+	allowCreds, err := UserDAO.CreateDAOFactory("mysql").FindCredentialByUserID(WebAuthnCtx)
+	if err != nil {
+		return nil, err
+	}
+	credentialOptions := &CredentialOptions{
+		Challenge:  WebAuthnCtx.GetString(Consts.ValidatorPrefix + "challenge"),
+		AllowCreds: allowCreds,
+	}
+	return credentialOptions, nil
 }

@@ -1,48 +1,74 @@
 package AuthController
 
 import (
+	"AITranslatio/Global/Consts"
 	"AITranslatio/app/Service/AuthService"
-	"fmt"
-
-	"AITranslatio/Utils/token"
 	"AITranslatio/app/http/reposen"
+	"fmt"
 	"github.com/gin-gonic/gin"
 )
 
-func (Controller *AuthController) ApplicationWebAuthn(ctx *gin.Context) {
+// 获取webAunth服务器的信息（RPI,TimeOut,Challenge...）
+func (Controller *AuthController) ApplicationWebAuthn(WebAuthnCtx *gin.Context) {
 
 	//从token解析出UserID
-	err, UserID := token.GetDataFormToken[int64](ctx.GetHeader("Authorization"), "UserID")
-	if err != nil {
-		reposen.ErrorSystem(ctx, fmt.Errorf("token解析UserID失败:", err))
-		return
-	}
+	UserID := WebAuthnCtx.GetInt64(Consts.ValidatorPrefix + "UserID")
 
 	//从config获取webAuthn配置项
-
 	WebAuthn, err := AuthService.CreateAuthService().ApplicationWebAuthn(UserID)
 	if err != nil {
-		reposen.ErrorSystem(ctx, fmt.Errorf("AuthService创建失败:", err))
+		reposen.ErrorSystem(WebAuthnCtx, fmt.Errorf("AuthService创建失败:", err))
 		return
 	}
 
-	reposen.OK(ctx, WebAuthn)
+	reposen.OK(WebAuthnCtx, WebAuthn)
+	return
+}
+
+// WebAuthnToRegister 验证WebAuthn休息是否合规
+func (Controller *AuthController) WebAuthnToRegister(WebAuthnCtx *gin.Context) {
+
+	//校验WebAuthn信息
+	err := AuthService.CreateAuthService().VerifyWebAuthnToRegister(WebAuthnCtx)
+	if err != nil {
+		return
+	}
+
+	reposen.OK(WebAuthnCtx, nil)
+	return
 
 }
 
-// VerifyWebAuthn 验证WebAuthn休息是否合规
-func (Controller *AuthController) VerifyWebAuthn(WebAuthnCtx *gin.Context) {
+func (Controller *AuthController) GetUserAllCredential(WebAuthnCtx *gin.Context) {
 
-	//RawID := WebAuthnCtx.GetString(Consts.ValidatorPrefix + "RawID")
-	//ID := WebAuthnCtx.GetString(Consts.ValidatorPrefix + "ID")
-	//ClientDataJSON := WebAuthnCtx.GetString(Consts.ValidatorPrefix + "clientDataJSON")
-	//AttestationObject := WebAuthnCtx.GetString(Consts.ValidatorPrefix + "attestationObject")
-	//UserID := WebAuthnCtx.GetString(Consts.ValidatorPrefix + "UserID")
+	//生成随机挑战,置于redis分钟
+	UserID := WebAuthnCtx.GetInt64(Consts.ValidatorPrefix + "UserID")
+	w, err := AuthService.CreateAuthService().ApplicationWebAuthn(UserID)
+	if err != nil {
+		reposen.ErrorSystem(WebAuthnCtx, err)
+		return
+	}
+	WebAuthnCtx.Set(Consts.ValidatorPrefix+"challenge", w.Challenge)
 
-	//校验WebAuthn信息
-	err := AuthService.CreateAuthService().VerifyWebAuthn(WebAuthnCtx)
+	//获取该用户所有的凭证
+	data, err := AuthService.CreateAuthService().GetUserAllCredentialDTO(WebAuthnCtx)
 	if err != nil {
 		return
 	}
+	reposen.OK(WebAuthnCtx, data)
+	return
+}
+
+func (Controller *AuthController) WebAuthnByLogin(WebAuthnCtx *gin.Context) {
+
+	err := AuthService.CreateAuthService().WebAuthnToLogin(WebAuthnCtx)
+	if err != nil {
+		reposen.ErrorSystem(WebAuthnCtx, err)
+		return
+	}
+
+	//查询登录成功的业务数据
+
+	reposen.OK(WebAuthnCtx, nil)
 
 }

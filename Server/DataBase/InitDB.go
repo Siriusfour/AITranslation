@@ -5,6 +5,7 @@ import (
 	"AITranslatio/Global/MyErrors"
 	"AITranslatio/app/Model/Team"
 	"AITranslatio/app/Model/User"
+	"AITranslatio/app/Model/webAuthn"
 
 	"errors"
 	"fmt"
@@ -55,7 +56,7 @@ func GetSqlDriver(sqlType string, readDbIsOpen int, dbConf ...ConfigParams) (*go
 		return nil, err
 	}
 
-	err = gormDb.AutoMigrate(&Team.Team{}, &User.User{}, &Team.JoinTeamApplication{})
+	err = gormDb.AutoMigrate(&Team.Team{}, &User.User{}, &Team.JoinTeamApplication{}, &webAuthn.WebAuthnCredential{})
 	if err != nil {
 		return nil, fmt.Errorf("gorm自动建表失败:%w", err)
 	}
@@ -71,7 +72,6 @@ func getDbDialector(sqlType, readWrite string, dbConf ...ConfigParams) (gorm.Dia
 
 	case "mysql":
 		dbDialector = mysql.Open(dsn)
-	//case "postgres"
 
 	default:
 		return nil, errors.New(MyErrors.ErrorsDbDriverNotExists + sqlType)
@@ -132,7 +132,7 @@ func getDsn(sqlType, readWrite string, dbConf ...ConfigParams) string {
 
 	switch strings.ToLower(sqlType) {
 	case "mysql":
-		return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=false&loc=Local", User, Pass, Host, Port, DataBase, Charset)
+		return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=true&loc=Local", User, Pass, Host, Port, DataBase, Charset)
 	case "sqlserver", "mssql":
 		return fmt.Sprintf("server=%s;port=%d;database=%s;UserModel id=%s;password=%s;encrypt=disable", Host, Port, DataBase, User, Pass)
 	case "postgresql", "postgre", "postgres":

@@ -20,11 +20,8 @@ context  gin上下文
 
 func DataAddContext(validatorInterface interf.ValidatorInterface, extraAddDataPrefix string, ctx *gin.Context) *gin.Context {
 	var value map[string]interface{}
-	// 🚀 mapstructure 保留类型，不会把 int 转 float64
 	if err := mapstructure.Decode(validatorInterface, &value); err == nil {
-		for k, v := range value {
-			ctx.Set(extraAddDataPrefix+k, v)
-		}
+		flattenAndSetContext(ctx, extraAddDataPrefix, value)
 	}
 
 	curDateTime := time.Now().Format(Global.DataFormt)
@@ -39,4 +36,15 @@ func DataAddContext(validatorInterface interf.ValidatorInterface, extraAddDataPr
 		}
 	}
 	return ctx
+}
+
+func flattenAndSetContext(ctx *gin.Context, prefix string, data map[string]interface{}) {
+	for k, v := range data {
+		switch val := v.(type) {
+		case map[string]interface{}:
+			flattenAndSetContext(ctx, prefix, val)
+		default:
+			ctx.Set(prefix+k, val)
+		}
+	}
 }
