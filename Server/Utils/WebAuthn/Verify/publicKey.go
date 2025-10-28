@@ -1,6 +1,7 @@
 package Verify
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/elliptic"
@@ -39,32 +40,79 @@ const (
 	crvEd25519 = 6 // OKP Ed25519
 )
 
-func extractCredentialData(authData []byte) (*AttestedCredentialData, error) {
-
-	//校验是否有变长部分
+// 解析注册阶段 authData 中的 ACData（须保证这是 attestation 的 authData）
+func extractCredentialData(authData []byte) (*AttestedCredentialData, int, error) {
+	// 固定头：rpIdHash(32) + flags(1) + signCount(4)
+	if len(authData) < 37 {
+		return nil, 0, fmt.Errorf("authData too short: %d", len(authData))
+	}
 	flags := authData[32]
-	if (flags & 0x40) == 0 {
-		return nil, errors.New("AT flag 未设置，没有凭证数据")
+	const flagAT = 0x40
+	const flagED = 0x80
+
+	if (flags & flagAT) == 0 {
+		return nil, 0, errors.New("AT flag 未设置，没有凭证数据")
 	}
 
 	offset := 37
-	aaguid := authData[offset : offset+16]
+
+	// AAGUID (16)
+	if len(authData) < offset+16 {
+		return nil, 0, errors.New("authData truncated at AAGUID")
+	}
+	aaguid := make([]byte, 16)
+	copy(aaguid, authData[offset:offset+16])
 	offset += 16
 
+	// credentialIdLen (2, big-endian)
+	if len(authData) < offset+2 {
+		return nil, 0, errors.New("authData truncated at credentialIdLen")
+	}
 	credIdLen := binary.BigEndian.Uint16(authData[offset : offset+2])
 	offset += 2
 
-	credentialID := authData[offset : offset+int(credIdLen)]
+	// credentialId (credIdLen)
+	if len(authData) < offset+int(credIdLen) {
+		return nil, 0, fmt.Errorf("authData truncated at credentialId: need %d", credIdLen)
+	}
+	credentialID := make([]byte, credIdLen)
+	copy(credentialID, authData[offset:offset+int(credIdLen)])
 	offset += int(credIdLen)
 
-	cosePublicKey := authData[offset:]
+	// 解析“恰好一个” CBOR item 作为 COSE 公钥，避免把 extensions 也吃进去
+	rest := authData[offset:]
+	if len(rest) == 0 {
+		return nil, 0, errors.New("missing COSE public key")
+	}
+
+	r := bytes.NewReader(rest)
+	dec := cbor.NewDecoder(r)
+
+	// 解到一个任意对象（通常是 map[int]any），只为得到消耗的字节数
+	var any interface{}
+	if err := dec.Decode(&any); err != nil {
+		return nil, 0, fmt.Errorf("decode COSE key failed: %w", err)
+	}
+
+	// 计算刚才解码消耗了多少字节
+	consumed := len(rest) - r.Len()
+	if consumed <= 0 || consumed > len(rest) {
+		return nil, 0, fmt.Errorf("invalid COSE length consumed=%d", consumed)
+	}
+	cosePublicKey := make([]byte, consumed)
+	copy(cosePublicKey, rest[:consumed])
+
+	// 若 ED=1，extensions 从这里开始：offset+consumed
+	nextOffset := offset + consumed
+	if (flags & flagED) != 0 {
+		// 需要的话可以在这里继续解析 extensions（同理 decode 一个 CBOR item）
+	}
 
 	return &AttestedCredentialData{
 		AAGUID:              aaguid,
 		CredentialID:        credentialID,
 		CredentialPublicKey: cosePublicKey,
-	}, nil
-
+	}, nextOffset, nil
 }
 
 func parseCOSEPublicKey(coseBytes []byte) (interface{}, int, error) {

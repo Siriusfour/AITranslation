@@ -69,7 +69,7 @@ func AttestationObjectVerifyForRegister(WebAuthnCtx *gin.Context) error {
 	flags := authData[32]
 	signCount := binary.BigEndian.Uint32(authData[33:37])
 	UserID := WebAuthnCtx.GetInt64(Consts.ValidatorPrefix + "UserID")
-	attestedCredentialData, err := extractCredentialData(authData)
+	attestedCredentialData, _, err := extractCredentialData(authData)
 	if err != nil {
 		return fmt.Errorf("public解析失败: %w", err)
 	}
@@ -101,30 +101,27 @@ func AttestationObjectVerifyForRegister(WebAuthnCtx *gin.Context) error {
 
 func AttestationObjectVerifyForLogin(WebAuthnCtx *gin.Context) error {
 
-	AuthenticatorDataBase64 := WebAuthnCtx.GetString(Consts.ValidatorPrefix + "AttestationObject")
-
-	//0.解析Base64
-	authData, err := base64.RawURLEncoding.DecodeString(AuthenticatorDataBase64) //Base64字符串->字节数组
+	//从ctx里面提取出AttestationObject，Signature，ClientDataJSON
+	authData, err := base64.RawURLEncoding.DecodeString(WebAuthnCtx.GetString(Consts.ValidatorPrefix + "AttestationObject")) //Base64字符串->字节数组
+	signature, err := base64.RawURLEncoding.DecodeString(WebAuthnCtx.GetString(Consts.ValidatorPrefix + "Signature"))
+	ClientData, err := base64.RawURLEncoding.DecodeString(WebAuthnCtx.GetString(Consts.ValidatorPrefix + "ClientDataJSON"))
 	if err != nil {
-		return fmt.Errorf("base64URL解码错误: %v", err)
+		return fmt.Errorf("base64解码失败：: %w", err)
 	}
 
 	// ===== 0. 提取 authData 各部分 ,RPIDHash,flags,signCount=====
-
-	// 提取各部分
 	RPIDHash := authData[0:32]
 	flags := authData[32]
 	signCount := binary.BigEndian.Uint32(authData[33:37]) //把4字节按照大端序转化成一个uint32整数
 
-	//由UserID和Credential ID数据库提取公钥
+	//由Credential ID在数据库查询公钥
 	Credential, err := UserDAO.CreateDAOFactory("mysql").FindCredential(WebAuthnCtx)
 	if err != nil {
 		return fmt.Errorf("webAuthn中根据CredentialID查找Credential失败： %w", err)
 	}
 
 	// =====  验证 RP ID Hash 是否与配置文件的rpID的hash值相同
-	RPID := Global.Config.GetString("WebAuthn.RPID")
-	if err := verifyRPID(RPID, RPIDHash); err != nil {
+	if err := verifyRPID(Global.Config.GetString("WebAuthn.RPID"), RPIDHash); err != nil {
 		return err
 	}
 
@@ -139,17 +136,8 @@ func AttestationObjectVerifyForLogin(WebAuthnCtx *gin.Context) error {
 	}
 
 	//验证签名
-	ClientData, err := base64.RawURLEncoding.DecodeString(WebAuthnCtx.GetString(Consts.ValidatorPrefix + "ClientDataJSON"))
-	if err != nil {
-		return err
-	}
-
 	clientDataHash := sha256.Sum256(ClientData)
-	messageHash := append(authData, clientDataHash[:]...)
-	signature, err := base64.RawURLEncoding.DecodeString(WebAuthnCtx.GetString(Consts.ValidatorPrefix + "Signature"))
-	if err != nil {
-		return err
-	}
+	message := append(authData, clientDataHash[:]...)
 
 	publicKey, alg, err := parseCOSEPublicKey(Credential.PublicKey)
 	if err != nil {
@@ -159,7 +147,7 @@ func AttestationObjectVerifyForLogin(WebAuthnCtx *gin.Context) error {
 	// 3) 按算法验证
 	switch k := publicKey.(type) {
 	case *ecdsa.PublicKey: // ES256 (-7)
-		var d = messageHash
+		var d = message
 		// 首选 DER
 		if signature[0] == 0x30 {
 			if !ecdsa.VerifyASN1(k, d[:], signature) {
@@ -181,7 +169,7 @@ func AttestationObjectVerifyForLogin(WebAuthnCtx *gin.Context) error {
 		}
 
 	case *rsa.PublicKey: // RS256 (-257)
-		d := sha256.Sum256(signature)
+		d := sha256.Sum256(message)
 		if err := rsa.VerifyPKCS1v15(k, crypto.SHA256, d[:], signature); err != nil {
 			return fmt.Errorf("rsa verify failed: %w", err)
 		}
