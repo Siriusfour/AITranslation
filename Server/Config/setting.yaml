@@ -31,7 +31,7 @@ WebAuthn :
   Attestation : "none"  #认证器证明类型
   CryptoType : -7          #服务器支持的加密类型
   AuthenticatorAttachment: "platform "  #用户端向认证器验证身份的类型
-  TimeOut : 300
+  TimeOut : 30000
   fmt : "none"
   Challenge_TTL : 1  #1分钟
   RPID : "localhost"

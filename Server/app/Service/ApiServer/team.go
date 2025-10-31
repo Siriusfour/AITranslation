@@ -44,7 +44,7 @@ func (Server *ApiServer) JoinTeam(ctx *gin.Context) error {
 		return fmt.Errorf("DAO层调用JoinTeam失败: %w", err)
 	}
 
-	//投放到消息队列，告诉用户“申请成功”，消费者会做“websoket通知，日志统计”
-
+	//投放到消息队列，告诉用户“申请成功”，消费者会做“websoket/SSE通知，日志统计"
+	
 	return nil
 }

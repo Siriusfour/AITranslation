@@ -38,7 +38,7 @@ func Fail(Context *gin.Context, err error, data ...interface{}) {
 	ReturnResponse(Context, http.StatusBadRequest, http.StatusBadRequest, err, data)
 }
 
-// OK 处理成功
+// success handller
 func OK(Context *gin.Context, data interface{}) {
 	ReturnResponse(Context, http.StatusOK, http.StatusOK, errors.New("success"), data)
 }

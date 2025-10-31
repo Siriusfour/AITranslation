@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// webAuthn服务器配置信息
+// WebAuthn 服务器配置信息
 type Config struct {
 	//网站信息
 	Name string
