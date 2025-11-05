@@ -54,7 +54,7 @@ func (s *SnowFlake) GetId() int64 {
 		diff := s.timestamp - now
 		if diff <= threshold {
 			// 小回拨：沿用 lastTs 作为逻辑时间，并推进序列
-			Global.Logger.Warn("snowflake clock rollback (minor), using logical time", zap.Int64("diff_ms", diff), zap.Int64("last_ts", s.timestamp))
+			Global.Logger["Business"].Warn("snowflake clock rollback (minor), using logical time", zap.Int64("diff_ms", diff), zap.Int64("last_ts", s.timestamp))
 			now = s.timestamp
 			s.sequence = (s.sequence + 1) & Consts.SequenceMask
 			if s.sequence == 0 {
@@ -62,7 +62,7 @@ func (s *SnowFlake) GetId() int64 {
 			}
 		} else {
 			// 大回拨：阻塞到 lastTs
-			Global.Logger.Error("snowflake clock rollback (major), blocking until last timestamp", zap.Int64("diff_ms", diff), zap.Int64("last_ts", s.timestamp))
+			Global.Logger["Business"].Error("snowflake clock rollback (major), blocking until last timestamp", zap.Int64("diff_ms", diff), zap.Int64("last_ts", s.timestamp))
 			now = waitNextMillis(s.timestamp)
 			s.sequence = 0
 		}

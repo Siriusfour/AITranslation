@@ -74,11 +74,11 @@ func (l logOutPut) Printf(strFormat string, args ...interface{}) {
 	logFlag := "gorm 日志:"
 	detailFlag := "详情："
 	if strings.HasPrefix(strFormat, "[info]") || strings.HasPrefix(strFormat, "[traceStr]") {
-		Global.Logger.Info(logFlag, zap.String(detailFlag, logRes))
+		Global.Logger["DB"].Info(logFlag, zap.String(detailFlag, logRes))
 	} else if strings.HasPrefix(strFormat, "[error]") || strings.HasPrefix(strFormat, "[traceErr]") {
-		Global.Logger.Error(logFlag, zap.String(detailFlag, logRes))
+		Global.Logger["DB"].Error(logFlag, zap.String(detailFlag, logRes))
 	} else if strings.HasPrefix(strFormat, "[warn]") || strings.HasPrefix(strFormat, "[traceWarn]") {
-		Global.Logger.Warn(logFlag, zap.String(detailFlag, logRes))
+		Global.Logger["DB"].Warn(logFlag, zap.String(detailFlag, logRes))
 	}
 }
 

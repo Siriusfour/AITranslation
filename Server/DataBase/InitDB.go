@@ -39,7 +39,7 @@ func GetSqlDriver(sqlType string, readDbIsOpen int, dbConf ...ConfigParams) (*go
 
 	var dbDialector gorm.Dialector
 	if val, err := getDbDialector(sqlType, "Write", dbConf...); err != nil {
-		Global.Logger.Error(MyErrors.ErrorsDialectorDbInitFail+sqlType, zap.Error(err))
+		Global.Logger["DB"].Error(MyErrors.ErrorsDialectorDbInitFail+sqlType, zap.Error(err))
 	} else {
 		dbDialector = val
 	}

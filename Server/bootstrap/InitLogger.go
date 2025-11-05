@@ -4,6 +4,7 @@ import (
 	"AITranslatio/Global"
 	"AITranslatio/Global/Consts"
 	"AITranslatio/Utils/Hooks"
+	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -14,28 +15,32 @@ import (
 // InitLogger
 
 func InitLogger() {
-
 	Global.Logger = CreateZapFactory(Hooks.ZapLogHandler)
 }
 
-func CreateZapFactory(entry func(zapcore.Entry) error) *zap.Logger {
+func CreateZapFactory(entry func(zapcore.Entry) error) map[string]*zap.Logger {
 
-	// 获取程序所处的模式：  开发调试 、 生产
-	//variable.ConfigYml := yml_config.CreateYamlFactory()
+	// 获取程序所处的模式：开发调试 或 生产
 	appDebug := Global.Config.GetBool("Mode.Develop")
 
-	// 判断程序当前所处的模式，调试模式直接返回一个便捷的zap日志管理器地址，所有的日志打印到控制台即可
+	// 返回不同组件的日志记录器
+	loggers := make(map[string]*zap.Logger)
+
+	// 判断程序当前所处的模式，调试模式直接返回一个便捷的zap日志管理器地址
 	if appDebug {
-		if logger, err := zap.NewDevelopment(zap.Hooks(entry)); err == nil {
-			return logger
-		} else {
+		// 如果是开发模式，直接创建一个开发模式的logger
+		logger, err := zap.NewDevelopment(zap.Hooks(entry))
+		if err != nil {
 			log.Fatal("创建zap日志包失败，详情：" + err.Error())
 		}
+		loggers["default"] = logger
+		return loggers
 	}
 
-	// 以下才是 非调试（生产）模式所需要的代码
+	// 以下是生产模式的代码
 	encoderConfig := zap.NewProductionEncoderConfig()
 
+	// 获取日志时间精度配置
 	timePrecision := Global.Config.GetString("Logs.TimePrecision")
 	var recordTimeFormat string
 	switch timePrecision {
@@ -45,14 +50,16 @@ func CreateZapFactory(entry func(zapcore.Entry) error) *zap.Logger {
 		recordTimeFormat = "2006-01-02 15:04:05.000"
 	default:
 		recordTimeFormat = "2006-01-02 15:04:05"
-
 	}
+
+	// 设置时间格式
 	encoderConfig.EncodeTime = func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 		enc.AppendString(t.Format(recordTimeFormat))
 	}
 	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
-	encoderConfig.TimeKey = "created_at" // 生成json格式日志的时间键字段，默认为 ts,修改以后方便日志导入到 ELK 服务器
+	encoderConfig.TimeKey = "created_at"
 
+	// 根据配置选择输出格式
 	var encoder zapcore.Encoder
 	switch Global.Config.GetString("Logs.TextFormat") {
 	case "console":
@@ -60,23 +67,53 @@ func CreateZapFactory(entry func(zapcore.Entry) error) *zap.Logger {
 	case "json":
 		encoder = zapcore.NewJSONEncoder(encoderConfig) // json格式
 	default:
-		encoder = zapcore.NewConsoleEncoder(encoderConfig) // 普通模式
+		encoder = zapcore.NewConsoleEncoder(encoderConfig) // 默认控制台模式
 	}
 
-	//写入器
-	fileName := Consts.BasePath + Global.Config.GetString("Logs.Path")
-	lumberJackLogger := &lumberjack.Logger{
-		Filename:   fileName,                                //日志文件的位置
-		MaxSize:    Global.Config.GetInt("Logs.MaxSize"),    //在进行切割之前，日志文件的最大大小（以MB为单位）
-		MaxBackups: Global.Config.GetInt("Logs.MaxBackups"), //保留旧文件的最大个数
-		MaxAge:     Global.Config.GetInt("Logs.MaxAge"),     //保留旧文件的最大天数
-		Compress:   Global.Config.GetBool("Logs.Compress"),  //是否压缩/归档旧文件
+	// 准备日志文件路径和切割策略
+
+	logPaths := map[string]string{
+		"business": Consts.BasePath + Global.Config.GetString("Logs.BusinessPath"),
+		"db":       Consts.BasePath + Global.Config.GetString("Logs.DbPath"),
+		"mq":       Consts.BasePath + Global.Config.GetString("Logs.MQPath"),
 	}
-	writer := zapcore.AddSync(lumberJackLogger)
-	// 开始初始化zap日志核心参数，
-	//参数一：编码器
-	//参数二：写入器
-	//参数三：参数级别，debug级别支持后续调用的所有函数写日志，如果是 fatal 高级别，则级别>=fatal 才可以写日志
-	zapCore := zapcore.NewCore(encoder, writer, zap.InfoLevel)
-	return zap.New(zapCore, zap.AddCaller(), zap.Hooks(entry), zap.AddStacktrace(zap.WarnLevel))
+
+	// 定义不同模块的日志文件
+	modules := []string{"business", "db", "mq"}
+
+	// 为每个模块创建不同的日志文件和 logger
+	for _, module := range modules {
+		// 创建每个模块的日志文件路径
+		fileName := fmt.Sprintf("%s_%s.log", logPaths[module], module)
+		lumberJackLogger := &lumberjack.Logger{
+			Filename:   fileName,                                // 日志文件位置
+			MaxSize:    Global.Config.GetInt("Logs.MaxSize"),    // 最大大小（MB）
+			MaxBackups: Global.Config.GetInt("Logs.MaxBackups"), // 保留的旧文件最大个数
+			MaxAge:     Global.Config.GetInt("Logs.MaxAge"),     // 旧文件保留天数
+			Compress:   Global.Config.GetBool("Logs.Compress"),  // 是否压缩旧文件
+		}
+		writer := zapcore.AddSync(lumberJackLogger)
+
+		// 设置每个模块的日志级别
+		var level zapcore.Level
+		switch module {
+		case "business":
+			level = zap.InfoLevel // 业务日志可以是 Info 级别
+		case "db":
+			level = zap.WarnLevel // 数据库日志可能需要 Warn 级别
+		case "mq":
+			level = zap.DebugLevel // MQ 日志可能更偏向调试级别
+		default:
+			level = zap.InfoLevel
+		}
+
+		// 创建每个模块的 Core
+		zapCore := zapcore.NewCore(encoder, writer, level)
+
+		// 使用不同的 module 名称生成 Logger
+		loggers[module] = zap.New(zapCore, zap.AddCaller(), zap.Hooks(entry), zap.AddStacktrace(zap.WarnLevel))
+	}
+
+	// 返回多个日志记录器
+	return loggers
 }

@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-var Logger *zap.Logger
+var Logger map[string]*zap.Logger
 var MySQL_Client *gorm.DB
 var PostgreSQL_Client *gorm.DB
 var SQLserver_Client *gorm.DB

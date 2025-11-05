@@ -33,7 +33,7 @@ func InitRouter() *gin.Engine {
 	// 设置可信任的代理服务器列表,gin
 	if Global.Config.GetInt("HttpServer.TrustProxies.IsOpen") == 1 {
 		if err := router.SetTrustedProxies(Global.Config.GetStringSlice("HttpServer.TrustProxies.ProxyServerList")); err != nil {
-			Global.Logger.Error(MyErrors.ErrorGinSetTrustProxy, zap.Error(err))
+			Global.Logger["DB"].Error(MyErrors.ErrorGinSetTrustProxy, zap.Error(err))
 		}
 	} else {
 		_ = router.SetTrustedProxies(nil)

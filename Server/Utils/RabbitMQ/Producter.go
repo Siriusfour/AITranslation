@@ -1,33 +1,48 @@
 package RabbitMQ
 
 import (
-	"AITranslatio/Global"
+	"errors"
+	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"time"
 )
 
-type Producer struct {
-	connect    *amqp.Connection //	地址
-	queueName  string           //队列名称
-	durable    bool
-	occurError error
-}
+// Publish  投放消息
 
-// CreateProducer  创建一个生产者
-func CreateProducer() (*Producer, error) {
-	// 获取配置信息
-	conn, err := amqp.Dial(Global.Config.GetString("RabbitMq.WorkQueue.Addr"))
-	queueName := Global.Config.GetString("RabbitMq.WorkQueue.QueueName")
-	durable := Global.Config.GetBool("RabbitMq.WorkQueue.Durable")
+func (c *Client) Publish(queueName string, body []byte) error {
 
-	if err != nil {
-		Global.Logger.Error(err.Error())
-		return nil, err
+	c.mu.RLock()
+	ch := c.ch
+	c.mu.RUnlock()
+	if ch == nil {
+		return errors.New("channel not available")
 	}
 
-	prod := &Producer{
-		connect:   conn,
-		queueName: queueName,
-		durable:   durable,
+	if _, err := ch.QueueDeclare(queueName, false, false, false, false, nil); err != nil {
+		return fmt.Errorf("MQ创建/链接队列失败: %w", err)
 	}
-	return prod, nil
+	// 选择器：如果启用发布确认，注册监听确认通道
+	var acks <-chan amqp.Confirmation
+	if c.config.EnableConfirm {
+		acks = ch.NotifyPublish(make(chan amqp.Confirmation, 1))
+	}
+
+	if err := ch.Publish("", queueName, false, false, amqp.Publishing{
+		DeliveryMode: amqp.Persistent,
+		ContentType:  "application/octet-stream",
+		Body:         body,
+	}); err != nil {
+		return fmt.Errorf("publish failed: %w", err)
+	}
+	if c.config.EnableConfirm {
+		select {
+		case conf := <-acks:
+			if !conf.Ack {
+				return errors.New("publish not acknowledged by broker")
+			}
+		case <-time.After(5 * time.Second):
+			return errors.New("publish confirm timeout")
+		}
+	}
+	return nil
 }

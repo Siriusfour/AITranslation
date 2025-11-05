@@ -16,7 +16,7 @@ func Create(key string) func(context *gin.Context) {
 		}
 	}
 
-	Global.Logger.Error(MyErrors.ErrorsValidatorNotExists + ", 验证器模块：" + key)
+	Global.Logger["Business"].Error(MyErrors.ErrorsValidatorNotExists + ", 验证器模块：" + key)
 	return nil
 
 }
