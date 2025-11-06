@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"go.uber.org/zap"
 	"sync/atomic"
 	"time"
 )
@@ -98,6 +99,7 @@ func (c *Client) connect(ctx context.Context) error {
 
 	hb := c.config.Heartbeat
 	connCount := 0
+	backOff := time.Duration(2)
 
 	cfg := amqp.Config{Heartbeat: hb, Properties: amqp.Table{"connection_name": c.config.ConnectionName}}
 
@@ -110,12 +112,21 @@ func (c *Client) connect(ctx context.Context) error {
 	//连接失败，开始重连，
 	if err != nil {
 		connCount++
-		if connCount > c.config.RetryMaxTries {
+		if connCount > c.config.RetryMaxTries { //大于限定次数直接返回
 			Global.Logger["MQ"].Error("MQ建立连接失败：" + err.Error())
+			return err
 		}
 
 		time.Sleep(c.config.RetryBaseTime * time.Millisecond)
+
+		timer := time.NewTimer(backOff)
+
+		<-timer.C //等到间隔时间
+
+		backOff *= 2
+
+		Global.Logger["MQ"].Error("[MQ] ❌ connect is failed :%w", zap.Error(err))
+
 		continue
 	}
-
 }
