@@ -12,82 +12,6 @@ import (
 	"time"
 )
 
-type Handler func(ctx context.Context, body []byte) error
-
-type Config struct {
-	URI           string
-	Durable       bool //是否持久化
-	prefetch      int  //每个消费者的最大未确认信息数量（背压）
-	workers       int  //每个消费者的并发协程数量
-	RetryBase     time.Duration
-	RetryMaxTries int
-	RetryWaitTime time.Duration
-	EnableConfirm bool //是否开启发布确认
-}
-
-type Client struct {
-	config Config
-	conn   *amqp.Connection
-	ch     *amqp.Channel
-	closed atomic.Bool
-
-	mu           sync.RWMutex
-	notifyCloseC chan *amqp.Error
-	wg           sync.WaitGroup
-	dealQueue    chan amqp.Delivery
-}
-
-func InitClient() (*Client, error) {
-
-	config := &Config{
-		URI:       Global.Config.GetString("RabbitMq.WorkQueue.Addr"),
-		Durable:   Global.Config.GetBool("RabbitMq.WorkQueue.Durable"),
-		workers:   Global.Config.GetInt("RabbitMq.WorkQueue.Workers"),
-		RetryBase: Global.Config.GetDuration("RabbitMq.WorkQueue.RetryBase"),
-	}
-
-	conn, err := amqp.Dial()
-	if err != nil {
-		Global.Logger["MQ"].Error("Failed to connect RabbitMQ" + err.Error())
-	}
-
-	ch, err := conn.Channel()
-	if err != nil {
-		Global.Logger["MQ"].Error("Failed to connect RabbitMQ" + err.Error())
-	}
-
-	// 1️⃣ 声明死信交换机
-	err = ch.ExchangeDeclare(
-		"dlx.exchange", // 死信交换机名
-		"direct",       // 类型 direct
-		true,           // durable
-		false,          // autoDelete
-		false,          // internal
-		false,          // noWait
-		nil,            // args
-	)
-
-	//声明死信队列
-	_, err = ch.QueueDeclare(
-		"dead_letter_queue", // 死信队列名称
-		true,                // durable
-		false,               // autoDelete
-		false,               // exclusive
-		false,               // noWait
-		nil,                 // args
-	)
-
-	//二者绑定
-	err = ch.QueueBind(
-		"dead_letter_queue", // 队列名
-		"dlx.key",           // 路由键
-		"dlx.exchange",      // 绑定的死信交换机
-		false,
-		nil,
-	)
-
-}
-
 // Connect 创建连接，失败时重试，直到成功/超出最大时间和次数
 func (c *Client) Connect(ctx context.Context) error {
 
@@ -122,19 +46,27 @@ func (c *Client) Connect(ctx context.Context) error {
 			//发布确认处理
 			if c.config.EnableConfirm {
 				if err := ch.Confirm(false); err != nil {
+					c.mu.Lock()
 					_ = ch.Close()
 					_ = conn.Close()
+					c.mu.Unlock()
 					return err
 				}
+
+				//定义并绑定发布确认队列pubConfirms，并以协程启动consumePublishConfirms监听并处理NACK信号
+				pubConfirms := ch.NotifyPublish(make(chan amqp.Confirmation, 1<<10))
+				go consumePublishConfirms(pubConfirms)
+
 			} else {
 				c.mu.Lock()
 				c.conn = conn
 				c.ch = ch
 				c.notifyCloseC = make(chan *amqp.Error, 1)
 				conn.NotifyClose(c.notifyCloseC)
+				ch.NotifyClose(c.notifyCloseC)
 				c.mu.Unlock()
 
-				log.Println("[MQ] ✅ connected")
+				Global.Logger["MQ"].Info("[MQ] ✅ connected")
 				// 启动连接监视器（断线重连）
 				c.wg.Add(1)
 				go c.watchReconnect()
@@ -162,6 +94,18 @@ func (c *Client) Connect(ctx context.Context) error {
 			Global.Logger["MQ"].Error("[MQ] ❌ connect is failed :%w", zap.Error(err))
 		}
 	}
+}
+
+func consumePublishConfirms(confirms <-chan amqp.Confirmation) {
+	for confirm := range confirms {
+		if confirm.Ack {
+			log.Printf("[MQ] ✅ publish confirmed (tag=%d)", confirm.DeliveryTag)
+		} else {
+			log.Printf("[MQ] ❌ publish NOT confirmed (tag=%d)", confirm.DeliveryTag)
+			// 在这里可以执行重发逻辑或记录日志
+		}
+	}
+	log.Println("[MQ] publish confirm channel closed")
 }
 
 func (c *Client) watchReconnect() {

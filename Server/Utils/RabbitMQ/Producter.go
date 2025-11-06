@@ -9,7 +9,7 @@ import (
 
 // Publish  投放消息
 
-func (c *Client) Publish(queueName string, body []byte) error {
+func (c *Client) Publish(queueName string, body []byte, exchangeType string) error {
 
 	c.mu.RLock()
 	ch := c.ch
@@ -18,7 +18,15 @@ func (c *Client) Publish(queueName string, body []byte) error {
 		return errors.New("channel not available")
 	}
 
-	if _, err := ch.QueueDeclare(queueName, false, false, false, false, nil); err != nil {
+	args := amqp.Table{
+		// 消息10秒没被消费就过期，成为“死信”
+		"x-message-ttl": int32(10000), // 10 秒
+		// 过期的消息会转发到以下 DLX
+		"x-dead-letter-exchange":    "dlx.exchange",
+		"x-dead-letter-routing-key": "dlx.key",
+	}
+
+	if _, err := ch.QueueDeclare(queueName, false, false, false, false, args); err != nil {
 		return fmt.Errorf("MQ创建/链接队列失败: %w", err)
 	}
 	// 选择器：如果启用发布确认，注册监听确认通道
