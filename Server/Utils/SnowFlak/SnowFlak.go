@@ -4,6 +4,7 @@ import (
 	"AITranslatio/Global"
 	"AITranslatio/Global/Consts"
 	"go.uber.org/zap"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -73,6 +74,10 @@ func (s *SnowFlake) GetId() int64 {
 	r := (now-Consts.StartTimeStamp)<<Consts.TimestampShift | (s.machineId << Consts.MachineIdShift) | (s.sequence)
 
 	return r
+}
+
+func (s *SnowFlake) GetIDString() string {
+	return strconv.FormatInt(s.GetId(), 10)
 }
 
 // 等待到下一毫秒，直到当前毫秒时间 strictly 大于 lastTs

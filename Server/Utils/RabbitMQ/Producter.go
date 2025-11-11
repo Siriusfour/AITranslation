@@ -1,55 +1,55 @@
 package RabbitMQ
 
 import (
+	"AITranslatio/Utils/SnowFlak"
 	"errors"
 	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
+
 	"time"
 )
 
 // Publish  投放消息
-
-func (c *Client) Publish(queueName string, body []byte, exchangeType string) error {
+func (c *Client) Publish(exchange, routingKey string, body []byte) error {
 
 	c.mu.RLock()
-	ch := c.ch
+	ch, err := c.Conn.Channel()
+	if err != nil {
+		return fmt.Errorf("conncet创建channel失败：%w", err)
+	}
+	defer ch.Close()
 	c.mu.RUnlock()
-	if ch == nil {
-		return errors.New("channel not available")
-	}
 
-	args := amqp.Table{
-		// 消息10秒没被消费就过期，成为“死信”
-		"x-message-ttl": int32(10000), // 10 秒
-		// 过期的消息会转发到以下 DLX
-		"x-dead-letter-exchange":    "dlx.exchange",
-		"x-dead-letter-routing-key": "dlx.key",
-	}
-
-	if _, err := ch.QueueDeclare(queueName, false, false, false, false, args); err != nil {
-		return fmt.Errorf("MQ创建/链接队列失败: %w", err)
-	}
-	// 选择器：如果启用发布确认，注册监听确认通道
+	// 如果启用发布确认，注册监听确认通道
 	var acks <-chan amqp.Confirmation
-	if c.config.EnableConfirm {
+
+	if c.Config.EnableConfirm {
+		if err := ch.Confirm(false); err != nil {
+			return fmt.Errorf("enable confirm failed: %w", err)
+		}
 		acks = ch.NotifyPublish(make(chan amqp.Confirmation, 1))
 	}
 
-	if err := ch.Publish("", queueName, false, false, amqp.Publishing{
+	//Publish向队列推送消息
+	if err := ch.Publish(exchange, routingKey, false, false, amqp.Publishing{
+
 		DeliveryMode: amqp.Persistent,
 		ContentType:  "application/octet-stream",
 		Body:         body,
+		MessageId:    SnowFlak.CreateSnowflakeFactory().GetIDString(),
 	}); err != nil {
 		return fmt.Errorf("publish failed: %w", err)
 	}
-	if c.config.EnableConfirm {
+
+	//推送消息后监测5秒内有没有来自MQ服务器的ACK,没有的话返回错误
+	if c.Config.EnableConfirm {
 		select {
 		case conf := <-acks:
 			if !conf.Ack {
-				return errors.New("publish not acknowledged by broker")
+				return errors.New("推送信息时没有收到来自broke的ACK")
 			}
 		case <-time.After(5 * time.Second):
-			return errors.New("publish confirm timeout")
+			return errors.New("publish超时")
 		}
 	}
 	return nil

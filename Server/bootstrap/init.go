@@ -29,4 +29,6 @@ func init() {
 	//初始化redis客户端
 	InitRedis()
 
+	//初始化rabbitMQ客户端
+
 }
