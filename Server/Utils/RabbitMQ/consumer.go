@@ -47,18 +47,20 @@ func (c *Client) consumer(ctx context.Context, queueName string, handleFunc Hand
 				consumeLoop:
 					for {
 						select {
+						//持续监听信息
 						case msg := <-msgs:
 							err := handleFunc(msg.Body)
 							if err != nil {
-								msg.Nack(false, false)
-								errChan <- fmt.Errorf("WorkerID:%v，消费失败：%w", workerID, err)
+								c.MessageFailHandler(msg, queueName)
+								continue
 							} else {
 								msg.Ack(false)
 							}
+						//调用者主动关闭
 						case <-ctx.Done():
 							ch.Close()
 							return
-
+						//通道被broker关闭
 						case err := <-notifyClose:
 							if err != nil {
 								errChan <- fmt.Errorf("WorkerID:%v Channel 异常关闭：%v", workerID, err)
@@ -81,8 +83,67 @@ func (c *Client) consumer(ctx context.Context, queueName string, handleFunc Hand
 	return
 }
 
-// 判断是否是有经过延迟重连队列
-func (c *Client) IsRetryMessage() {}
+func (c *Client) MessageFailHandler(msg amqp.Delivery, queueName string) {
 
-// 投递到延迟重连队列
-func (c *Client) SendToRetry() {}
+	if c.IsRetryMessage(&msg) {
+		err := c.SendTo(&msg, queueName, "deal")
+		if err != nil {
+			msg.Nack(false, true)
+
+		}
+
+	} else {
+		err := c.SendTo(&msg, queueName, "retry")
+		if err != nil {
+			return
+		}
+	}
+
+}
+
+// 判断是否是有经过延迟重连队列
+func (c *Client) IsRetryMessage(msg *amqp.Delivery) bool {
+
+	val, ok := msg.Headers["x-retry"]
+	if ok {
+		return val == 1
+	} else {
+		return false
+	}
+}
+
+// SendTo 投递到死信or延迟重试队列
+func (c *Client) SendTo(msg *amqp.Delivery, queueName string, Type string) error {
+
+	if msg.Headers == nil {
+		msg.Headers = amqp.Table{}
+	}
+
+	if Type == "retry" {
+		msg.Headers["x-retry"] = 1
+	}
+
+	Exchange := Type + queueName
+
+	// 打开一个新的 channel
+	ch, err := c.Conn.Channel()
+	if err != nil {
+		return fmt.Errorf("sendTO创建ch失败 %w", err)
+	}
+	defer ch.Close()
+
+	// 直接发布消息到死信交换机
+	return ch.Publish(
+		Exchange,  // 已存在的 DLX
+		queueName, // routing key
+		false,     // mandatory
+		false,     // immediate
+		amqp.Publishing{
+			ContentType:   msg.ContentType,
+			Body:          msg.Body,
+			DeliveryMode:  amqp.Persistent, // 持久化消息
+			CorrelationId: msg.CorrelationId,
+			Headers:       msg.Headers,
+		},
+	)
+}
