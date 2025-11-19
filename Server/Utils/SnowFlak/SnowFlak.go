@@ -9,33 +9,48 @@ import (
 	"time"
 )
 
+type SnowFlakeConfig interface {
+	GetInt64(string) int64
+}
+type SnowFlake struct {
+	sync.Mutex
+	timestamp int64 //上次生成ID是时间戳(毫秒)
+	machineId int64
+	sequence  int64
+	getTime   func() int64
+
+	logger map[string]*zap.Logger
+	config SnowFlakeConfig
+}
+
 // 创建一个雪花算法生成器(生成工厂)
 func CreateSnowflakeFactory() *SnowFlake {
 	return &SnowFlake{
 		timestamp: 0,
-		machineId: Global.Config.GetInt64("SnowFlake.SnowFlakeMachineId"),
+		//machineId: Global.Config.GetInt64("SnowFlake.SnowFlakeMachineId"),
+		machineId: 1,
 		sequence:  0,
+
+		getTime: func() int64 { return time.Now().UnixNano() / 1e6 }, //依赖注入，默认获取当前时间，测试时注入测试时间
+
+		logger: Global.Logger,
+		config: Global.Config,
 	}
 }
 
-type SnowFlake struct {
-	sync.Mutex
-	timestamp int64
-	machineId int64
-	sequence  int64
-}
-
-// 生成分布式ID
-func (s *SnowFlake) GetId() int64 {
+// 生成ID
+func (s *SnowFlake) GetID() int64 {
 
 	s.Lock()
 	defer s.Unlock()
 
-	now := time.Now().UnixNano() / 1e6
+	now := s.getTime()
 
 	//同毫秒内发号
 	if now == s.timestamp {
+		// 同毫秒内序列号自增1，&SequenceMask保证不会溢出，在0-4095内循环
 		s.sequence = (s.sequence + 1) & Consts.SequenceMask
+		//如果溢出了，则阻塞到1下一个1毫秒
 		if s.sequence == 0 {
 			now = waitNextMillis(s.timestamp)
 		}
@@ -48,14 +63,14 @@ func (s *SnowFlake) GetId() int64 {
 
 	//时钟回拨
 	if now < s.timestamp {
-		threshold := Global.Config.GetInt64("SnowFlake.RollbackThresholdMs")
+		threshold := s.config.GetInt64("SnowFlake.RollbackThresholdMs")
 		if threshold <= 0 {
 			threshold = 5
 		}
 		diff := s.timestamp - now
 		if diff <= threshold {
 			// 小回拨：沿用 lastTs 作为逻辑时间，并推进序列
-			Global.Logger["Business"].Warn("snowflake clock rollback (minor), using logical time", zap.Int64("diff_ms", diff), zap.Int64("last_ts", s.timestamp))
+			s.logger["Business"].Warn("snowflake 时钟回退，使用逻辑时间", zap.Int64("diff_ms", diff), zap.Int64("last_ts", s.timestamp))
 			now = s.timestamp
 			s.sequence = (s.sequence + 1) & Consts.SequenceMask
 			if s.sequence == 0 {
@@ -63,7 +78,7 @@ func (s *SnowFlake) GetId() int64 {
 			}
 		} else {
 			// 大回拨：阻塞到 lastTs
-			Global.Logger["Business"].Error("snowflake clock rollback (major), blocking until last timestamp", zap.Int64("diff_ms", diff), zap.Int64("last_ts", s.timestamp))
+			s.logger["Business"].Error("snowflake clock rollback (major), blocking until last timestamp", zap.Int64("diff_ms", diff), zap.Int64("last_ts", s.timestamp))
 			now = waitNextMillis(s.timestamp)
 			s.sequence = 0
 		}
@@ -77,7 +92,7 @@ func (s *SnowFlake) GetId() int64 {
 }
 
 func (s *SnowFlake) GetIDString() string {
-	return strconv.FormatInt(s.GetId(), 10)
+	return strconv.FormatInt(s.GetID(), 10)
 }
 
 // 等待到下一毫秒，直到当前毫秒时间 strictly 大于 lastTs

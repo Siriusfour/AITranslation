@@ -1,0 +1,150 @@
+Mode:
+  Develop : true
+  Product : false  #production
+  DoMain : "suis.com"
+
+HttpServer:
+  Port: ":3008"
+  TrustProxies: #设置gin可以信任的代理服务器(例如 nginx 前置代理服务器),详情参见文档：https://www.yuque.com/xiaofensinixidaouxiang/bkfhct/vmobe7
+    IsOpen: 0                       # 可选值（0 或者 1）,如果 go 服务是被 nginx 代理，建议该值设置为 1，将 nginx 代理及机器的ip添加到 ProxyServerList 列表
+    # nginx 代理服务器ip地址
+    ProxyServerList:
+      - "192.168.10.1"
+      - "192.168.10.2"
+
+
+
+Logs:
+
+  MQ: "/Storage/Logs/MQ.log"
+  Db: "/Storage/Logs/DB.log"
+  Business: "/Storage/Logs/Business.log"
+  TextFormat: "json"                                  #记录日志的格式，参数选项：console、json ， console 表示一般的文本格式
+  TimePrecision: "millisecond"                         #记录日志时，相关的时间精度，该参数选项：second  、 millisecond ， 分别表示 秒 和 毫秒 ,默认为毫秒级别
+  MaxSize: 10                                           #每个日志的最大尺寸(以MB为单位）， 超过该值，系统将会自动进行切割
+  MaxBackups: 7                                        #保留旧日志最大个数
+  MaxAge: 15                                           #保留旧日志最大天数
+  Compress: false                                      #日志备份时，是否进行压缩
+
+
+WebAuthn :
+  rp :
+    name: "Suis笔记小说共享网"
+    ID : "http://localhost:5173"
+  Attestation : "none"  #认证器证明类型
+  CryptoType : -7          #服务器支持的加密类型
+  AuthenticatorAttachment: "platform "  #用户端向认证器验证身份的类型
+  TimeOut : 30000
+  fmt : "none"
+  Challenge_TTL : 1  #1分钟
+  RPID : "localhost"
+
+Redis:
+  DNS: "localhost:6379"
+  DB: 0
+  Password: ""
+
+
+grpc:
+  DNS: "127.0.0.1:5001"        #192.168.3.205
+
+Token:
+  AkOutTime: 3     #3小时
+  RkOutTime: 72   #3天
+
+
+SnowFlake:
+  SnowFlakeMachineId: 2
+  RollbackThresholdMs: 5
+
+
+DB:
+  SlowThreshold: 5            # 慢 SQL 阈值(sql执行时间超过此时间单位（秒），就会触发系统日志记录)
+  Mode : 0
+  MySQL:
+    IsInitGlobalGormMysql: 1
+    IsOpenReadDB: 0 # 随项目启动为gorm db初始化一个全局 variable.GormDbMysql（完全等于*gorm.Db）,正确配置数据库，该值必须设置为: 1
+    Write:
+      Host: "127.0.0.1"
+      DataBase: "Note_Writer"
+      Port: 3306
+      User: "root"
+      Password: "123456789"    #更好的方案：在环境变量中获取
+      Charset: "utf8"
+      MaxIdleConns: 10
+      MaxOpenConns: 128
+      ConnMaxLifetime: 60    # 连接不活动时的最大生存时间(秒)
+      # 是否开启读写分离配置（1=开启、0=关闭），IsOpenReadDb=1,Read 部分参数有效，否则Read部分参数直接忽略
+
+    Read:
+      Host: "127.0.0.1"
+      DataBase: "Note_Reader"
+      Port: 3308                        #注意，非3306，请自行调整
+      Prefix: "tb_"
+      User: "root"
+      Password: "123456789"
+      Charset: "utf8"
+      SetMaxIdleConns: 10
+      SetMaxOpenConns: 128
+      SetConnMaxLifetime: 60
+
+
+  #################=====PostgreSQL====#####################################
+  # 如果要使用postgresql数据库，请在 app/model 目录，将 users_for_postgres.txt 的内容直接覆盖同目录的 users.go 即可
+  PostgreSql:
+    IsInitGlobalGormPostgreSql: 0  # 随项目启动为gorm db初始化一个全局 variable.GormDbMysql（完全等于*gorm.Db）,正确配置数据库，该值必须设置为: 1
+    Write:
+      Host: "127.0.0.1"
+      DataBase: "DB_Note"
+      Port: 5432
+      Prefix: "tb_"
+      User: "postgres"
+      Pass: "Secret2017~"
+      SetMaxIdleConns: 10
+      SetMaxOpenConns: 128
+      SetConnMaxLifetime: 60
+
+    IsOpenReadDb: 0            # 是否开启读写分离配置（1=开启、0=关闭），IsOpenReadDb=1,Read  部分参数有效，否则Read部分参数直接忽略
+
+    Read:
+      Host: "127.0.0.1"
+      DataBase: "DB_Note"
+      Port: 5432
+      Prefix: "tb_"
+      User: "postgres"
+      Pass: "secret2017"
+      SetMaxIdleConns: 10
+      SetMaxOpenConns: 128
+      SetConnMaxLifetime: 60
+
+RabbitMq:
+  WorkQueue:
+    Addr: "amqp://@127.0.0.1:5672/"  #参照前文地址说明
+    Durable: false    #消息是否持久化
+    Workers: 10       #最大线程数量
+    RetryMaxTries: 10 #重连的最大次数
+    RetryWaitTime: 100000 #重连的最大时间
+    RetryBaseTime: 2000  #指数避让的起始时间
+    EnableConfirm: true   #发布确认
+
+    #死信队列配置：
+    DLXExchange:   "dlx_"
+    DLXRoutingKey: "dlx_"
+    DLQName:       "dlx_"
+
+    exchange:
+      - name: "creat"
+        bindQueue: ["creat.team","creat.project"]
+
+      - name: "apply"
+        bindQueue: [ "apply.team","apply.friend" ]
+
+    RetryCount: 5                                         #消费者掉线后,尝试重连最大次数
+    # 是否开启生产确认and消费确认
+    MaxPubRetries: 10
+    ConfirmTimeout: 10000   #确认超时时间
+
+    #延迟重试队列
+    RetryExchange: "RetryExchange"                        # 延迟重连交换机的名称
+    RetryQueue: "Retry"                                   # 延迟重连队列的名称
+    RetryTime: 10                                         # 消息在延迟重连队列的TTL
