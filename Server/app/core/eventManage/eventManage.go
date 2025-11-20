@@ -29,8 +29,6 @@ func (e *eventManage) Set(key string, value interface{}) bool {
 
 	if _, exist := e.Get(key); exist == true {
 
-		Global.Logger.Error(MyErrors.ErrorsFuncEventAlreadyExists, "keyName:"+key)
-
 		return false
 
 	} else {

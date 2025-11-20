@@ -8,7 +8,6 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
-	"log"
 	"time"
 )
 
@@ -21,21 +20,21 @@ func InitLogger() {
 func CreateZapFactory(entry func(zapcore.Entry) error) map[string]*zap.Logger {
 
 	// 获取程序所处的模式：开发调试 或 生产
-	appDebug := Global.Config.GetBool("Mode.Develop")
+	//appDebug := Global.Config.GetBool("Mode.Develop")
 
 	// 返回不同组件的日志记录器
 	loggers := make(map[string]*zap.Logger)
 
 	// 判断程序当前所处的模式，调试模式直接返回一个便捷的zap日志管理器地址
-	if appDebug {
-		// 如果是开发模式，直接创建一个开发模式的logger
-		logger, err := zap.NewDevelopment(zap.Hooks(entry))
-		if err != nil {
-			log.Fatal("创建zap日志包失败，详情：" + err.Error())
-		}
-		loggers["default"] = logger
-		return loggers
-	}
+	//if appDebug {
+	//	// 如果是开发模式，直接创建一个开发模式的logger
+	//	logger, err := zap.NewDevelopment(zap.Hooks(entry))
+	//	if err != nil {
+	//		log.Fatal("创建zap日志包失败，详情：" + err.Error())
+	//	}
+	//	loggers["default"] = logger
+	//	return loggers
+	//}
 
 	// 以下是生产模式的代码
 	encoderConfig := zap.NewProductionEncoderConfig()
@@ -71,7 +70,6 @@ func CreateZapFactory(entry func(zapcore.Entry) error) map[string]*zap.Logger {
 	}
 
 	// 准备日志文件路径和切割策略
-
 	logPaths := map[string]string{
 		"business": Consts.BasePath + Global.Config.GetString("Logs.BusinessPath"),
 		"db":       Consts.BasePath + Global.Config.GetString("Logs.DbPath"),
@@ -79,7 +77,7 @@ func CreateZapFactory(entry func(zapcore.Entry) error) map[string]*zap.Logger {
 	}
 
 	// 定义不同模块的日志文件
-	modules := []string{"business", "db", "mq"}
+	modules := []string{"Business", "DB", "MQ"}
 
 	// 为每个模块创建不同的日志文件和 logger
 	for _, module := range modules {
@@ -113,7 +111,8 @@ func CreateZapFactory(entry func(zapcore.Entry) error) map[string]*zap.Logger {
 		// 使用不同的 module 名称生成 Logger
 		loggers[module] = zap.New(zapCore, zap.AddCaller(), zap.Hooks(entry), zap.AddStacktrace(zap.WarnLevel))
 	}
-
+	fmt.Println(loggers)
+	fmt.Println(loggers["MQ"])
 	// 返回多个日志记录器
 	return loggers
 }

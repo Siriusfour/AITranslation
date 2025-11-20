@@ -1,7 +1,7 @@
 package bootstrap
 
 import (
-	"AITranslatio/Config"
+	"AITranslatio/Config/interf"
 	"AITranslatio/Global"
 
 	"path"
@@ -14,6 +14,6 @@ func InitConfig(FileName string) {
 	//读取后缀
 	FileType := path.Ext(FileName)
 
-	Global.Config = Config.CreateConfigFactory(FileName, FileType[1:])
+	Global.Config = interf.CreateConfigFactory(FileName, FileType[1:])
 
 }

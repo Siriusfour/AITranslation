@@ -41,7 +41,7 @@ func (Service *AuthService) Register(DTO *NotAuthDTO.RegisterDTO) (*NotAuthDTO.A
 	}
 
 	//调用雪花算法生成唯一UserID
-	UserID := SnowFlak.CreateSnowflakeFactory().GetId()
+	UserID := SnowFlak.CreateSnowflakeFactory().GetID()
 
 	//补完DTO
 	DTO.UserID = UserID

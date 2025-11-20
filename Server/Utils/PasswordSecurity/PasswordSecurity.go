@@ -20,6 +20,7 @@ func CreatePasswordGeneratorFactory(cost ...int) *PasswordGenerator {
 	return &PasswordGenerator{cost[0]}
 }
 
+// 生成随机的盐值
 func (Generator *PasswordGenerator) GenerateSalt(length int) (string, error) {
 	saltBytes := make([]byte, 32) // 32字节 = 256位
 	_, err := rand.Read(saltBytes)

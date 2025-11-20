@@ -12,6 +12,7 @@ import (
 )
 
 type Handler func(body []byte) error
+type DialMQ func(string, amqp.Config) (*amqp.Connection, error)
 
 type Config struct {
 	URI            string
@@ -42,63 +43,19 @@ type Config struct {
 }
 
 type Client struct {
-	wg            sync.WaitGroup
+	Wg            sync.WaitGroup
 	Config        Config
 	mu            sync.RWMutex
 	Conn          *amqp.Connection
 	Closed        atomic.Bool
 	notifychannel chan *amqp.Error
-}
-
-func InitClient() (client *Client, err error) {
-
-	config := &Config{
-		URI:     Global.Config.GetString("RabbitMq.WorkQueue.Addr"),
-		Durable: Global.Config.GetBool("RabbitMq.WorkQueue.Durable"),
-		Workers: Global.Config.GetInt("RabbitMq.WorkQueue.Workers"),
-
-		RetryMaxTries: Global.Config.GetInt("RabbitMq.WorkQueue.Workers"),
-		RetryBaseTime: time.Duration(Global.Config.GetInt("RabbitMq.WorkQueue.RetryBaseTime")), //ms
-		RetryWaitTime: time.Duration(Global.Config.GetInt("RabbitMq.WorkQueue.Workers")),
-		EnableConfirm: Global.Config.GetBool("RabbitMq.WorkQueue.EnableConfirm"), //是否开启发布确认
-
-		// 死信队列
-		DLXExchange:   Global.Config.GetString("RabbitMq.WorkQueue.DLXExchange"),   // e.g. "dlx.exchange"
-		DLXRoutingKey: Global.Config.GetString("RabbitMq.WorkQueue.DLXRoutingKey"), // e.g. "dlx.key"
-		DLQName:       Global.Config.GetString("RabbitMq.WorkQueue.DLQName"),       // e.g. "dlq"
-
-		//生产确认，消费确认
-		ConfirmTimeout: time.Duration(Global.Config.GetInt64("RabbitMq.WorkQueue.ConfirmTimeout")), // e.g. 5s
-		MaxPubRetries:  Global.Config.GetInt("RabbitMq.WorkQueue.MaxPubRetries"),                   // e.g. 3
-
-		// 演出重发队列配置项
-		RetryExchange: Global.Config.GetString("RabbitMq.WorkQueue.RetryExchange"), // e.g. "retry.exchange"
-		RetryTime:     time.Duration(Global.Config.GetInt("RabbitMq.WorkQueue.RetryTime")),
-	}
-
-	client = &Client{
-		wg:     sync.WaitGroup{},
-		Config: *config,
-		Conn:   nil,
-		Closed: atomic.Bool{},
-	}
-
-	//安全检查，判断队列是否齐全
-
-	err = client.Connect()
-	err = client.EnsureDLX()
-	err = client.EnsureQueue()
-
-	if err != nil {
-		return nil, fmt.Errorf("mq客户端初始化失败: %w", err)
-	}
-
-	return client, nil
-
+	//封装的连接MQ服务器的函数，单元测试、集成测试、生产环境初始化时各自填充
+	DialMQ DialMQ
 }
 
 // client的客户端连接到MQ服务器
 func (c *Client) Connect() error {
+
 	// 心跳默认值
 	hb := c.Config.Heartbeat
 	if hb <= 0 {
@@ -106,13 +63,13 @@ func (c *Client) Connect() error {
 	}
 
 	// 退避基础时间 & 上限
-	base := c.Config.RetryBaseTime
-	if base <= 0 {
-		base = time.Second
+	RetryBaseTime := c.Config.RetryBaseTime
+	if RetryBaseTime <= 0 {
+		RetryBaseTime = 100 * time.Millisecond
 	}
 	maxWait := c.Config.RetryWaitTime
 	if maxWait <= 0 {
-		maxWait = 30 * time.Second
+		maxWait = 15 * time.Second
 	}
 
 	cfg := amqp.Config{
@@ -122,26 +79,31 @@ func (c *Client) Connect() error {
 		},
 	}
 
-	backOff := base
+	backOff := RetryBaseTime
 	tries := 0
 
 	for {
+
+		fmt.Printf("%s, %s\n", maxWait, RetryBaseTime)
+
 		if c.Closed.Load() {
 			return errors.New("client closed")
 		}
 
 		// 2. 尝试建立连接
-		conn, err := amqp.DialConfig(c.Config.URI, cfg)
+		conn, err := c.DialMQ(c.Config.URI, cfg)
 		if err == nil { //连接成功
 
 			c.mu.Lock()
-
 			old := c.Conn
 			if old != nil {
 				_ = old.Close()
 			} //关闭旧链接
-
+			c.Conn = conn
 			c.notifychannel = make(chan *amqp.Error, 1) //,注册notifyCh
+
+			fmt.Println("c.conn:", c.Conn)
+
 			c.Conn.NotifyClose(c.notifychannel)
 			c.Conn = conn
 			go c.watchReconnect()
@@ -162,6 +124,7 @@ func (c *Client) Connect() error {
 		}
 
 		// 4. 退避等待
+
 		timer := time.NewTimer(backOff)
 		select {
 		case <-timer.C:
@@ -187,23 +150,22 @@ func (c *Client) watchReconnect() {
 
 			// 清空当前连接（加锁保护）
 			c.mu.Lock()
-			old := c.Conn
+
 			c.Conn = nil
-			c.mu.Unlock()
-			if old != nil {
-				_ = old.Close()
+			if c.notifychannel != nil {
+				close(c.notifychannel)
 			}
+			c.mu.Unlock()
 
 			// 开始重连，带简单的重试+sleep
 			for {
-
 				if c.Closed.Load() {
 					return
 				}
 
 				connErr := c.Connect()
 				if connErr == nil {
-					// 重连成功：给新连接注册 NotifyClose，并重新起一个 watcher
+					// 重连成功：给新连接注册 NotifyClose，并break,重新监听
 					c.mu.RLock()
 					newConn := c.Conn
 					c.mu.RUnlock()
@@ -215,9 +177,9 @@ func (c *Client) watchReconnect() {
 					c.notifychannel = notify
 					c.mu.Unlock()
 
-					// 起一个新的 watcher 监听新连接
-					go c.watchReconnect()
-					return
+					// 返回外层循环，重新监听
+					break
+
 				}
 
 				Global.Logger["MQ"].Error("MQ 重连失败，将在 5s 后重试", zap.Error(connErr))
@@ -226,6 +188,10 @@ func (c *Client) watchReconnect() {
 
 		}
 	}
+}
+
+func (c *Client) Close() {
+	c.Closed.Store(true)
 }
 
 // 声明死信队列和死信交换机

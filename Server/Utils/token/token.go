@@ -10,18 +10,23 @@ import (
 	"time"
 )
 
+type tokenConfig interface {
+	GetInt(key string) int
+}
+
 // CreateTokenFactory 0-AccessToken  1-RefreshToken
 func CreateTokenFactory(TokenType int, UserID int64) *Token {
 
 	Token := &Token{
 		"AccessToken",
 		UserID,
-		SnowFlak.CreateSnowflakeFactory().GetId(),
+		SnowFlak.CreateSnowflakeFactory().GetID(),
 		Global.EncryptKey,
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(Global.Config.GetInt("Token.AkOutTime")) * time.Hour * 24)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 		},
+		Global.Config,
 	}
 
 	if TokenType == 1 {
@@ -38,6 +43,8 @@ type Token struct {
 	TokenID    int64  `json:"TokenID"` //Tokne的唯一ID
 	EncryptKey []byte
 	jwt.RegisteredClaims
+
+	config tokenConfig
 }
 
 type UserAuth struct {

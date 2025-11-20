@@ -1,14 +1,13 @@
-package Config
+package interf
 
 import (
-	"AITranslatio/Config/interf"
 	"AITranslatio/Global/Consts"
 	"AITranslatio/Global/MyErrors"
 	"github.com/spf13/viper"
 	"sync"
 )
 
-func CreateConfigFactory(FileName string, Type string) interf.ConfigInterface {
+func CreateConfigFactory(FileName string, Type string) ConfigInterface {
 
 	yamlConfig := viper.New()
 	yamlConfig.AddConfigPath(Consts.BasePath + "/Config")
@@ -19,7 +18,7 @@ func CreateConfigFactory(FileName string, Type string) interf.ConfigInterface {
 		panic(MyErrors.ErrorsConfigYamlNotExists + err.Error())
 	}
 
-	return &interf.ConfigFile{
+	return &ConfigFile{
 		Viper: yamlConfig,
 		Mu:    new(sync.Mutex),
 	}
