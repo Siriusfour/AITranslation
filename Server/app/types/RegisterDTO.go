@@ -1,4 +1,4 @@
-package NotAuthDTO
+package types
 
 type RegisterDTO struct {
 	UserID    int64

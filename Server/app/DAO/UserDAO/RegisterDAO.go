@@ -2,10 +2,10 @@ package UserDAO
 
 import (
 	"AITranslatio/app/Model/User"
-	"AITranslatio/app/http/DTO/NotAuthDTO"
+	"AITranslatio/app/types"
 )
 
-func (DAO *UserDAO) Register(DTO *NotAuthDTO.RegisterDTO) error {
+func (DAO *UserDAO) Register(DTO *types.RegisterDTO) error {
 
 	RegisterData := &User.User{
 		UserID:   DTO.UserID,

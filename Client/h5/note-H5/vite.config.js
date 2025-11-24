@@ -7,10 +7,11 @@ export default defineConfig({
 
   server: {
     host:"0.0.0.0",
-    proxy: {
-      '/kapi': {
+    proxy: {   //代理信息
+
+      '/noteApi': {  //当你在前端请求 /kapi/xxx 时，Vite 会把请求 转发 到http://localhost:3008/xxx
         target: 'http://localhost:3008',
-        rewrite: (path) => path.replace(/^\/kapi/, ''),
+        rewrite: (path) => path.replace(/^\/noteApi/, ''),
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {

@@ -3,15 +3,15 @@ package AuthController
 import (
 	"AITranslatio/Global/Consts"
 	"AITranslatio/app/Service/AuthService"
-	"AITranslatio/app/http/DTO/NotAuthDTO"
 	"AITranslatio/app/http/reposen"
+	"AITranslatio/app/types"
 	"fmt"
 	"github.com/gin-gonic/gin"
 )
 
 func (Controller *AuthController) Register(ctx *gin.Context) {
 
-	DTO := &NotAuthDTO.RegisterDTO{
+	DTO := &types.RegisterDTO{
 		UserID:    0,
 		UserName:  ctx.GetString(Consts.ValidatorPrefix + "UserName"),
 		Password:  ctx.GetString(Consts.ValidatorPrefix + "Password"),

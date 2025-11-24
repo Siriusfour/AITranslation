@@ -43,7 +43,6 @@ type Token struct {
 	TokenID    int64  `json:"TokenID"` //Tokne的唯一ID
 	EncryptKey []byte
 	jwt.RegisteredClaims
-
 	config tokenConfig
 }
 

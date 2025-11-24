@@ -4,18 +4,17 @@ import (
 	"AITranslatio/Global/Consts"
 	"AITranslatio/Utils/token"
 	"AITranslatio/app/DAO/UserDAO"
-	"AITranslatio/app/http/DTO/NotAuthDTO"
+	"AITranslatio/app/types"
 	"fmt"
 )
 
 func CreateAuthService() *AuthService {
-
 	return &AuthService{}
 }
 
 type AuthService struct{}
 
-func (Service *AuthService) LoginByPassWord(Email string, PassWord string) (error, *NotAuthDTO.Auth) {
+func (Service *AuthService) LoginByPassWord(Email string, PassWord string) (error, *types.Auth) {
 
 	//验证PW,成功的话刷新内存里面的AK,RK，并向客户端返回新的AK.RK
 	//查数据库校验PassWord
@@ -33,7 +32,7 @@ func (Service *AuthService) LoginByPassWord(Email string, PassWord string) (erro
 		return fmt.Errorf("登录失败：%w", errAk), nil
 	}
 
-	return nil, &NotAuthDTO.Auth{
+	return nil, &types.Auth{
 		AccessToken:  AccessToken,
 		RefreshToken: RefreshToken,
 	}

@@ -1,0 +1,65 @@
+name: CI   # 这个 workflow 的名字，随便起，用来在 GitHub Actions 页面显示
+
+on:
+  # 当有人提交 Pull Request 到 develop / release/* / master 时触发 CI
+  pull_request:
+    branches: [develop, 'release/**', master]
+
+  # 当有人 push 到以下分支时，也触发 CI：
+  # - develop（集成分支）
+  # - feature/**（功能分支）
+  # - release/**（测试/预发分支）
+  # - master（生产分支）
+
+  push:
+    branches: [develop, 'feature/**', 'release/**', master]
+    tags: [ 'v*' ]   # 例如 v1.0.0、v1.2.3 等 tag
+
+jobs:
+  # CI 的第一个 Job：构建 + 测试
+  build-and-test:
+    runs-on: ubuntu-latest   # GitHub 提供的最新 Ubuntu 虚拟机
+
+    steps:
+      # 第一步：检出当前仓库的代码
+      # 相当于在 CI 机器上运行：git clone + checkout 当前提交
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 第二步：安装 Go 环境
+      # 注意：GitHub Actions 每次都是一台干净的新机器，所以必须重新装 Go
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'   # 指定你项目要用的 Go 版本
+          cache: true          # 开启 Go Modules 缓存（极大加快依赖下载速度）
+
+      # 第三步：缓存 Go build 缓存（~/.cache/go-build 和 ~/go/pkg/mod）
+      # 这样下一次构建速度会快很多，因为依赖代码不会重复编译
+      - name: Cache Go Build
+        uses: actions/cache@v3
+        with:
+          # 要缓存的目录
+          path: |
+            ~/.cache/go-build   # Go 构建缓存（编译后的依赖）
+            ~/go/pkg/mod        # Go modules 依赖存放处
+          # 缓存的 key，当代码变化时，判断是否失效
+          key: ${{ runner.os }}-go-build-${{ hashFiles('**/*.go') }}
+          # 如果 key 匹配不到，则根据 restore-key 找最近的缓存
+          restore-keys: |
+            ${{ runner.os }}-go-build-
+
+      # 第四步：静态分析（go vet）
+      # 可以检测一些潜在错误，如：写错格式化参数、未使用变量等
+      - name: Go Vet
+        run: go vet ./...
+
+      # 第五步：运行单元测试
+      # go test ./... 会执行所有目录下的测试文件
+      - name: Test
+        run: go test ./...
+
+      # 第六步：构建 Go Web 程序
+      # 根据你的项目结构，这里假设 main.go 在 cmd/server/main.go
+      - name: Build
+        run: go build -o build/app ./cmd/server

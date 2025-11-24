@@ -2,8 +2,7 @@
 import ApiCode from "./ApiCode.js";
 
 
-const baseUrl = '/kapi';
-
+const baseUrl = '/noteApi';
 
 
 const refreshRequest = async (RefreshToken) => {
@@ -74,11 +73,8 @@ const request = async (url, method, data) => {
 
   try {
     const response = await fetch(requestUrl, requestConfig);
-
     const result = await response.json();
     const { code } = result;
-
-
 
     // Token过期处理
     if (code === ApiCode.TOKEN_EXPIRED) {
@@ -99,7 +95,10 @@ const request = async (url, method, data) => {
 
       throw new Error(result.message || '请求失败，服务器返回非成功状态码');
 
+    }else{
+      console.log(result);
     }
+
 
     return result.data;
   } catch (error) {

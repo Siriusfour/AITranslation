@@ -1,4 +1,4 @@
-package validators
+package Auth
 
 import (
 	"AITranslatio/Global/Consts"

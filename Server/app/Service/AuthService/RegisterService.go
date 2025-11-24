@@ -7,11 +7,11 @@ import (
 	"AITranslatio/Utils/SnowFlak"
 	"AITranslatio/Utils/token"
 	"AITranslatio/app/DAO/UserDAO"
-	"AITranslatio/app/http/DTO/NotAuthDTO"
+	types2 "AITranslatio/app/types"
 	"errors"
 )
 
-func (Service *AuthService) Register(DTO *NotAuthDTO.RegisterDTO) (*NotAuthDTO.Auth, error) {
+func (Service *AuthService) Register(DTO *types2.RegisterDTO) (*types2.Auth, error) {
 
 	// TODO 1.验证邮箱验证码是否有效（是否存在于redis）
 
@@ -29,7 +29,7 @@ func (Service *AuthService) Register(DTO *NotAuthDTO.RegisterDTO) (*NotAuthDTO.A
 	p := PasswordSecurity.CreatePasswordGeneratorFactory(12)
 
 	//为每个用户生成随机盐值
-	salt, err := p.GenerateSalt(32)
+	salt, err := p.GenerateSalt()
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (Service *AuthService) Register(DTO *NotAuthDTO.RegisterDTO) (*NotAuthDTO.A
 
 	//----------------业务逻辑
 
-	return &NotAuthDTO.Auth{
+	return &types2.Auth{
 		AccessToken:  AccessToken,
 		RefreshToken: RefreshToken,
 	}, nil

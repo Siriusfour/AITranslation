@@ -36,10 +36,6 @@ func (Controller *AuthController) Login(ctx *gin.Context) {
 	return
 }
 
-func (Controller *AuthController) LoginByWebAuthn(LoginCtx *gin.Context) {
-
-}
-
 //func (Controller *AuthController) CreateSSE(CreateSSEctx *gin.Context) {
 //
 //	//获取到URL的参数，解析出UserID

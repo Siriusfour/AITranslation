@@ -39,6 +39,14 @@ WebAuthn :
   Challenge_TTL : 1  #1分钟
   RPID : "localhost"
 
+OAuth :
+  Challenge_TTL : 1 #1分钟
+
+  Github :
+    client_secret: "c64eb1c9135dfcc90fca529317adc158a748b22b"
+    client_id: "Iv23limF64jySyryK3Kx"
+
+
 Redis:
   DNS: "localhost:6379"
   DB: 0

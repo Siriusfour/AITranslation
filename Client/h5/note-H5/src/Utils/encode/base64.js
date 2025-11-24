@@ -1,10 +1,9 @@
 
-//Base64URL 解码函数
-function decodeBase64URL(base64url) {
+//Base64URL-->字节数组 解码函数
+function Base64URL_To_arrayBuffer(base64url) {
     if (typeof base64url !== 'string') {
-        throw new TypeError('Input must be a string');
+        throw new TypeError('Base64URL_To_arrayBuffer输入必须是数组');
     }
-
     // 1. 替换 URL 安全字符
     let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
 
@@ -20,11 +19,11 @@ function decodeBase64URL(base64url) {
     for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
     }
-
     return bytes;
 }
 
-// Base64URL 编码函数
+
+// 字节数组-->Base64URL 编码函数
 function arrayBufferToBase64URL(buffer) {
     const bytes = new Uint8Array(buffer);
     let binary = '';
@@ -47,5 +46,19 @@ function arrayBufferToBase64URL(buffer) {
     return new Uint8Array(buffer);
 }
 
-export    {int64ToBytes,arrayBufferToBase64URL}
-export default decodeBase64URL ;
+function toPublicKeyOptions(serverData) {
+    return {
+        publicKey:{
+            challenge: Base64URL_To_arrayBuffer(serverData.Challenge),
+/*            allowCredentials: serverData.AllowCreds.map(c => ({
+                type: c.Type,
+                id: Base64URL_To_arrayBuffer(c.CredentialID),
+                transports: ["internal"],
+            })),*/
+            userVerification: "required",
+            timeout: 1200000
+        }
+    };
+}
+
+export    {int64ToBytes,arrayBufferToBase64URL,Base64URL_To_arrayBuffer,toPublicKeyOptions}

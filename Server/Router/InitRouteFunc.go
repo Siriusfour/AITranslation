@@ -14,6 +14,10 @@ func InitAuthRoute(rg gin.IRoutes) {
 
 	rg.GET("/GetUserAllCredential", factory.Create(Consts.ValidatorPrefix+"GetUserAllCredential"))
 	rg.POST("/LoginByWebAuthn", factory.Create(Consts.ValidatorPrefix+"LoginByWebAuthn"))
+
+	//OAuth相关
+	rg.GET("/GetChallenge", factory.Create(Consts.ValidatorPrefix+"GetChallenge"))
+	rg.POST("LoginByGithub", factory.Create(Consts.ValidatorPrefix+"LoginByGithub"))
 }
 
 func InitBaseRoute(rg gin.IRoutes) {
