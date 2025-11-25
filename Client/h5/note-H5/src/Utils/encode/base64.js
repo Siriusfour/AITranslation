@@ -61,4 +61,24 @@ function toPublicKeyOptions(serverData) {
     };
 }
 
-export    {int64ToBytes,arrayBufferToBase64URL,Base64URL_To_arrayBuffer,toPublicKeyOptions}
+function publicKeyCredentialToJSON(cred) {
+    if (cred instanceof ArrayBuffer) {
+        // 处理所有二进制字段
+        return arrayBufferToBase64URL(cred);
+    } else if (Array.isArray(cred)) {
+        // 处理数组
+        return cred.map(x => publicKeyCredentialToJSON(x));
+    } else if (cred && typeof cred === 'object') {
+        // 处理对象
+        const obj = {};
+        for (const key in cred) {
+            obj[key] = publicKeyCredentialToJSON(cred[key]);
+        }
+        return obj;
+    } else {
+        // string / number / boolean / null / undefined 原样返回
+        return cred;
+    }
+}
+
+export    {int64ToBytes,arrayBufferToBase64URL,Base64URL_To_arrayBuffer,toPublicKeyOptions,publicKeyCredentialToJSON}

@@ -4,7 +4,7 @@ import {
     arrayBufferToBase64URL,
     int64ToBytes,
     Base64URL_To_arrayBuffer,
-    toPublicKeyOptions
+    toPublicKeyOptions, publicKeyCredentialToJSON
 } from "../../src/Utils/encode/base64.js"
 
 
@@ -35,10 +35,12 @@ export function LoginByWebAuthn(){
 
        let PublicKeyOptions = toPublicKeyOptions(res)
 
-        navigator.credentials.get(PublicKeyOptions).then((PublicKeyCredential )=>{
-            console.log(PublicKeyCredential)
 
-            api.post("/Auth/LoginByWebAuthn",PublicKeyCredential,).then((result)=>{
+        navigator.credentials.get(PublicKeyOptions).then((PublicKeyCredential )=>{
+
+            console.log(publicKeyCredentialToJSON(PublicKeyCredential));
+
+            api.post("/Auth/LoginByWebAuthn", publicKeyCredentialToJSON(PublicKeyCredential),).then((result)=>{
 
                 alert("webAuthn登录成功！")
                 //跳转到主业务页面
@@ -46,9 +48,10 @@ export function LoginByWebAuthn(){
 
             })
 
-        }).catch((err)=>{alert(err)})
+        }).catch((err)=>{
+            console.error(err)})
 
-    }).catch(err=>{alert(err)});
+    }).catch(err=>console.error(err));
 
 }
 
@@ -56,8 +59,8 @@ export function LoginByWebAuthn(){
 function login(loginInfo){
 
    return  api.post("/Auth/Login",loginInfo).then((res)=> {
-            localStorage.setItem("AccessToken", res.AccessToken)
-            localStorage.setItem("RefreshToken", res.RefreshToken)
+            localStorage.setItem("AccessToken", res.Auth.AccessToken)
+            localStorage.setItem("RefreshToken", res.Auth.RefreshToken)
     })
 }
  function getFormData() {
@@ -144,7 +147,7 @@ api.get("/Auth/GetChallenge?OAuth_provider=Github").then((res)=>{
 
     window.location.href =
         "https://github.com/login/oauth/authorize" +
-        "?client_id=Ov23lis7yW3qDZV1ARrr" +
+        "?client_id=Iv23limF64jySyryK3Kx" +
         "&redirect_uri=http://localhost:5174/callback" +
         "&scope=read:user%20user:email" +
         "&state=" + res;

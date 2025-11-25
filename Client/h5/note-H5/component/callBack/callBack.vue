@@ -8,10 +8,14 @@ const state = ref("");
 onMounted(async () => {
 
   const params = new URLSearchParams(window.location.search);
-  code.value = params.get("code") || "";
-  state.value = params.get("state") || "";
+  const data  ={
+    code:params.get("code") || "",
+    state: params.get("state") || ""
+  }
 
-  api.post("/Login").then(data => {})
+  api.post("/Auth/LoginByGithub",data).then(data => {
+    console.log(data);
+  })
 
 });
 </script>

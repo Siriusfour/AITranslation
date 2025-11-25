@@ -41,6 +41,8 @@ const refreshRequest = async (RefreshToken) => {
 
 const request = async (url, method, data) => {
 
+  console.log(url, method, data);
+
   let AccessToken = localStorage.getItem("AccessToken");
   let RefreshToken = localStorage.getItem("RefreshToken");
   const fullUrl = baseUrl + url;
@@ -70,6 +72,8 @@ const request = async (url, method, data) => {
       requestConfig.body = JSON.stringify(data);
     }
   }
+
+  console.log(requestConfig);
 
   try {
     const response = await fetch(requestUrl, requestConfig);
