@@ -6,6 +6,10 @@ import {
     Base64URL_To_arrayBuffer,
     toPublicKeyOptions, publicKeyCredentialToJSON
 } from "../../src/Utils/encode/base64.js"
+import {onMounted} from "vue";
+
+
+
 
 
 
@@ -14,13 +18,14 @@ export function Login(){
     const formData = getFormData();
 
     // 调用登录API
-    login(formData).then(()=>{
+        api.post("/Auth/Login",formData).then((res)=> {
+            localStorage.setItem("AccessToken", res.Auth.AccessToken)
+            localStorage.setItem("RefreshToken", res.Auth.RefreshToken)
 
-        if (confirm("要为该账号注册一条安全密钥吗")){
-            ApplicationWebAuthn()
-        }
-
-    }).catch((error)=>{alert(error.message || '登录失败，请重试');});
+            if (confirm("要为该账号注册一条安全密钥吗")){
+                ApplicationWebAuthn()
+            }
+        }).catch((error)=>{alert(error.message || '登录失败，请重试');});
 }
 
 export function LoginByWenXin(){}
@@ -56,13 +61,7 @@ export function LoginByWebAuthn(){
 }
 
 
-function login(loginInfo){
 
-   return  api.post("/Auth/Login",loginInfo).then((res)=> {
-            localStorage.setItem("AccessToken", res.Auth.AccessToken)
-            localStorage.setItem("RefreshToken", res.Auth.RefreshToken)
-    })
-}
  function getFormData() {
         const accountInput = document.getElementById('accountInput');
         const passwordInput = document.getElementById('passwordInput');
@@ -150,7 +149,8 @@ api.get("/Auth/GetChallenge?OAuth_provider=Github").then((res)=>{
         "?client_id=Iv23limF64jySyryK3Kx" +
         "&redirect_uri=http://localhost:5174/callback" +
         "&scope=read:user%20user:email" +
-        "&state=" + res;
+        "&state=" + res.Challenge
+        "&token=" + res.Token;
 
 }).catch((error)=>{console.log(error)});
 

@@ -2,6 +2,14 @@
 import 'remixicon/fonts/remixicon.css'
 import 'ant-design-vue/dist/reset.css' // 路径按你项目实际调整
 import {Login, LoginByGithub, LoginByWebAuthn} from './index.js'
+import {onMounted} from "vue";
+
+onMounted( () => {
+  const token = localStorage.getItem('AccessToken')
+  if (token) {
+    Login()
+  }
+})
 
 </script>
 

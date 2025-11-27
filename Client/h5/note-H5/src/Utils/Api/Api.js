@@ -45,6 +45,7 @@ const request = async (url, method, data) => {
 
   let AccessToken = localStorage.getItem("AccessToken");
   let RefreshToken = localStorage.getItem("RefreshToken");
+  let Token = sessionStorage.getItem("Token");
   const fullUrl = baseUrl + url;
 
   // 构建请求配置
@@ -53,7 +54,8 @@ const request = async (url, method, data) => {
     mode: "cors",
     credentials: "same-origin",
     headers: {
-      "Authorization": AccessToken || ''
+      "Authorization": AccessToken || '',
+      "Token" : Token || ''
     }
   };
 

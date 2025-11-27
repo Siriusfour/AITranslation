@@ -13,8 +13,11 @@ onMounted(async () => {
     state: params.get("state") || ""
   }
 
-  api.post("/Auth/LoginByGithub",data).then(data => {
-    console.log(data);
+  api.post("/Auth/LoginByGithub",data).then(res => {
+
+
+
+
   })
 
 });
@@ -24,6 +27,9 @@ onMounted(async () => {
   <div class="container">
     <p>code: {{ code }}</p>
     <p>state: {{ state }}</p>
+
+    <p>avatar: {{ avatar }}</p>
+    <p>userName: {{ userName }}</p>
   </div>
 </template>
 
