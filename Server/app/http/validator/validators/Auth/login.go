@@ -11,8 +11,8 @@ import (
 )
 
 type LoginDTO struct {
-	Email    string `json:"Email" binding:"required"`
-	Password string `json:"Password" binding:"required"`
+	Email    string `json:"Email" `
+	Password string `json:"Password" `
 }
 
 func (login LoginDTO) CheckParams(context *gin.Context) {

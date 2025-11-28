@@ -1,9 +1,12 @@
 package UserDAO
 
 import (
+	"AITranslatio/Global/MyErrors"
 	"AITranslatio/Utils/PasswordSecurity"
 	"AITranslatio/app/DAO"
 	"AITranslatio/app/Model/User"
+	"AITranslatio/app/types"
+	"errors"
 	"gorm.io/gorm"
 )
 
@@ -21,11 +24,28 @@ func (DAO *UserDAO) CreateUser(user *User.User) error {
 	return DAO.DB_Client.Create(user).Error
 }
 
-func (DAO *UserDAO) CheckOAuthID(ID int) (bool *User.User) {
+// CheckOAuthID 根据ID查找用户是否存在（OAuthID/UserID）
+func (DAO *UserDAO) CheckUserID(ID int64, IDtype string) (error, *User.User) {
+
+	var UserInfo *User.User
+
+	result := DAO.DB_Client.First(&UserInfo, IDtype+" = ?", ID)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+
+		return MyErrors.ErrorOAuthIDrNotFound, nil
+
+	} else if result.Error != nil {
+
+		return result.Error, nil
+
+	} else {
+		return nil, UserInfo
+	}
 
 }
 
-func (DAO *UserDAO) FindUser(UserID int64) (*User.User, error) {
+func (DAO *UserDAO) FindUser(UserID int64) (*types.LoginInfo, error) {
 	var UserInfo User.User
 
 	result := DAO.DB_Client.Table("User").Where("UserID = ?", UserID).First(&UserInfo)
@@ -33,27 +53,40 @@ func (DAO *UserDAO) FindUser(UserID int64) (*User.User, error) {
 		return nil, result.Error
 	}
 
-	return &UserInfo, nil
+	loginInfo := &types.LoginInfo{
+		UserID:   UserInfo.UserID,
+		Nickname: UserInfo.Nickname,
+		Avatar:   UserInfo.Avatar,
+	}
+
+	return loginInfo, nil
 
 }
 
 // 通过密码登录
-func (DAO *UserDAO) LoginByPassword(Email string, password string) (int64, error) {
+func (DAO *UserDAO) LoginByPassword(Email string, password string) (*types.LoginInfo, error) {
 
 	var UserInfo User.User
 
 	result := DAO.DB_Client.Table("User").Where("Email = ?", Email).First(&UserInfo)
 	if result.Error != nil {
-		return 0, result.Error
+		return nil, result.Error
 	}
 
 	if err := PasswordSecurity.CreatePasswordGeneratorFactory(12).ValidatePasswordWithSalt(UserInfo.Password, password, UserInfo.Salt); err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	if result.Error != nil {
-		return 0, result.Error
+		return nil, result.Error
 	}
+
+	return &types.LoginInfo{
+		Auth:     types.Auth{},
+		Nickname: UserInfo.Nickname,
+		UserID:   UserInfo.UserID,
+		Avatar:   UserInfo.Avatar,
+	}, nil
 
 }
 

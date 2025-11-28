@@ -2,14 +2,19 @@ package MyErrors
 
 import "errors"
 
-// token 错误
+// Auth 错误
 var (
+	//Token
 	ErrTokenInvalid      = errors.New("token无效")
 	ErrTokenExpired      = errors.New("token已过期")
 	ErrTokenMalformed    = errors.New("token格式错误")
 	ErrTokenNotActiveYet = errors.New("token尚未生效")
 	ErrSessionExpired    = errors.New("会话已失效")
 	ErrUnauthorized      = errors.New("未授权")
+	ErrAccountKicked     = errors.New("异地登陆")
+
+	//password
+	ErrFailLoginInfo = errors.New("请先输入登录信息")
 )
 
 // 基础错误
@@ -23,4 +28,5 @@ var (
 	ErrorClientDataTypeIsFail      = errors.New("type不为webauthn.create！")
 	ErrorClientDataChallengeIsFail = errors.New("challenge错误！")
 	ErrorClientDataRPID_IsFail     = errors.New("域名错误，当前页面域名与配置文件的RPID不符！")
+	ErrorOAuthIDrNotFound          = errors.New("没有该条OAuthID记录")
 )

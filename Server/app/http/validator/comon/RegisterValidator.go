@@ -35,13 +35,13 @@ func RegisterValidator() {
 	containers.Set(Consts.ValidatorPrefix+key, validators_Auth.LoginByWebAuthnDTO{})
 
 	key = "LoginByGithub"
-	containers.Set(Consts.ValidatorPrefix+key, validators_Auth.LoginByOAuth{"Github"})
+	containers.Set(Consts.ValidatorPrefix+key, validators_Auth.LoginByOAuthDTO{"Github", "", ""})
 
 	key = "LoginByWX"
-	containers.Set(Consts.ValidatorPrefix+key, validators_Auth.LoginByOAuth{"WX"})
+	containers.Set(Consts.ValidatorPrefix+key, validators_Auth.LoginByOAuthDTO{"WX", "", ""})
 
 	key = "LoginByQQ"
-	containers.Set(Consts.ValidatorPrefix+key, validators_Auth.LoginByOAuth{"QQ"})
+	containers.Set(Consts.ValidatorPrefix+key, validators_Auth.LoginByOAuthDTO{"QQ", "", ""})
 
 	key = "TeamCreate"
 	containers.Set(Consts.ValidatorPrefix+key, validators_Team.TeamDTO{})

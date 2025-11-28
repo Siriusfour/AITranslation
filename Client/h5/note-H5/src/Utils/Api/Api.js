@@ -79,8 +79,8 @@ const request = async (url, method, data) => {
 
   try {
     const response = await fetch(requestUrl, requestConfig);
-    const result = await response.json();
-    const { code } = result;
+    const res = await response.json();
+    const { code } = res;
 
     // Token过期处理
     if (code === ApiCode.TOKEN_EXPIRED) {
@@ -99,14 +99,18 @@ const request = async (url, method, data) => {
 
     }else if(code !== ApiCode.SUCCESS){
 
-      throw new Error(result.message || '请求失败，服务器返回非成功状态码');
+      throw new Error(res.message || '请求失败，服务器返回非成功状态码');
 
-    }else{
-      console.log(result);
+    }else{      console.log("ok:");
+      console.log(res.data.Auth);
+      if (res.data.Auth!=={}){
+        localStorage.setItem("AccessToken", res.data.Auth.AccessToken)
+        localStorage.setItem("RefreshToken", res.data.Auth.RefreshToken)
+      }
+
     }
+    return res.data;
 
-
-    return result.data;
   } catch (error) {
 
     throw error

@@ -21,7 +21,7 @@ const (
 	JwtTokenInvalid       int = -400100 //无效的token
 	JwtTokenExpired       int = -400101 //过期的token
 	JwtTokenFormatErrCode int = -400102 //提交的 token 格式错误
-
+	LoginInfoInavlid      int = -400103 //没有提交登录信息
 	// CURD 常用业务状态码
 	CurdStatusOkCode         int    = 200
 	CurdStatusOkMsg          string = "Success"
@@ -48,12 +48,6 @@ const (
 	FilesUploadMimeTypeFailCode    int    = -400252
 	FilesUploadMimeTypeFailMsg     string = "文件mime类型不允许"
 	FilesUploadIsEmpty             string = "不允许上传空文件"
-
-	//websocket
-	WsServerNotStartCode int    = -400300
-	WsServerNotStartMsg  string = "websocket 服务没有开启，请在配置文件开启，相关路径：Config/Config.yml"
-	WsOpenFailCode       int    = -400301
-	WsOpenFailMsg        string = "websocket open阶段初始化基本参数失败"
 
 	//验证码
 	CaptchaGetParamsInvalidMsg    string = "获取验证码：提交的验证码参数无效,请检查验证码ID以及文件名后缀是否完整"

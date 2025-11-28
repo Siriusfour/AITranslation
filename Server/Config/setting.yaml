@@ -40,7 +40,8 @@ WebAuthn :
   RPID : "localhost"
 
 OAuth :
-  Challenge_TTL : 1 #1分钟
+
+  Challenge_TTL : 6000 #1分钟
 
   Github :
     client_secret: "c64eb1c9135dfcc90fca529317adc158a748b22b"
@@ -156,3 +157,9 @@ RabbitMq:
     RetryExchange: "RetryExchange"                        # 延迟重连交换机的名称
     RetryQueue: "Retry"                                   # 延迟重连队列的名称
     RetryTime: 10                                         # 消息在延迟重连队列的TTL
+
+
+Zipkin:
+  URL: "http://localhost:9411"
+  ServerName: "note"
+  Port: "localhost:9411"

@@ -13,6 +13,8 @@ import (
 func InitRouter() *gin.Engine {
 
 	var router *gin.Engine
+	// zipkin server middleware（关键）
+
 	//【生产模式】
 	// 根据 gin 官方的说明：[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
 	// 如果部署到生产环境，请使用以下模式：
@@ -38,6 +40,7 @@ func InitRouter() *gin.Engine {
 	} else {
 		_ = router.SetTrustedProxies(nil)
 	}
+
 	//路由分组
 	rgBase := router.Group("/Api").Use(Middleware.Auth()).Use(Middleware.Cors())  // 基础crud业务的路由组
 	rgAuth := router.Group("/Auth").Use(Middleware.Auth()).Use(Middleware.Cors()) // 鉴权相关的路由组

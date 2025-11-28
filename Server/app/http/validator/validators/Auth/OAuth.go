@@ -6,6 +6,7 @@ import (
 	"AITranslatio/app/http/reposen"
 	"AITranslatio/app/http/validator/comon/data_transfer"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -22,17 +23,24 @@ func (DTO GetChallengeDTO) CheckParams(WebAuthnContext *gin.Context) {
 	}
 }
 
-type LoginByOAuth struct {
+type LoginByOAuthDTO struct {
 	OAuthProvider string
+	Code          string `json:"code" mapstructure:"code"`
+	State         string `json:"state" mapstructure:"state"`
 }
 
-func (DTO LoginByOAuth) CheckParams(WebAuthnContext *gin.Context) {
+func (DTO LoginByOAuthDTO) CheckParams(ctx *gin.Context) {
+
+	if err := ctx.ShouldBindJSON(&DTO); err != nil {
+		reposen.ErrorParam(ctx, fmt.Errorf("参数基础绑定验证错误：%w", err))
+	}
+
 	//2.使用调用控制器
-	extraAddBindDataContext := data_transfer.DataAddContext(DTO, Consts.ValidatorPrefix, WebAuthnContext)
+	extraAddBindDataContext := data_transfer.DataAddContext(DTO, Consts.ValidatorPrefix, ctx)
 	if extraAddBindDataContext == nil {
-		reposen.ErrorSystem(WebAuthnContext, errors.New("DataAddContext无法绑定到*gin.contex"))
+		reposen.ErrorSystem(ctx, errors.New("DataAddContext无法绑定到*gin.contex"))
 	} else {
-		provider := extraAddBindDataContext.GetString(Consts.ValidatorPrefix + "OAuth_provider")
+		provider := extraAddBindDataContext.GetString(Consts.ValidatorPrefix + "OAuthProvider")
 		AuthController.CreateOAuthFactroy(provider).Login(extraAddBindDataContext)
 	}
 }

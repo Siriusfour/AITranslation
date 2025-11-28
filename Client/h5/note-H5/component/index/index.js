@@ -10,18 +10,17 @@ import {onMounted} from "vue";
 
 
 
+onMounted(async () => {
+    Login()
+});
 
 
 
 // 登录处理
 export function Login(){
     const formData = getFormData();
-
     // 调用登录API
         api.post("/Auth/Login",formData).then((res)=> {
-            localStorage.setItem("AccessToken", res.Auth.AccessToken)
-            localStorage.setItem("RefreshToken", res.Auth.RefreshToken)
-
             if (confirm("要为该账号注册一条安全密钥吗")){
                 ApplicationWebAuthn()
             }
@@ -63,6 +62,7 @@ export function LoginByWebAuthn(){
 
 
  function getFormData() {
+    debugger
         const accountInput = document.getElementById('accountInput');
         const passwordInput = document.getElementById('passwordInput');
 

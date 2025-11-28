@@ -14,7 +14,7 @@ type User struct {
 	Email      string `gorm:"type:varchar(255);not null;column:Email"`
 	Credential bool   `gorm:"type:boolean;not null;column:credential"`
 
-	GithubID int `gorm:"type:int;not null;column:GithubId"`
+	GithubID int64 `gorm:"type:int;not null;column:GithubId"`
 }
 
 func (u *User) TableName() string {

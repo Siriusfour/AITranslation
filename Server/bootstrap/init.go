@@ -32,4 +32,6 @@ func init() {
 	//初始化rabbitMQ客户端
 	InitMQClient()
 
+	InitZipkin()
+
 }

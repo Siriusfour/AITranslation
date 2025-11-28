@@ -1,6 +1,6 @@
 package types
 
 type Auth struct {
-	AccessToken  string `json:"AccessToken"`
-	RefreshToken string `json:"RefreshToken"`
+	AccessToken  string `json:"AccessToken,omitempty"`
+	RefreshToken string `json:"RefreshToken,omitempty"`
 }

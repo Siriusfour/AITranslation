@@ -15,14 +15,14 @@ type ApplicationWebAuthnDTO struct{}
 type GetUserAllCredentialDTO struct{}
 
 type LoginByWebAuthnDTO struct {
-	RawID    string `json:"rawId"`
-	ID       string `json:"id"`
-	Type     string `json:"type"`
+	RawID    string `json:"rawId" required:"true"`
+	ID       string `json:"id" required:"true"`
+	Type     string `json:"type" required:"true"`
 	Response struct {
-		ClientDataJSON    string `json:"clientDataJSON"`
-		AttestationObject string `json:"authenticatorData"`
-		Signature         string `json:"signature"`
-	} `json:"response"`
+		ClientDataJSON    string `json:"clientDataJSON" required:"true"`
+		AttestationObject string `json:"authenticatorData" required:"true"`
+		Signature         string `json:"signature" required:"true"`
+	} `json:"response" required:"true"`
 }
 
 type RegisterWebAuthnDTO struct {

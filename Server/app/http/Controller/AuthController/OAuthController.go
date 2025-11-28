@@ -13,17 +13,15 @@ type OAuthController interface {
 	VerifyChallenge(*gin.Context) //验证随机挑战
 
 	Login(*gin.Context) //登录
-
 }
 
 func CreateOAuthFactroy(server string) OAuthController {
-	if server == "Github" {
-		return &Github{}
-	}
-	return nil
+	return &Github{OAuthService.CreateOAuthFactroy(server)}
 }
 
-type Github struct{}
+type Github struct {
+	GithubService OAuthService.OAuthService
+}
 
 func (g *Github) GetChallenge(ctx *gin.Context) {
 	challenge, err := OAuthService.CreateOAuthFactroy("Github").GetChallenge(ctx)
@@ -32,7 +30,6 @@ func (g *Github) GetChallenge(ctx *gin.Context) {
 	}
 
 	reposen.OK(ctx, challenge)
-
 }
 
 func (g *Github) VerifyChallenge(ctx *gin.Context) {
@@ -47,14 +44,18 @@ func (g *Github) VerifyChallenge(ctx *gin.Context) {
 func (g *Github) Login(ctx *gin.Context) {
 
 	//验证challenge
-	err := OAuthService.CreateOAuthFactroy("Github").VerifyChallenge(ctx)
+	err := g.GithubService.VerifyChallenge(ctx)
 	if err != nil {
 		reposen.Fail(ctx, errors.New("请求过期"))
 	}
 
-	//用code换取Github的AccessToken和RefreshToken
+	//用code换取Github的用户信息
+	loginInfo, err := g.GithubService.GetUserInfo(ctx)
+	if err != nil {
+		reposen.ErrorSystem(ctx, fmt.Errorf("code换取Github的用户信息错误：%w", err))
+	}
 
-	//生成自己的token
+	reposen.OK(ctx, loginInfo)
 
 	//返回
 

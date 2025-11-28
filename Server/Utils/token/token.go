@@ -5,6 +5,7 @@ import (
 	"AITranslatio/Global/MyErrors"
 	"AITranslatio/Utils/SnowFlak"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"time"
@@ -24,7 +25,7 @@ func CreateTokenFactory(TokenType int, UserID int64) *Token {
 		Global.EncryptKey,
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(Global.Config.GetInt("Token.AkOutTime")) * time.Hour * 24)),
-			IssuedAt:  jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 		Global.Config,
 	}
@@ -46,6 +47,7 @@ type Token struct {
 	config tokenConfig
 }
 
+// redis存储的结构
 type UserAuth struct {
 	TokenID      int64  `redis:"TokenID"`
 	UserID       string `redis:"UserID"`
@@ -60,7 +62,8 @@ func (t *Token) GeneratedToken() (string, error) {
 
 	// 使用事务 Pipeline
 	Key := fmt.Sprintf("UserID:%d", t.UserID)
-	TTL := time.Duration(Global.Config.GetInt("Token.AkOutTime")) * time.Hour
+
+	TTL := time.Duration(Global.Config.GetInt("Token.RkOutTime")) * time.Hour
 
 	pipe := Global.RedisClient.TxPipeline()
 	pipe.HSet(context.Background(), Key, map[string]interface{}{
@@ -78,14 +81,20 @@ func (t *Token) GeneratedToken() (string, error) {
 	return Token, nil
 }
 
-// ParseToken 判断token是否有效   0.签名是否相同（防篡改）  1.是否过期   2.是否被吊销（是否存在与redis）  3.是否异地登录
+// ParseToken 判断token是否有效   0.签名是否相同（防篡改）  1.是否过期     3.是否异地登录
 func ParseToken(VerifyToken string) error {
 
-	token, err := jwt.Parse(VerifyToken, func(token *jwt.Token) (interface{}, error) {
+	//解析token信息到结构体
+	claims := &Token{}
+	token, err := jwt.ParseWithClaims(VerifyToken, claims, func(token *jwt.Token) (interface{}, error) {
 		return Global.EncryptKey, nil
 	})
 
+	//如果是token过期，则返回自定义的token过期错误
 	if err != nil {
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return MyErrors.ErrTokenExpired
+		}
 		return err
 	}
 
@@ -94,27 +103,33 @@ func ParseToken(VerifyToken string) error {
 		return MyErrors.ErrTokenInvalid
 	}
 
-	//解析token
-	claims, ok := token.Claims.(Token)
-	if !ok {
-		return MyErrors.ErrorAssert
-	}
-
 	//2
 	var UserInfo UserAuth //存储来自redis的数据
-
 	UserID := claims.UserID
 	TokenID := claims.TokenID
 
-	//从redis获取数据到TokenDTO
-	err = Global.RedisClient.HGetAll(context.Background(), fmt.Sprintf("UserID:%d", UserID)).Scan(&UserInfo)
-	if err != nil {
-		return fmt.Errorf(" MyErrors.ErrorRedisGetDATA: %w", err)
+	//从redis获取数据到结构体
+	cmd := Global.RedisClient.HGetAll(context.Background(), fmt.Sprintf("UserID:%d", UserID))
+	if err := cmd.Err(); err != nil {
+
+		return err
+	}
+	m := cmd.Val()
+	if len(m) == 0 {
+		// 说明这个 key 不存在，token已经到期删除
+		return MyErrors.ErrTokenExpired
+	}
+	if err := cmd.Scan(&UserInfo); err != nil {
+		return err
 	}
 
 	//3
 	if UserInfo.TokenID != TokenID {
-		return fmt.Errorf("你的账号已于%s被异地登录", time.Unix(UserInfo.RegisterTime, 0).Format(time.DateTime))
+		return fmt.Errorf(
+			"%w: 你的账号已于 %s 被其他地方登录",
+			MyErrors.ErrAccountKicked,
+			time.Unix(UserInfo.RegisterTime, 0).Format(time.DateTime),
+		)
 	}
 	return nil
 }
@@ -143,6 +158,13 @@ func GetDataFormToken[T any](Token string, arg string) (error, T) {
 		}
 		return nil, any(int64(value)).(T)
 	}
+	if arg == "TokenID" {
+		value, ok := claims[arg].(float64)
+		if !ok {
+			return MyErrors.ErrorAssert, zero
+		}
+		return nil, any(int64(value)).(T)
+	}
 
 	value, ok := claims[arg].(T)
 	if !ok {
@@ -150,7 +172,6 @@ func GetDataFormToken[T any](Token string, arg string) (error, T) {
 	}
 
 	return nil, value
-
 }
 
 // Verify 验证token

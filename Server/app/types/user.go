@@ -1,12 +1,16 @@
 package types
 
-type UserInfo struct {
+type LoginInfo struct {
 
 	//鉴权信息
 	Auth Auth
 
 	//用户信息
-	UserName string
+	Nickname string
 	UserID   int64
 	Avatar   interface{}
+}
+
+type Challenge struct {
+	Challenge string
 }
