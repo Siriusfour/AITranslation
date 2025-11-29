@@ -6,7 +6,7 @@ import (
 	"AITranslatio/Global/MyErrors"
 	"AITranslatio/Utils/SnowFlak"
 	"AITranslatio/Utils/token"
-	"AITranslatio/app/DAO/UserDAO"
+	"AITranslatio/app/DAO/AuthDAO"
 	"AITranslatio/app/Model/User"
 	"AITranslatio/app/types"
 	"context"
@@ -20,7 +20,7 @@ import (
 )
 
 type Github struct {
-	DAO *UserDAO.UserDAO
+	DAO *AuthDAO.authDAO
 }
 
 type GitHubAppTokenResponse struct {

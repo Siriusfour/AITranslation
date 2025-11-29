@@ -1,7 +1,7 @@
 package OAuthService
 
-import "AITranslatio/app/DAO/UserDAO"
+import "AITranslatio/app/DAO/AuthDAO"
 
 type WX struct {
-	UserDAO.UserDAO
+	AuthDAO.authDAO
 }

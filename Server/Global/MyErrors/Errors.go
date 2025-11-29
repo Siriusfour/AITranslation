@@ -15,18 +15,18 @@ var (
 
 	//password
 	ErrFailLoginInfo = errors.New("请先输入登录信息")
+
+	//OAuth
+	ErrorOAuthIDrNotFound = errors.New("没有该条OAuthID记录")
+
+	// webAthun错误
+	ErrorClientDataTypeIsFail      = errors.New("type不为webauthn.create！")
+	ErrorClientDataChallengeIsFail = errors.New("challenge错误！")
+	ErrorClientDataRPID_IsFail     = errors.New("域名错误，当前页面域名与配置文件的RPID不符！")
 )
 
 // 基础错误
 var (
 	ErrorAssert        = errors.New("类型断言失败")
 	ErrorDB_FindIsFail = errors.New("数据库查找失败")
-)
-
-// webAthun错误
-var (
-	ErrorClientDataTypeIsFail      = errors.New("type不为webauthn.create！")
-	ErrorClientDataChallengeIsFail = errors.New("challenge错误！")
-	ErrorClientDataRPID_IsFail     = errors.New("域名错误，当前页面域名与配置文件的RPID不符！")
-	ErrorOAuthIDrNotFound          = errors.New("没有该条OAuthID记录")
 )

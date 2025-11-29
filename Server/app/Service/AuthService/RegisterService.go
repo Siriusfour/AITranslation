@@ -1,12 +1,11 @@
 package AuthService
 
 import (
-	"AITranslatio/Global/Consts"
 	"AITranslatio/Global/MyErrors"
 	"AITranslatio/Utils/PasswordSecurity"
 	"AITranslatio/Utils/SnowFlak"
 	"AITranslatio/Utils/token"
-	"AITranslatio/app/DAO/UserDAO"
+	"AITranslatio/app/DAO/AuthDAO"
 	types2 "AITranslatio/app/types"
 	"errors"
 )
@@ -49,14 +48,14 @@ func (Service *AuthService) Register(DTO *types2.RegisterDTO) (*types2.Auth, err
 	DTO.Password = HashPasswordWithSalt
 
 	//调用DAO存储在库中
-	err = UserDAO.CreateDAOFactory("mysql").Register(DTO)
+	err = AuthDAO.CreateDAOFactory("mysql").Register(DTO)
 	if err != nil {
 		return nil, errors.New(MyErrors.ErrorRegisterIsFail + err.Error())
 	}
 
 	//生成token
-	AccessToken, ErrAK := token.CreateTokenFactory(Consts.AccessToken, UserID).GeneratedToken()
-	RefreshToken, ErrRK := token.CreateTokenFactory(Consts.RefreshToken, UserID).GeneratedToken()
+	//AccessToken, ErrAK := token.CreateTokenFactory(Consts.AccessToken, UserID).GeneratedToken()
+	//RefreshToken, ErrRK := token.CreateTokenFactory(Consts.RefreshToken, UserID).GeneratedToken()
 
 	if ErrRK != nil || ErrAK != nil {
 		return nil, errors.New(ErrAK.Error() + ErrRK.Error())

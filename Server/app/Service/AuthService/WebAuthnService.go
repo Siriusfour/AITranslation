@@ -5,7 +5,7 @@ import (
 	"AITranslatio/Global/MyErrors"
 	"AITranslatio/Utils/WebAuthn"
 	WebAuthn_Verify "AITranslatio/Utils/WebAuthn/Verify"
-	"AITranslatio/app/DAO/UserDAO"
+	"AITranslatio/app/DAO/AuthDAO"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -13,7 +13,7 @@ import (
 
 type CredentialOptions struct {
 	Challenge  string               `json:"Challenge"`
-	AllowCreds []UserDAO.Credential `json:"AllowCreds"`
+	AllowCreds []AuthDAO.Credential `json:"AllowCreds"`
 }
 
 // 申请一个WebAuthn密钥
@@ -21,7 +21,7 @@ func (Service *AuthService) ApplicationWebAuthn(UserID int64) (*WebAuthn.WebAuth
 
 	//获取userName和Email
 	var UseName, Email string
-	err := UserDAO.CreateDAOFactory("mysql").
+	err := AuthDAO.CreateDAOFactory("mysql").
 		DB_Client.
 		Raw("SELECT NickName, Email FROM User WHERE UserID = ?", UserID).
 		Row().
@@ -72,7 +72,7 @@ func (Service *AuthService) WebAuthnToLogin(WebAuthnCtx *gin.Context) error {
 }
 
 func (Service *AuthService) GetUserAllCredentialDTO(WebAuthnCtx *gin.Context) (*CredentialOptions, error) {
-	allowCreds, err := UserDAO.CreateDAOFactory("mysql").FindCredentialByUserID(WebAuthnCtx)
+	allowCreds, err := AuthDAO.CreateDAOFactory("mysql").FindCredentialByUserID(WebAuthnCtx)
 	if err != nil {
 		return nil, err
 	}

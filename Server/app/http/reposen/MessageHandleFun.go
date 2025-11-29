@@ -13,7 +13,7 @@ func MessageHandle(err error) string {
 	if Global.Config.GetBool("Mode.Product") { //生产模式，只返回顶层信息 ，如："登录失败！“
 
 		return topMessage(err)
-	} else { //开发模式，返回全链错误 ，如："登录失败！: service error:  XXXX :DAO error : XXXX“
+	} else { //开发模式，返回全链错误 ，如："登录失败！: service error:  XXXX :authDAO error : XXXX“
 
 		return fullChain(err)
 	}

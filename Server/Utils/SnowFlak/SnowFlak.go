@@ -12,6 +12,12 @@ import (
 type SnowFlakeConfig interface {
 	GetInt64(string) int64
 }
+
+type SnowFlakManager interface {
+	GetID() int64
+	GetIDString() string
+}
+
 type SnowFlake struct {
 	sync.Mutex
 	timestamp int64 //上次生成ID是时间戳(毫秒)

@@ -1,4 +1,4 @@
-package UserDAO
+package AuthDAO
 
 import (
 	"AITranslatio/Global/Consts"
@@ -14,7 +14,7 @@ type Credential struct {
 }
 
 // 查找某一条凭证
-func (DAO *UserDAO) FindCredential(ctx *gin.Context) (*webAuthn.WebAuthnCredential, error) {
+func (DAO *AuthDAO) FindCredential(ctx *gin.Context) (*webAuthn.WebAuthnCredential, error) {
 
 	var webAuthnCredential *webAuthn.WebAuthnCredential
 
@@ -32,7 +32,7 @@ func (DAO *UserDAO) FindCredential(ctx *gin.Context) (*webAuthn.WebAuthnCredenti
 }
 
 // 创建凭证
-func (DAO *UserDAO) CreateCredential(userID int64, signCount uint32, CredentialID, publicKey []byte) error {
+func (DAO *AuthDAO) CreateCredential(userID int64, signCount uint32, CredentialID, publicKey []byte) error {
 
 	webAuthnCredential := &webAuthn.WebAuthnCredential{
 		UserID:       userID,
@@ -50,7 +50,7 @@ func (DAO *UserDAO) CreateCredential(userID int64, signCount uint32, CredentialI
 }
 
 // 根据UserID查找其所有的CredentialID、type
-func (DAO *UserDAO) FindCredentialByUserID(ctx *gin.Context) ([]Credential, error) {
+func (DAO *AuthDAO) FindCredentialByUserID(ctx *gin.Context) ([]Credential, error) {
 	var credentials []Credential
 
 	UserID := ctx.GetInt64(Consts.ValidatorPrefix + "UserID")

@@ -3,7 +3,7 @@ package OAuthService
 import (
 	"AITranslatio/Global"
 	"AITranslatio/Global/Consts"
-	"AITranslatio/app/DAO/UserDAO"
+	"AITranslatio/app/DAO/AuthDAO"
 	"AITranslatio/app/types"
 	"bytes"
 	"encoding/json"
@@ -22,7 +22,7 @@ type OAuthService interface {
 
 func CreateOAuthFactroy(server string) OAuthService {
 	if server == "Github" {
-		return &Github{UserDAO.CreateDAOFactory("mysql")}
+		return &Github{AuthDAO.CreateDAOFactory("mysql")}
 	}
 	if server == "WX" {
 	}

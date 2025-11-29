@@ -3,7 +3,7 @@ package Verify
 import (
 	"AITranslatio/Global"
 	"AITranslatio/Global/Consts"
-	"AITranslatio/app/DAO/UserDAO"
+	"AITranslatio/app/DAO/AuthDAO"
 	"AITranslatio/app/http/reposen"
 	"bytes"
 	"crypto"
@@ -90,7 +90,7 @@ func AttestationObjectVerifyForRegister(WebAuthnCtx *gin.Context) error {
 	}
 
 	//数据库插入数据
-	err = UserDAO.CreateDAOFactory("mysql").CreateCredential(UserID, signCount, attestedCredentialData.CredentialID, attestedCredentialData.CredentialPublicKey)
+	err = AuthDAO.CreateDAOFactory("mysql").CreateCredential(UserID, signCount, attestedCredentialData.CredentialID, attestedCredentialData.CredentialPublicKey)
 	if err != nil {
 		return fmt.Errorf("DAO层CreateCredential调用失败: %w", err)
 	}
@@ -115,7 +115,7 @@ func AttestationObjectVerifyForLogin(WebAuthnCtx *gin.Context) error {
 	signCount := binary.BigEndian.Uint32(authData[33:37]) //把4字节按照大端序转化成一个uint32整数
 
 	//由Credential ID在数据库查询公钥
-	Credential, err := UserDAO.CreateDAOFactory("mysql").FindCredential(WebAuthnCtx)
+	Credential, err := AuthDAO.CreateDAOFactory("mysql").FindCredential(WebAuthnCtx)
 	if err != nil {
 		return fmt.Errorf("webAuthn中根据CredentialID查找Credential失败： %w", err)
 	}

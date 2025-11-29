@@ -15,7 +15,6 @@ HttpServer:
 
 
 Logs:
-
   MQ: "/Storage/Logs/MQ.log"
   Db: "/Storage/Logs/DB.log"
   Business: "/Storage/Logs/Business.log"
@@ -40,7 +39,6 @@ WebAuthn :
   RPID : "localhost"
 
 OAuth :
-
   Challenge_TTL : 6000 #1分钟
 
   Github :

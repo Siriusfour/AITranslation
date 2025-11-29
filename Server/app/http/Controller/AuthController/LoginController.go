@@ -1,11 +1,12 @@
 package AuthController
 
 import (
-	"AITranslatio/Global"
 	"AITranslatio/Global/Consts"
-	"AITranslatio/app/DAO/UserDAO"
+	"AITranslatio/Utils/token"
+	"AITranslatio/app/DAO/AuthDAO"
 	"AITranslatio/app/Service/AuthService"
 	"AITranslatio/app/http/reposen"
+	"AITranslatio/app/types"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -14,49 +15,66 @@ import (
 	"strconv"
 )
 
-type AuthController struct{}
+type AuthController struct {
+	Service *AuthService.AuthService
+	tracer  types.TracerInterf
+}
+
+func NewAuthController(DAO AuthDAO.Inerf, TokenProvider token.TokenProvider) *AuthController {
+	return &AuthController{
+		Service: &AuthService.AuthService{
+			DAO,
+			TokenProvider,
+		},
+	}
+}
 
 func (Controller *AuthController) Login(ctx *gin.Context) {
 
 	span := zipkin.SpanFromContext(ctx.Request.Context())
 
 	if span != nil {
-		span.Tag("UserID", strconv.FormatInt(ctx.GetInt64("UserID"), 10)) // 从 Token 解析出来的
+		span.Tag("UserID", strconv.FormatInt(ctx.GetInt64(Consts.ValidatorPrefix+"UserID"), 10)) // 从 Token 解析出来的
 		defer span.Finish()
 	}
 
 	//从ctx解析出需要的参数
 	Email := ctx.GetString(Consts.ValidatorPrefix + "Email")
 	passWord := ctx.GetString(Consts.ValidatorPrefix + "Password")
+	userID := ctx.GetInt64(Consts.ValidatorPrefix + "UserID")
 
-	//有账号密码
+	//有账号密码优先账号密码
 	if Email != "" || passWord != "" {
-		LoginInfo, err := AuthService.CreateAuthService().LoginByPassWord(Email, passWord)
-		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-			reposen.Fail(ctx, fmt.Errorf("登录失败，密码错误！%w", err))
+		LoginInfo, err := Controller.Service.LoginByPassWord(Email, passWord)
+		if err != nil {
+			if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+				reposen.Fail(ctx, fmt.Errorf("登录失败！密码错误%w", err))
+				return
+			}
+			reposen.Fail(ctx, fmt.Errorf("登录失败！%w", err))
 			return
 		}
+
 		reposen.OK(ctx, LoginInfo)
 		return
 
-		//尝试获取token登录
+		//如果是token登录,中间件已经验证过了，这里直接返回信息
 	} else {
-		childSpan, newCtx := Global.Tracing.Tracer.StartSpanFromContext(ctx, "GetUserInfo")
+		childSpan, newCtx := Controller.tracer.StartSpanFromContext(ctx, "GetUserInfo")
 		defer childSpan.Finish()
 		ctx.Request = ctx.Request.WithContext(newCtx)
 
 		childSpan.Tag("db.system", "MySQL")
 		childSpan.Tag("sql:", "FindUser")
-		loginInfo, err := UserDAO.CreateDAOFactory("mysql").FindUser(ctx.GetInt64(Consts.ValidatorPrefix + "UserID"))
+		loginInfo, err := Controller.Service.FindUser(userID, "UserID")
 		if err != nil {
 			reposen.ErrorSystem(ctx, fmt.Errorf("获取用户信息失败：%w", err))
 			return
 		}
-
+		
 		reposen.OK(ctx, loginInfo)
 
 	}
-
 }
 
 //func (Controller *AuthController) CreateSSE(CreateSSEctx *gin.Context) {

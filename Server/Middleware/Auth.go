@@ -1,8 +1,10 @@
 package Middleware
 
 import (
+	"AITranslatio/Global"
 	"AITranslatio/Global/Consts"
 	"AITranslatio/Global/MyErrors"
+	"AITranslatio/Utils/SnowFlak"
 	tokenUtil "AITranslatio/Utils/token"
 	"AITranslatio/app/http/reposen"
 	"errors"
@@ -20,7 +22,21 @@ func Auth() gin.HandlerFunc {
 			c.Next()
 		}
 
-		err := tokenUtil.ParseToken(token)
+		Key := Global.EncryptKey
+		AkOutTime := Global.Config.GetDuration("Token.AkOutTime")
+		RkOutTime := Global.Config.GetDuration("Token.RkOutTime")
+		redis := Global.RedisClient
+		SnowFlakManager := SnowFlak.CreateSnowflakeFactory()
+
+		ct := &tokenUtil.CreateToken{
+			Key,
+			AkOutTime,
+			RkOutTime,
+			SnowFlakManager,
+			redis,
+		}
+
+		err := tokenUtil.CreateTokenFactory(ct).ParseToken(token)
 		if err != nil {
 			if errors.Is(err, MyErrors.ErrTokenExpired) {
 				reposen.ErrorTokenAuthFail(c, fmt.Errorf("登录失败,登录信息已过期"), Consts.JwtTokenExpired)
