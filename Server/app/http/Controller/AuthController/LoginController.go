@@ -71,9 +71,7 @@ func (Controller *AuthController) Login(ctx *gin.Context) {
 			reposen.ErrorSystem(ctx, fmt.Errorf("获取用户信息失败：%w", err))
 			return
 		}
-		
 		reposen.OK(ctx, loginInfo)
-
 	}
 }
 
