@@ -74,6 +74,7 @@ func CreateZapFactory(entry func(zapcore.Entry) error) map[string]*zap.Logger {
 		"business": Consts.BasePath + Global.Config.GetString("Logs.BusinessPath"),
 		"db":       Consts.BasePath + Global.Config.GetString("Logs.DbPath"),
 		"mq":       Consts.BasePath + Global.Config.GetString("Logs.MQPath"),
+		"http":     Consts.BasePath + Global.Config.GetString("Logs.HttpPath"),
 	}
 
 	// 定义不同模块的日志文件

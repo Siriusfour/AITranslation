@@ -13,6 +13,8 @@ import (
 type Inerf interface {
 	LoginByPassword(Email string, password string) (*types.LoginInfo, error)
 	FindUserByID(ID int64, IDtype string) (*User.User, error)
+
+	CreateUser(UserInfo *User.User) error
 }
 
 type AuthDAO struct {
@@ -30,7 +32,7 @@ func (DAO *AuthDAO) CreateUser(user *User.User) error {
 }
 
 // CheckOAuthID 根据ID查找用户是否存在（OAuthID/UserID）
-func (DAO *AuthDAO) FindUser(ID int64, IDtype string) (*User.User, error) {
+func (DAO *AuthDAO) FindUserByID(ID int64, IDtype string) (*User.User, error) {
 
 	var UserInfo *User.User
 
@@ -92,13 +94,4 @@ func (DAO *AuthDAO) LoginByPassword(Email string, password string) (*types.Login
 		Avatar:   UserInfo.Avatar,
 	}, nil
 
-}
-
-func (DAO *AuthDAO) LoginByAccessToken(AccessToken string) error {
-	return nil
-
-}
-
-func (DAO *AuthDAO) LoginByRefreshToken(RefreshToken string) error {
-	return nil
 }

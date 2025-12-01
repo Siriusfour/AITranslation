@@ -28,7 +28,7 @@ func (login LoginDTO) CheckParams(context *gin.Context) {
 		reposen.ErrorSystem(context, errors.New("DataAddContext无法绑定到*gin.contex"))
 	} else {
 		//调用Controller
-		(&AuthController.AuthController{}).Login(extraAddBindDataContext)
+		AuthController.NewAuthController()
 	}
 
 }

@@ -3,7 +3,9 @@ package Global
 import (
 	"AITranslatio/Config/interf"
 	"AITranslatio/Utils/SSE"
+	"AITranslatio/Utils/SnowFlak"
 	"AITranslatio/Utils/zipkin"
+
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -11,6 +13,7 @@ import (
 )
 
 var Logger map[string]*zap.Logger
+
 var MySQL_Client *gorm.DB
 var PostgreSQL_Client *gorm.DB
 
@@ -21,4 +24,5 @@ var Config interf.ConfigInterface
 var DB_Config interf.ConfigInterface
 var RabbitmqClient any
 
+var SnowflakeManage *SnowFlak.SnowFlake
 var Tracing *zipkin.Tracing

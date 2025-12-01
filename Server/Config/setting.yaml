@@ -15,9 +15,10 @@ HttpServer:
 
 
 Logs:
-  MQ: "/Storage/Logs/MQ.log"
-  Db: "/Storage/Logs/DB.log"
-  Business: "/Storage/Logs/Business.log"
+  MQ: "./Storage/Logs/MQ.log"
+  Db: "./Storage/Logs/DB.log"
+  Business: "./Storage/Logs/Business.log"
+  Http : "./Storage/Logs/Http.log"
   TextFormat: "json"                                  #记录日志的格式，参数选项：console、json ， console 表示一般的文本格式
   TimePrecision: "millisecond"                         #记录日志时，相关的时间精度，该参数选项：second  、 millisecond ， 分别表示 秒 和 毫秒 ,默认为毫秒级别
   MaxSize: 10                                           #每个日志的最大尺寸(以MB为单位）， 超过该值，系统将会自动进行切割

@@ -19,7 +19,7 @@ func (Controller *AuthController) Register(ctx *gin.Context) {
 		Email:     ctx.GetString(Consts.ValidatorPrefix + "Email"),
 		EamilCode: "0000",
 	}
-	Auth, err := AuthService.CreateAuthService().Register(DTO)
+	Auth, err := AuthService.NewAuthService().Register(DTO)
 	if err != nil {
 		reposen.ErrorSystem(ctx, fmt.Errorf("创建AuthService失败: %w", err))
 		return

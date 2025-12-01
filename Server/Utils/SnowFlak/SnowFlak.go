@@ -1,17 +1,12 @@
 package SnowFlak
 
 import (
-	"AITranslatio/Global"
 	"AITranslatio/Global/Consts"
 	"go.uber.org/zap"
 	"strconv"
 	"sync"
 	"time"
 )
-
-type SnowFlakeConfig interface {
-	GetInt64(string) int64
-}
 
 type SnowFlakManager interface {
 	GetID() int64
@@ -20,27 +15,23 @@ type SnowFlakManager interface {
 
 type SnowFlake struct {
 	sync.Mutex
-	timestamp int64 //上次生成ID是时间戳(毫秒)
-	machineId int64
-	sequence  int64
-	getTime   func() int64
-
-	logger map[string]*zap.Logger
-	config SnowFlakeConfig
+	timestamp           int64 //上次生成ID是时间戳(毫秒)
+	machineId           int64
+	sequence            int64
+	getTime             func() int64
+	RollbackThresholdMs int64
+	logger              map[string]*zap.Logger
 }
 
 // 创建一个雪花算法生成器(生成工厂)
-func CreateSnowflakeFactory() *SnowFlake {
+func CreateSnowflakeFactory(RollbackThresholdMs int64, logger map[string]*zap.Logger) *SnowFlake {
 	return &SnowFlake{
-		timestamp: 0,
-		//machineId: Global.Config.GetInt64("SnowFlake.SnowFlakeMachineId"),
-		machineId: 1,
-		sequence:  0,
-
-		getTime: func() int64 { return time.Now().UnixNano() / 1e6 }, //依赖注入，默认获取当前时间，测试时注入测试时间
-
-		logger: Global.Logger,
-		config: Global.Config,
+		timestamp:           0,
+		machineId:           1,
+		sequence:            0,
+		getTime:             func() int64 { return time.Now().UnixNano() / 1e6 }, //依赖注入，默认获取当前时间，测试时注入测试时间
+		RollbackThresholdMs: RollbackThresholdMs,
+		logger:              logger,
 	}
 }
 
@@ -69,7 +60,7 @@ func (s *SnowFlake) GetID() int64 {
 
 	//时钟回拨
 	if now < s.timestamp {
-		threshold := s.config.GetInt64("SnowFlake.RollbackThresholdMs")
+		threshold := s.RollbackThresholdMs
 		if threshold <= 0 {
 			threshold = 5
 		}

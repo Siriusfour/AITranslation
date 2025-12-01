@@ -20,7 +20,7 @@ import (
 )
 
 type Github struct {
-	DAO *AuthDAO.authDAO
+	DAO AuthDAO.Inerf
 }
 
 type GitHubAppTokenResponse struct {
@@ -117,7 +117,7 @@ func (Github *Github) GetUserInfo(ctx *gin.Context) (*types.LoginInfo, error) {
 	}
 
 	//由OAuthID判断是否存在该账号
-	err, UserInfo := Github.DAO.CheckUserID(GithubUserInfo.ID, "GithubId")
+	UserInfo, err := Github.DAO.FindUserByID(GithubUserInfo.ID, "GithubId")
 	if err != nil {
 		if errors.Is(err, MyErrors.ErrorOAuthIDrNotFound) { //如果是不存在该OAuthID，则直接创建账号
 			userID := SnowFlak.CreateSnowflakeFactory().GetID()

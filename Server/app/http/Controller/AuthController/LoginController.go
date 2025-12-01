@@ -2,8 +2,7 @@ package AuthController
 
 import (
 	"AITranslatio/Global/Consts"
-	"AITranslatio/Utils/token"
-	"AITranslatio/app/DAO/AuthDAO"
+
 	"AITranslatio/app/Service/AuthService"
 	"AITranslatio/app/http/reposen"
 	"AITranslatio/app/types"
@@ -11,6 +10,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/openzipkin/zipkin-go"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"strconv"
 )
@@ -18,14 +18,15 @@ import (
 type AuthController struct {
 	Service *AuthService.AuthService
 	tracer  types.TracerInterf
+
+	loggerMap map[string]*zap.Logger
 }
 
-func NewAuthController(DAO AuthDAO.Inerf, TokenProvider token.TokenProvider) *AuthController {
+func NewController(Service *AuthService.AuthService, tracer types.TracerInterf, loggerMap map[string]*zap.Logger) *AuthController {
 	return &AuthController{
-		Service: &AuthService.AuthService{
-			DAO,
-			TokenProvider,
-		},
+		Service:   Service,
+		tracer:    tracer,
+		loggerMap: loggerMap,
 	}
 }
 
@@ -71,7 +72,7 @@ func (Controller *AuthController) Login(ctx *gin.Context) {
 			reposen.ErrorSystem(ctx, fmt.Errorf("获取用户信息失败：%w", err))
 			return
 		}
-		
+
 		reposen.OK(ctx, loginInfo)
 
 	}

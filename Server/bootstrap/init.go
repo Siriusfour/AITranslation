@@ -1,7 +1,6 @@
 package bootstrap
 
 import (
-	"AITranslatio/app/http/validator/comon"
 	"flag"
 )
 
@@ -15,7 +14,7 @@ func init() {
 	flag.Parse()
 
 	//2.注册表单校验容器,也是router调用函数
-	comon.RegisterValidator()
+	//comon.RegisterValidator()
 
 	//3.初始化config文件
 	InitConfig(File)

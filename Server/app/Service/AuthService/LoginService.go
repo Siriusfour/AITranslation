@@ -6,17 +6,20 @@ import (
 	"AITranslatio/app/DAO/AuthDAO"
 	"AITranslatio/app/types"
 	"fmt"
+	"go.uber.org/zap"
 )
 
 type AuthService struct {
 	DAO           AuthDAO.Inerf
 	TokenProvider token.TokenProvider
+	Loggers       map[string]*zap.Logger
 }
 
-func CreateAuthService(AuthDAO AuthDAO.Inerf, TokenProvider token.TokenProvider) *AuthService {
+func NewAuthService(AuthDAO AuthDAO.Inerf, TokenProvider token.TokenProvider, loggers map[string]*zap.Logger) *AuthService {
 	return &AuthService{
 		AuthDAO,
 		TokenProvider,
+		loggers,
 	}
 }
 

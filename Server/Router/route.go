@@ -8,9 +8,10 @@ import (
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"AITranslatio/bootstrap"
 )
 
-func InitRouter() *gin.Engine {
+func InitRouter(app *bootstrap.APP) *gin.Engine {
 
 	var router *gin.Engine
 	// zipkin server middleware（关键）
@@ -42,13 +43,13 @@ func InitRouter() *gin.Engine {
 	}
 
 	//路由分组
-	rgBase := router.Group("/Api").Use(Middleware.Auth()).Use(Middleware.Cors())  // 基础crud业务的路由组
-	rgAuth := router.Group("/Auth").Use(Middleware.Auth()).Use(Middleware.Cors()) // 鉴权相关的路由组
+	rgBase := router.Group("/Api").Use(Middleware.Auth()).Use(Middleware.Cors()).Use(Middleware.HttpLog(Global.Logger, "http"))  // 基础crud业务的路由组
+	rgAuth := router.Group("/Auth").Use(Middleware.Auth()).Use(Middleware.Cors()).Use(Middleware.HttpLog(Global.Logger, "http")) // 鉴权相关的路由组
 
 	//注册所有组别的路由
 
-	InitAuthRoute(rgAuth)
-	InitBaseRoute(rgBase)
+	InitAuthRoute(rgAuth, app)
+	InitBaseRoute(rgBase, app)
 
 	return router
 

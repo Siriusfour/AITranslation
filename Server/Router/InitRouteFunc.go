@@ -3,10 +3,11 @@ package Router
 import (
 	"AITranslatio/Global/Consts"
 	"AITranslatio/app/http/validator/comon/factory"
+	"AITranslatio/bootstrap"
 	"github.com/gin-gonic/gin"
 )
 
-func InitAuthRoute(rg gin.IRoutes) {
+func InitAuthRoute(rg gin.IRoutes, app *bootstrap.APP) {
 	rg.POST("/Login", factory.Create(Consts.ValidatorPrefix+"Login")) //在全局容器里面找到Login验证器
 	rg.POST("/Register", factory.Create(Consts.ValidatorPrefix+"Register"))
 	rg.GET("/ApplicationWebAuthn", factory.Create(Consts.ValidatorPrefix+"ApplicationWebAuthn"))

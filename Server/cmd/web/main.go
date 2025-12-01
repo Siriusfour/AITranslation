@@ -3,6 +3,8 @@ package main
 import (
 	"AITranslatio/Global"
 	"AITranslatio/Router"
+
+	"AITranslatio/bootstrap"
 	_ "AITranslatio/bootstrap"
 
 	"net/http"
@@ -12,7 +14,9 @@ import (
 
 func main() {
 
-	router := Router.InitRouter()
+	App := bootstrap.InitApp()
+
+	router := Router.InitRouter(App)
 
 	serverMiddleware := zipkinHTTP.NewServerMiddleware(
 		Global.Tracing.Tracer,
