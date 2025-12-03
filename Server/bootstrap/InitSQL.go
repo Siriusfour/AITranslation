@@ -1,30 +1,30 @@
 package bootstrap
 
 import (
-	"AITranslatio/Global"
+	"AITranslatio/Config/interf"
 	"fmt"
+	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 import "AITranslatio/DataBase"
 
-func InitDB() {
+func InitDB(cfg interf.ConfigInterface, logger *zap.Logger) (*gorm.DB, error) {
 
-	dbTYpe := Global.Config.GetInt("test")
-	fmt.Println(dbTYpe)
-
-	if Global.Config.GetInt("DB.MySQL.IsInitGlobalGormMysql") == 1 {
-		MySQL_Client, err := DataBase.InitMySQL_Client()
+	if cfg.GetInt("DB.MySQL.IsInitGlobalGormMysql") == 1 {
+		MySQL_Client, err := DataBase.InitMySQL_Client(cfg, logger)
 		if err != nil {
-			return
+			return nil, fmt.Errorf("MySQL初始化失败 %w", err)
 		}
-		Global.MySQL_Client = MySQL_Client
+		return MySQL_Client, nil
 	}
 
-	if Global.Config.GetInt("DB.PostgreSql.IsInitGlobalGormPostgreSql") == 1 {
-		PostgreSQL_Client, err := DataBase.InitPostgreSQL_Client()
+	if cfg.GetInt("DB.PostgreSql.IsInitGlobalGormPostgreSql") == 1 {
+		PostgreSQL_Client, err := DataBase.InitPostgreSQL_Client(cfg, logger)
 		if err != nil {
-			return
+			return nil, fmt.Errorf("PostgreSQL初始化失败 %w", err)
 		}
-		Global.PostgreSQL_Client = PostgreSQL_Client
+		return PostgreSQL_Client, nil
 	}
 
+	return nil, fmt.Errorf("不允许的数据库类型")
 }

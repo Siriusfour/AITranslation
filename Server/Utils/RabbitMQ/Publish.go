@@ -36,7 +36,7 @@ func (c *Client) Publish(exchange, routingKey string, body []byte) error {
 		DeliveryMode: amqp.Persistent,
 		ContentType:  "application/octet-stream",
 		Body:         body,
-		MessageId:    SnowFlak.CreateSnowflakeFactory().GetIDString(),
+		MessageId:    SnowFlak.CreateSnowflakeFactory(c.Cfg, c.Logger).GetIDString(),
 	}); err != nil {
 		return fmt.Errorf("publish failed: %w", err)
 	}

@@ -1,12 +1,20 @@
 package bootstrap
 
 import (
-	"AITranslatio/Global"
+	"AITranslatio/Config/interf"
+	"AITranslatio/Utils/SnowFlak"
 	"AITranslatio/Utils/token"
+	"AITranslatio/Utils/zipkin"
+	"AITranslatio/app/DAO/ApiDAO"
 	"AITranslatio/app/DAO/AuthDAO"
+	"AITranslatio/app/Service/ApiServer"
 	"AITranslatio/app/Service/AuthService"
+	"AITranslatio/app/Service/AuthService/OAuthService"
 	"AITranslatio/app/http/Controller/ApiController"
 	"AITranslatio/app/http/Controller/AuthController"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 type Controller struct {
@@ -18,24 +26,39 @@ type APP struct {
 	Controller *Controller
 }
 
-func InitApp() *APP {
+func InitApp(EncryptKey []byte, cfg interf.ConfigInterface, db *gorm.DB, redisClient *redis.Client, logger *zap.Logger, tracing *zipkin.Tracing) *APP {
 
 	t := token.CreateTokenFactory(&token.CreateToken{
-		Global.EncryptKey,
-		Global.Config.GetDuration("Token.AkOutTime"),
-		Global.Config.GetDuration("Token.RkOutTime"),
-
-		Global.SnowflakeManage,
-		Global.RedisClient,
+		EncryptKey,
+		cfg.GetDuration("Token.AkOutTime"),
+		cfg.GetDuration("Token.RkOutTime"),
+		SnowFlak.CreateSnowflakeFactory(cfg, logger),
+		redisClient,
 	})
 
-	authDAO := AuthDAO.CreateDAOFactory("mysql")
-	authService := AuthService.NewAuthService(authDAO, t, Global.Logger)
-	authController := AuthController.NewController(authService, Global.Tracing.Tracer, Global.Logger)
+	s := SnowFlak.CreateSnowflakeFactory(cfg, logger)
+	oauthDAO := AuthDAO.NewDAOFactory(db)
+	GithubService := OAuthService.CreateOAuthServiceFactroy(cfg, logger, t, s, redisClient, oauthDAO, "Github")
+	WxService := OAuthService.CreateOAuthServiceFactroy(cfg, logger, t, s, redisClient, oauthDAO, "WX")
+	QQService := OAuthService.CreateOAuthServiceFactroy(cfg, logger, t, s, redisClient, oauthDAO, "QQ")
+	oauthMap := map[string]AuthController.OAuthController{
+		"Github": AuthController.NewOAuthControllerFactroy(GithubService, logger),
+		"WX":     AuthController.NewOAuthControllerFactroy(WxService, logger),
+		"QQ":     AuthController.NewOAuthControllerFactroy(QQService, logger),
+	}
+	//AuthController的创建
+	authDAO := AuthDAO.NewDAOFactory(db)
+	authService := AuthService.NewService(cfg, logger, t, s, redisClient, authDAO)
+	authController := AuthController.NewController(cfg, logger, authService, tracing.Tracer, oauthMap)
+
+	//ApiController的创建
+	apiDAO := ApiDAO.NewDAOFactory(db)
+	apiService := ApiServer.NewService(cfg, logger, apiDAO)
+	apiController := ApiController.NewController(cfg, logger, apiService)
 
 	App := &APP{
 		Controller: &Controller{
-			ApiController:  nil,
+			ApiController:  apiController,
 			AuthController: authController,
 		},
 	}

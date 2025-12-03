@@ -13,7 +13,7 @@ import (
 )
 
 // token校验
-func Auth() gin.HandlerFunc {
+func Auth(app *Global.Infrastructure) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		token := c.GetHeader("Authorization")
@@ -22,11 +22,11 @@ func Auth() gin.HandlerFunc {
 			c.Next()
 		}
 
-		Key := Global.EncryptKey
-		AkOutTime := Global.Config.GetDuration("Token.AkOutTime")
-		RkOutTime := Global.Config.GetDuration("Token.RkOutTime")
-		redis := Global.RedisClient
-		SnowFlakManager := SnowFlak.CreateSnowflakeFactory()
+		Key := app.EncryptKey
+		AkOutTime := app.Config.GetDuration("Token.AkOutTime")
+		RkOutTime := app.Config.GetDuration("Token.RkOutTime")
+		redis := app.RedisClient
+		SnowFlakManager := SnowFlak.CreateSnowflakeFactory(app.Config, app.Logger["business"])
 
 		ct := &tokenUtil.CreateToken{
 			Key,

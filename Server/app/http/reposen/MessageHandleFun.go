@@ -10,7 +10,7 @@ import (
 func MessageHandle(err error) string {
 
 	//1.判断当前模式
-	if Global.Config.GetBool("Mode.Product") { //生产模式，只返回顶层信息 ，如："登录失败！“
+	if Global.GetInfra().Config.GetBool("Mode.Product") { //生产模式，只返回顶层信息 ，如："登录失败！“
 
 		return topMessage(err)
 	} else { //开发模式，返回全链错误 ，如："登录失败！: service error:  XXXX :authDAO error : XXXX“

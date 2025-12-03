@@ -2,20 +2,19 @@ package AuthController
 
 import (
 	"AITranslatio/Global/Consts"
-	"AITranslatio/app/Service/AuthService"
 	"AITranslatio/app/http/reposen"
 	"fmt"
 	"github.com/gin-gonic/gin"
 )
 
-// 获取webAunth服务器的信息（RPI,TimeOut,Challenge...）
+// 申请凭证，获取webAunth服务器的信息（RPID,TimeOut,Challenge...）
 func (Controller *AuthController) ApplicationWebAuthn(WebAuthnCtx *gin.Context) {
 
 	//从token解析出UserID
 	UserID := WebAuthnCtx.GetInt64(Consts.ValidatorPrefix + "UserID")
 
 	//从config获取webAuthn配置项
-	WebAuthn, err := AuthService.NewAuthService().ApplicationWebAuthn(UserID)
+	WebAuthn, err := Controller.Service.ApplicationWebAuthn(UserID)
 	if err != nil {
 		reposen.ErrorSystem(WebAuthnCtx, fmt.Errorf("AuthService创建失败:", err))
 		return
@@ -25,25 +24,11 @@ func (Controller *AuthController) ApplicationWebAuthn(WebAuthnCtx *gin.Context) 
 	return
 }
 
-// WebAuthnToRegister 验证WebAuthn休息是否合规
-func (Controller *AuthController) WebAuthnToRegister(WebAuthnCtx *gin.Context) {
-
-	//校验WebAuthn信息
-	err := AuthService.NewAuthService().VerifyWebAuthnToRegister(WebAuthnCtx)
-	if err != nil {
-		return
-	}
-
-	reposen.OK(WebAuthnCtx, nil)
-	return
-
-}
-
 func (Controller *AuthController) GetUserAllCredential(WebAuthnCtx *gin.Context) {
 
 	//生成随机挑战,置于redis分钟
 	UserID := WebAuthnCtx.GetInt64(Consts.ValidatorPrefix + "UserID")
-	w, err := AuthService.NewAuthService().ApplicationWebAuthn(UserID)
+	w, err := Controller.Service.ApplicationWebAuthn(UserID)
 	if err != nil {
 		reposen.ErrorSystem(WebAuthnCtx, err)
 		return
@@ -51,7 +36,7 @@ func (Controller *AuthController) GetUserAllCredential(WebAuthnCtx *gin.Context)
 	WebAuthnCtx.Set(Consts.ValidatorPrefix+"challenge", w.Challenge)
 
 	//获取该用户所有的凭证
-	data, err := AuthService.NewAuthService().GetUserAllCredentialDTO(WebAuthnCtx)
+	data, err := Controller.Service.GetUserAllCredentialDTO(WebAuthnCtx)
 	if err != nil {
 		return
 	}
@@ -61,7 +46,7 @@ func (Controller *AuthController) GetUserAllCredential(WebAuthnCtx *gin.Context)
 
 func (Controller *AuthController) WebAuthnByLogin(WebAuthnCtx *gin.Context) {
 
-	err := AuthService.NewAuthService().WebAuthnToLogin(WebAuthnCtx)
+	err := Controller.Service.WebAuthnToLogin(WebAuthnCtx)
 	if err != nil {
 		reposen.ErrorSystem(WebAuthnCtx, err)
 		return

@@ -1,25 +1,34 @@
 package AuthService
 
 import (
+	"AITranslatio/Config/interf"
 	"AITranslatio/Global/Consts"
+	"AITranslatio/Utils/SnowFlak"
 	"AITranslatio/Utils/token"
 	"AITranslatio/app/DAO/AuthDAO"
 	"AITranslatio/app/types"
 	"fmt"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
 type AuthService struct {
-	DAO           AuthDAO.Inerf
-	TokenProvider token.TokenProvider
-	Loggers       map[string]*zap.Logger
+	cfg                interf.ConfigInterface
+	Loggers            *zap.Logger
+	TokenProvider      token.TokenProvider
+	SnowFlakeGenerator *SnowFlak.SnowFlakeGenerator
+	RedisClient        *redis.Client
+	DAO                AuthDAO.Inerf
 }
 
-func NewAuthService(AuthDAO AuthDAO.Inerf, TokenProvider token.TokenProvider, loggers map[string]*zap.Logger) *AuthService {
+func NewService(cfg interf.ConfigInterface, logger *zap.Logger, TokenProvider token.TokenProvider, SnowFlakeGenerator *SnowFlak.SnowFlakeGenerator, redisClient *redis.Client, AuthDAO AuthDAO.Inerf) *AuthService {
 	return &AuthService{
-		AuthDAO,
+		cfg,
+		logger,
 		TokenProvider,
-		loggers,
+		SnowFlakeGenerator,
+		redisClient,
+		AuthDAO,
 	}
 }
 

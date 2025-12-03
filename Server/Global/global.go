@@ -2,27 +2,64 @@ package Global
 
 import (
 	"AITranslatio/Config/interf"
-	"AITranslatio/Utils/SSE"
-	"AITranslatio/Utils/SnowFlak"
+	"AITranslatio/Utils/RabbitMQ"
+
 	"AITranslatio/Utils/zipkin"
+	"os"
+	"sync"
 
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"os"
 )
 
-var Logger map[string]*zap.Logger
+type Infrastructure struct {
+	Logger map[string]*zap.Logger
 
-var MySQL_Client *gorm.DB
-var PostgreSQL_Client *gorm.DB
+	Config   interf.ConfigInterface
+	DbConfig interf.ConfigInterface
 
-var RedisClient *redis.Client
-var EncryptKey = []byte(os.Getenv("PATHEXT"))
-var SSEClients *SSE.SSEClients
-var Config interf.ConfigInterface
-var DB_Config interf.ConfigInterface
-var RabbitmqClient any
+	DbClient *gorm.DB
 
-var SnowflakeManage *SnowFlak.SnowFlake
-var Tracing *zipkin.Tracing
+	RedisClient    *redis.Client
+	RabbitmqClient *RabbitMQ.Client
+
+	//snowflakeManage *SnowFlak.SnowFlake
+	Tracing *zipkin.Tracing
+
+	EncryptKey []byte
+}
+
+var (
+	infra     *Infrastructure
+	infraOnce sync.Once
+)
+
+func InitInfrastructure(cfg interf.ConfigInterface, logger map[string]*zap.Logger, dbClient *gorm.DB, redisClient *redis.Client, MQClient *RabbitMQ.Client, tracing *zipkin.Tracing) *Infrastructure {
+
+	infraOnce.Do(func() {
+		infra = &Infrastructure{
+			Config:         cfg,
+			Logger:         logger,
+			DbClient:       dbClient,
+			RedisClient:    redisClient,
+			RabbitmqClient: MQClient,
+			Tracing:        tracing,
+			EncryptKey:     []byte(os.Getenv("PATHEXT")),
+		}
+	})
+
+	return infra
+}
+
+func GetInfra() *Infrastructure {
+	return infra
+}
+
+func (infra *Infrastructure) GetConfig() interf.ConfigInterface {
+	return infra.Config
+}
+
+func (infra *Infrastructure) GetLogger(name string) *zap.Logger {
+	return infra.Logger[name]
+}

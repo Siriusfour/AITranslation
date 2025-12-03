@@ -10,7 +10,7 @@ type mockConfig struct{}
 
 func (logger mockConfig) GetInt64(keyName string) int64 { return 0 }
 
-func initSnowflake() *SnowFlake {
+func initSnowflake() *SnowFlakeGenerator {
 	c := CreateSnowflakeFactory()
 	c.logger = map[string]*zap.Logger{
 		"Business": zap.NewNop(),

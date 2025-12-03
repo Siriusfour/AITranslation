@@ -1,12 +1,11 @@
 package bootstrap
 
 import (
-	"AITranslatio/Global"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
 )
 
-func InitRedis() {
+func InitRedis() *redis.Client {
 
 	Options := &redis.Options{
 		Addr:     viper.GetString("redis.addr"),
@@ -14,6 +13,6 @@ func InitRedis() {
 		DB:       viper.GetInt("redis.db"),
 	}
 
-	Global.RedisClient = redis.NewClient(Options)
+	return redis.NewClient(Options)
 
 }

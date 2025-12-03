@@ -7,8 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ApiController struct{}
-
 func (Controller *ApiController) CreateTeam(ctx *gin.Context) {
 
 	err := ApiServer.CreateApiServer().CreateTeam(ctx)
@@ -30,7 +28,6 @@ func (Controller *ApiController) JoinTeam(ctx *gin.Context) {
 	}
 
 	reposen.OK(ctx, "Success")
-
 
 }
 

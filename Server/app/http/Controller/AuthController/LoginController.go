@@ -1,6 +1,7 @@
 package AuthController
 
 import (
+	"AITranslatio/Config/interf"
 	"AITranslatio/Global/Consts"
 
 	"AITranslatio/app/Service/AuthService"
@@ -16,17 +17,20 @@ import (
 )
 
 type AuthController struct {
-	Service *AuthService.AuthService
-	tracer  types.TracerInterf
-
-	loggerMap map[string]*zap.Logger
+	Service  *AuthService.AuthService
+	tracer   types.TracerInterf
+	OAuthMap map[string]OAuthController
+	logger   *zap.Logger
+	cfg      interf.ConfigInterface
 }
 
-func NewController(Service *AuthService.AuthService, tracer types.TracerInterf, loggerMap map[string]*zap.Logger) *AuthController {
+func NewController(cfg interf.ConfigInterface, logger *zap.Logger, Service *AuthService.AuthService, tracer *zipkin.Tracer, oauthMap map[string]OAuthController) *AuthController {
 	return &AuthController{
-		Service:   Service,
-		tracer:    tracer,
-		loggerMap: loggerMap,
+		cfg:      cfg,
+		logger:   logger,
+		Service:  Service,
+		tracer:   tracer,
+		OAuthMap: oauthMap,
 	}
 }
 

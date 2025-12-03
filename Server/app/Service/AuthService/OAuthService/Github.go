@@ -1,7 +1,7 @@
 package OAuthService
 
 import (
-	"AITranslatio/Global"
+	"AITranslatio/Config/interf"
 	"AITranslatio/Global/Consts"
 	"AITranslatio/Global/MyErrors"
 	"AITranslatio/Utils/SnowFlak"
@@ -16,11 +16,18 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	"time"
 )
 
-type Github struct {
-	DAO AuthDAO.Inerf
+type GithubService struct {
+	cfg                interf.ConfigInterface
+	logger             *zap.Logger
+	JWTGenerator       *token.JWTGenerator
+	SnowFlakeGenerator *SnowFlak.SnowFlakeGenerator
+	Redis              *redis.Client
+	DAO                AuthDAO.Inerf
 }
 
 type GitHubAppTokenResponse struct {
@@ -46,7 +53,7 @@ type GitHubUser struct {
 }
 
 // GetChallenge 生成随机数，存入redis
-func (Github *Github) GetChallenge(ctx *gin.Context) (*types.Challenge, error) {
+func (s *GithubService) GetChallenge(ctx *gin.Context) (*types.Challenge, error) {
 	// 生成随机部分
 	randomPart := make([]byte, 24)
 	_, err := rand.Read(randomPart)
@@ -66,12 +73,12 @@ func (Github *Github) GetChallenge(ctx *gin.Context) (*types.Challenge, error) {
 	//以事务存入redis
 	Key := fmt.Sprintf("SessionID:%s", ctx.GetString(Consts.ValidatorPrefix+"SessionID"))
 
-	pipe := Global.RedisClient.TxPipeline()
+	pipe := s.Redis.TxPipeline()
 	pipe.HSet(context.Background(), Key, map[string]interface{}{
 		"OAuth_Github_challenge": "" + challenge,
 	})
 
-	pipe.Expire(context.Background(), Key, time.Duration(Global.Config.GetInt64("OAuth.Challenge_TTL"))*time.Second)
+	pipe.Expire(context.Background(), Key, time.Duration(s.cfg.GetInt64("OAuth.Challenge_TTL"))*time.Second)
 
 	_, err = pipe.Exec(context.Background())
 	if err != nil {
@@ -85,11 +92,11 @@ func (Github *Github) GetChallenge(ctx *gin.Context) (*types.Challenge, error) {
 	return repsData, nil
 }
 
-func (Github *Github) VerifyChallenge(ctx *gin.Context) error {
+func (s *GithubService) VerifyChallenge(ctx *gin.Context) error {
 
 	Key := fmt.Sprintf("SessionID:%s", ctx.GetString(Consts.ValidatorPrefix+"SessionID"))
 
-	challenge, err := Global.RedisClient.HGet(ctx, Key, "OAuth_Github_challenge").Result()
+	challenge, err := s.Redis.HGet(ctx, Key, "OAuth_Github_challenge").Result()
 	if err != nil {
 		return fmt.Errorf("challenge不存在或过期：%w", err)
 	}
@@ -102,10 +109,10 @@ func (Github *Github) VerifyChallenge(ctx *gin.Context) error {
 	return nil
 }
 
-func (Github *Github) GetUserInfo(ctx *gin.Context) (*types.LoginInfo, error) {
+func (s *GithubService) GetUserInfo(ctx *gin.Context) (*types.LoginInfo, error) {
 
 	//获取githubToken（存储到redis）
-	Resp, err := GetToken("https://github.com/login/oauth/access_token", ctx)
+	Resp, err := GetToken(s.cfg, "https://github.com/login/oauth/access_token", ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -117,12 +124,12 @@ func (Github *Github) GetUserInfo(ctx *gin.Context) (*types.LoginInfo, error) {
 	}
 
 	//由OAuthID判断是否存在该账号
-	UserInfo, err := Github.DAO.FindUserByID(GithubUserInfo.ID, "GithubId")
+	UserInfo, err := s.DAO.FindUserByID(GithubUserInfo.ID, "GithubId")
 	if err != nil {
 		if errors.Is(err, MyErrors.ErrorOAuthIDrNotFound) { //如果是不存在该OAuthID，则直接创建账号
-			userID := SnowFlak.CreateSnowflakeFactory().GetID()
-			auth, err := Github.CreateToken(userID)
-			LoginInfo, err := Github.CreateUser(GithubUserInfo, userID)
+			userID := s.SnowFlakeGenerator.GetID()
+			auth, err := s.CreateToken(userID)
+			LoginInfo, err := s.CreateUser(GithubUserInfo, userID)
 			LoginInfo.Auth.AccessToken = auth.AccessToken
 			LoginInfo.Auth.RefreshToken = auth.RefreshToken
 			return LoginInfo, err
@@ -130,7 +137,7 @@ func (Github *Github) GetUserInfo(ctx *gin.Context) (*types.LoginInfo, error) {
 		return nil, err
 	}
 
-	auth, err := Github.CreateToken(UserInfo.UserID)
+	auth, err := s.CreateToken(UserInfo.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +154,7 @@ func (Github *Github) GetUserInfo(ctx *gin.Context) (*types.LoginInfo, error) {
 	}, nil
 }
 
-func (Github *Github) CreateUser(GithubUserInfo *GitHubUser, UserID int64) (*types.LoginInfo, error) {
+func (s *GithubService) CreateUser(GithubUserInfo *GitHubUser, UserID int64) (*types.LoginInfo, error) {
 
 	UserInfo := &User.User{
 		GithubID: GithubUserInfo.ID,
@@ -157,7 +164,7 @@ func (Github *Github) CreateUser(GithubUserInfo *GitHubUser, UserID int64) (*typ
 		Avatar:   GithubUserInfo.AvatarURL,
 	}
 
-	err := Github.DAO.CreateUser(UserInfo)
+	err := s.DAO.CreateUserByOAuth(UserInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -171,14 +178,14 @@ func (Github *Github) CreateUser(GithubUserInfo *GitHubUser, UserID int64) (*typ
 
 }
 
-func (Github *Github) CreateToken(ID int64) (*types.Auth, error) {
+func (s *GithubService) CreateToken(ID int64) (*types.Auth, error) {
 
 	//创建APP的token
-	AccessToken, errAk := token.CreateTokenFactory(Consts.AccessToken, ID).GeneratedToken()
+	AccessToken, errAk := s.JWTGenerator.GeneratedToken(ID, Consts.AccessToken)
 	if errAk != nil {
 		return nil, fmt.Errorf("生成token失败: %w", errAk)
 	}
-	RefreshToken, errRk := token.CreateTokenFactory(Consts.RefreshToken, ID).GeneratedToken()
+	RefreshToken, errRk := s.JWTGenerator.GeneratedToken(ID, Consts.RefreshToken)
 	if errRk != nil {
 		return nil, fmt.Errorf("生成token失败: %w", errAk)
 	}

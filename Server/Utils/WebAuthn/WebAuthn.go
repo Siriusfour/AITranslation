@@ -1,13 +1,14 @@
 package WebAuthn
 
 import (
-	"AITranslatio/Global"
+	"AITranslatio/Config/interf"
 	"AITranslatio/Global/Consts"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
+	"github.com/redis/go-redis/v9"
 	"time"
 )
 
@@ -34,23 +35,23 @@ type WebAuthn struct {
 	Challenge string
 }
 
-func CreateWebAuthnConfigFactory(UserID int64, UseName, Email string) *WebAuthn {
+func CreateWebAuthnConfigFactory(cfg interf.ConfigInterface, UserID int64, UseName, Email string) *WebAuthn {
 	return &WebAuthn{
 		Config: Config{
-			Name:             Global.Config.GetString("WebAuthn.rp.Name"),
-			ID:               Global.Config.GetString("WebAuthn.rp.ID"),
+			Name:             cfg.GetString("WebAuthn.rp.Name"),
+			ID:               cfg.GetString("WebAuthn.rp.ID"),
 			UserName:         UseName + "(" + Email + ")",
 			PubKeyCredParams: Consts.PubKeyCredParams,
-			Attestation:      Global.Config.GetString("WebAuthn.Attestation"),
-			Attachment:       Global.Config.GetString("WebAuthn.AuthenticatorAttachment"),
-			TimeOut:          time.Second * time.Duration(Global.Config.GetInt("WebAuthn.TimeOut")),
+			Attestation:      cfg.GetString("WebAuthn.Attestation"),
+			Attachment:       cfg.GetString("WebAuthn.AuthenticatorAttachment"),
+			TimeOut:          time.Second * time.Duration(cfg.GetInt("WebAuthn.TimeOut")),
 			UserID:           UserID,
-			ChallengeTTL:     time.Now().Add(time.Hour * time.Duration(Global.Config.GetInt("WebAuthn.Challenge_TTL"))).Unix(),
+			ChallengeTTL:     time.Now().Add(time.Hour * time.Duration(cfg.GetInt("WebAuthn.Challenge_TTL"))).Unix(),
 		},
 	}
 }
 
-func (w *WebAuthn) CreateChallenge() error {
+func (w *WebAuthn) CreateChallenge(redisClient *redis.Client) error {
 	// 生成随机部分
 	randomPart := make([]byte, 24)
 	_, err := rand.Read(randomPart)
@@ -73,7 +74,7 @@ func (w *WebAuthn) CreateChallenge() error {
 	// 使用事务 Pipeline
 	Key := fmt.Sprintf("UserID:%d", w.Config.UserID)
 
-	pipe := Global.RedisClient.TxPipeline()
+	pipe := redisClient.TxPipeline()
 	pipe.HSet(context.Background(), Key, map[string]interface{}{
 		"challenge":         w.Challenge,
 		"challenge_OutTime": w.Config.ChallengeTTL,

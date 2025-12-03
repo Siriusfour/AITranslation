@@ -50,10 +50,8 @@ func (DAO *AuthDAO) CreateCredential(userID int64, signCount uint32, CredentialI
 }
 
 // 根据UserID查找其所有的CredentialID、type
-func (DAO *AuthDAO) FindCredentialByUserID(ctx *gin.Context) ([]Credential, error) {
+func (DAO *AuthDAO) FindCredentialByUserID(UserID int64) ([]Credential, error) {
 	var credentials []Credential
-
-	UserID := ctx.GetInt64(Consts.ValidatorPrefix + "UserID")
 
 	result := DAO.DB_Client.
 		Table("webauthncredential").

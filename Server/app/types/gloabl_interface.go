@@ -6,5 +6,5 @@ import (
 )
 
 type TracerInterf interface {
-	StartSpanFromContext(context.Context, string) (zipkin.Span, context.Context)
+	StartSpanFromContext(ctx context.Context, name string, opts ...zipkin.SpanOption) (zipkin.Span, context.Context)
 }

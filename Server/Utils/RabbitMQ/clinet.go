@@ -1,7 +1,7 @@
 package RabbitMQ
 
 import (
-	"AITranslatio/Global"
+	"AITranslatio/Config/interf"
 	"errors"
 	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -44,8 +44,10 @@ type Config struct {
 
 type Client struct {
 	Wg            sync.WaitGroup
-	Config        Config
+	Logger        *zap.Logger
+	Cfg           interf.ConfigInterface
 	mu            sync.RWMutex
+	Config        Config
 	Conn          *amqp.Connection
 	Closed        atomic.Bool
 	notifychannel chan *amqp.Error
@@ -109,14 +111,14 @@ func (c *Client) Connect() error {
 			go c.watchReconnect()
 			c.mu.Unlock()
 
-			Global.Logger["MQ"].Info("[MQ] ✅ connected", zap.String("uri", c.Config.URI))
+			c.Logger.Info("[MQ] ✅ connected", zap.String("uri", c.Config.URI))
 			return nil
 		}
 
 		// 3. 连接失败，判断重试次数
 		tries++
 		if c.Config.RetryMaxTries > 0 && tries >= c.Config.RetryMaxTries {
-			Global.Logger["MQ"].Error("MQ 建立连接失败，超过最大重试次数",
+			c.Logger.Error("MQ 建立连接失败，超过最大重试次数",
 				zap.Error(err),
 				zap.Int("tries", tries),
 			)
@@ -146,7 +148,7 @@ func (c *Client) watchReconnect() {
 	for {
 		select {
 		case err := <-c.notifychannel:
-			Global.Logger["MQ"].Error("MQ 连接关闭", zap.Error(err))
+			c.Logger.Error("MQ 连接关闭", zap.Error(err))
 
 			// 清空当前连接（加锁保护）
 			c.mu.Lock()
@@ -182,7 +184,7 @@ func (c *Client) watchReconnect() {
 
 				}
 
-				Global.Logger["MQ"].Error("MQ 重连失败，将在 5s 后重试", zap.Error(connErr))
+				c.Logger.Error("MQ 重连失败，将在 5s 后重试", zap.Error(connErr))
 				time.Sleep(5 * time.Second)
 			}
 
@@ -244,38 +246,38 @@ func (c *Client) EnsureDLX() error {
 }
 
 // 由配置文件声明业务队列，并挂上 DLX 参数
-func (c *Client) EnsureQueue() error {
-
-	exchanges := Global.Config.Get("RabbitMq.WorkQueue.exchanges").([]interface{})
-	fmt.Println(exchanges)
-	for _, queueName := range exchanges {
-		fmt.Println(queueName)
-		ch, err := c.Conn.Channel()
-		if err != nil {
-			return err
-		}
-		defer ch.Close()
-
-		args := amqp.Table{}
-		if c.Config.DLXExchange != "" {
-			args["x-dead-letter-exchange"] = c.Config.DLXExchange
-		}
-		if c.Config.DLXRoutingKey != "" {
-			args["x-dead-letter-routing-key"] = c.Config.DLXRoutingKey
-		}
-
-		_, err = ch.QueueDeclare(
-			"",
-			c.Config.Durable,
-			false, // autoDelete
-			false, // exclusive
-			false, // noWait
-			args,
-		)
-	}
-
-	return nil
-}
+//func (c *Client) EnsureQueue() error {
+//
+//	exchanges := cfg.Get("RabbitMq.WorkQueue.exchanges").([]interface{})
+//	fmt.Println(exchanges)
+//	for _, queueName := range exchanges {
+//		fmt.Println(queueName)
+//		ch, err := c.Conn.Channel()
+//		if err != nil {
+//			return err
+//		}
+//		defer ch.Close()
+//
+//		args := amqp.Table{}
+//		if c.Config.DLXExchange != "" {
+//			args["x-dead-letter-exchange"] = c.Config.DLXExchange
+//		}
+//		if c.Config.DLXRoutingKey != "" {
+//			args["x-dead-letter-routing-key"] = c.Config.DLXRoutingKey
+//		}
+//
+//		_, err = ch.QueueDeclare(
+//			"",
+//			c.Config.Durable,
+//			false, // autoDelete
+//			false, // exclusive
+//			false, // noWait
+//			args,
+//		)
+//	}
+//
+//	return nil
+//}
 
 // EnsureRetryTopology 为某个业务队列声明“只有一个 5 分钟延迟的重试队列”
 // 延迟队列名：retry.<queue>.5m

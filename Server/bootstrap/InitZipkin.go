@@ -1,14 +1,14 @@
 package bootstrap
 
 import (
-	"AITranslatio/Global"
+	"AITranslatio/Config/interf"
 	"AITranslatio/Utils/zipkin"
 )
 
-func InitZipkin() {
+func InitZipkin(cfg interf.ConfigInterface) *zipkin.Tracing {
 
-	z := zipkin.CreateTracing(Global.Config.GetString("Zipkin.ServerName"), Global.Config.GetString("Zipkin.URL"), Global.Config.GetString("Zipkin.Port"))
+	z := zipkin.CreateTracing(cfg.GetString("Zipkin.ServerName"), cfg.GetString("Zipkin.URL"), cfg.GetString("Zipkin.Port"))
 
-	Global.Tracing = z
+	return z
 
 }

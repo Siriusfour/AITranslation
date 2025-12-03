@@ -1,14 +1,19 @@
 package OAuthService
 
 import (
-	"AITranslatio/Global"
+	"AITranslatio/Config/interf"
+
 	"AITranslatio/Global/Consts"
+	"AITranslatio/Utils/SnowFlak"
+	"AITranslatio/Utils/token"
 	"AITranslatio/app/DAO/AuthDAO"
 	"AITranslatio/app/types"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"net/url"
@@ -20,22 +25,34 @@ type OAuthService interface {
 	GetUserInfo(*gin.Context) (*types.LoginInfo, error)  //从OAuth提供方获取token
 }
 
-func CreateOAuthFactroy(server string) OAuthService {
-	if server == "Github" {
-		return &Github{AuthDAO.CreateDAOFactory("mysql")}
-	}
-	if server == "WX" {
-	}
-	if server == "QQ" {
+func CreateOAuthServiceFactroy(cfg interf.ConfigInterface, logger *zap.Logger, JWTGenerator *token.JWTGenerator, snowFlakManager *SnowFlak.SnowFlakeGenerator, redis *redis.Client, DAO AuthDAO.Inerf, server string) OAuthService {
+
+	switch server {
+	case "QQ":
+
+	case "WX":
+
+	case "Github":
+		return &GithubService{
+			cfg,
+			logger,
+			JWTGenerator,
+			snowFlakManager,
+			redis,
+			DAO,
+		}
+
+	default:
+		return nil
 	}
 	return nil
 }
 
-func GetToken(URL string, ctx *gin.Context) (*GitHubAppTokenResponse, error) {
+func GetToken(cfg interf.ConfigInterface, URL string, ctx *gin.Context) (*GitHubAppTokenResponse, error) {
 
 	data := url.Values{}
-	data.Set("client_id", Global.Config.GetString("OAuth.Github.client_id"))
-	data.Set("client_secret", Global.Config.GetString("OAuth.Github.client_secret"))
+	data.Set("client_id", cfg.GetString("OAuth.Github.client_id"))
+	data.Set("client_secret", cfg.GetString("OAuth.Github.client_secret"))
 	data.Set("code", ctx.GetString(Consts.ValidatorPrefix+"code"))
 
 	req, err := http.NewRequest("POST", URL, bytes.NewBufferString(data.Encode()))

@@ -1,16 +1,15 @@
 package AuthService
 
 import (
+	"AITranslatio/Global/Consts"
 	"AITranslatio/Global/MyErrors"
 	"AITranslatio/Utils/PasswordSecurity"
-	"AITranslatio/Utils/SnowFlak"
-	"AITranslatio/Utils/token"
-	"AITranslatio/app/DAO/AuthDAO"
-	types2 "AITranslatio/app/types"
+
+	"AITranslatio/app/types"
 	"errors"
 )
 
-func (Service *AuthService) Register(DTO *types2.RegisterDTO) (*types2.Auth, error) {
+func (Service *AuthService) Register(DTO *types.RegisterDTO) (*types.Auth, error) {
 
 	// TODO 1.验证邮箱验证码是否有效（是否存在于redis）
 
@@ -40,7 +39,7 @@ func (Service *AuthService) Register(DTO *types2.RegisterDTO) (*types2.Auth, err
 	}
 
 	//调用雪花算法生成唯一UserID
-	UserID := SnowFlak.CreateSnowflakeFactory().GetID()
+	UserID := Service.SnowFlakeGenerator.GetID()
 
 	//补完DTO
 	DTO.UserID = UserID
@@ -48,14 +47,14 @@ func (Service *AuthService) Register(DTO *types2.RegisterDTO) (*types2.Auth, err
 	DTO.Password = HashPasswordWithSalt
 
 	//调用DAO存储在库中
-	err = AuthDAO.CreateDAOFactory("mysql").Register(DTO)
+	err = Service.DAO.CreateUser(DTO)
 	if err != nil {
 		return nil, errors.New(MyErrors.ErrorRegisterIsFail + err.Error())
 	}
 
 	//生成token
-	//AccessToken, ErrAK := token.CreateTokenFactory(Consts.AccessToken, UserID).GeneratedToken()
-	//RefreshToken, ErrRK := token.CreateTokenFactory(Consts.RefreshToken, UserID).GeneratedToken()
+	AccessToken, ErrAK := Service.TokenProvider.GeneratedToken(UserID, Consts.AccessToken)
+	RefreshToken, ErrRK := Service.TokenProvider.GeneratedToken(UserID, Consts.RefreshToken)
 
 	if ErrRK != nil || ErrAK != nil {
 		return nil, errors.New(ErrAK.Error() + ErrRK.Error())
@@ -63,7 +62,7 @@ func (Service *AuthService) Register(DTO *types2.RegisterDTO) (*types2.Auth, err
 
 	//----------------业务逻辑
 
-	return &types2.Auth{
+	return &types.Auth{
 		AccessToken:  AccessToken,
 		RefreshToken: RefreshToken,
 	}, nil

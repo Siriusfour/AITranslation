@@ -1,49 +1,44 @@
 package DataBase
 
 import (
-	"AITranslatio/Global"
+	"AITranslatio/Config/interf"
+	"go.uber.org/zap"
+
 	"AITranslatio/Global/MyErrors"
 	"AITranslatio/app/Model/Team"
 	"AITranslatio/app/Model/User"
 	"AITranslatio/app/Model/webAuthn"
+	"log"
 
 	"errors"
 	"fmt"
-	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	gormLog "gorm.io/gorm/logger"
 	"strings"
 )
 
-func InitMySQL_Client() (client *gorm.DB, err error) {
+func InitMySQL_Client(cfg interf.ConfigInterface, logger *zap.Logger) (client *gorm.DB, err error) {
 	SQL_Type := "MySQL"
-	IsOpenReadDB := Global.Config.GetInt("DB." + SQL_Type + ".IsOpenReadDB")
-
-	return GetSqlDriver(SQL_Type, IsOpenReadDB)
+	//IsOpenReadDB := cfg.GetInt("DB." + SQL_Type + ".IsOpenReadDB")
+	return GetSqlDriver(cfg, logger, SQL_Type)
 }
-func InitPostgreSQL_Client() (client *gorm.DB, err error) {
+func InitPostgreSQL_Client(cfg interf.ConfigInterface, logger *zap.Logger) (client *gorm.DB, err error) {
 	SQL_Type := "PostgreSQL"
-	IsOpenReadDB := Global.DB_Config.GetInt("MySQL_DB." + SQL_Type + "IsOpenReadDB")
-	return GetSqlDriver(SQL_Type, IsOpenReadDB)
-}
-
-func InitSQLServer_Client() (client *gorm.DB, err error) {
-	SQL_Type := "SQLServer"
-	IsOpenReadDB := Global.DB_Config.GetInt("MySQL_DB." + SQL_Type + "IsOpenReadDB")
-	return GetSqlDriver(SQL_Type, IsOpenReadDB)
+	//IsOpenReadDB := cfg.GetInt("MySQL_DB." + SQL_Type + "IsOpenReadDB")
+	return GetSqlDriver(cfg, logger, SQL_Type)
 }
 
 // 获取数据库驱动, 可以通过options 动态参数连接任意多个数据库
-func GetSqlDriver(sqlType string, readDbIsOpen int, dbConf ...ConfigParams) (*gorm.DB, error) {
+func GetSqlDriver(cfg interf.ConfigInterface, logger *zap.Logger, sqlType string, dbConf ...ConfigParams) (*gorm.DB, error) {
 
 	var dbDialector gorm.Dialector
-	if val, err := getDbDialector(sqlType, "Write", dbConf...); err != nil {
-		Global.Logger["DB"].Error(MyErrors.ErrorsDialectorDbInitFail+sqlType, zap.Error(err))
+	if val, err := getDbDialector(sqlType, "Write", cfg, dbConf...); err != nil {
+		log.Fatal("GetSqlDriver失败")
 	} else {
 		dbDialector = val
 	}
-	MyLogger := redefineLog(sqlType)
+	MyLogger := redefineLog(cfg, logger, sqlType)
 
 	gormDb, err := gorm.Open(dbDialector, &gorm.Config{
 		SkipDefaultTransaction: true,
@@ -65,9 +60,9 @@ func GetSqlDriver(sqlType string, readDbIsOpen int, dbConf ...ConfigParams) (*go
 }
 
 // 根据不同的连接参数，获取具体的一类数据库的连接指针
-func getDbDialector(sqlType, readWrite string, dbConf ...ConfigParams) (gorm.Dialector, error) {
+func getDbDialector(sqlType, readWrite string, cfg interf.ConfigInterface, dbConf ...ConfigParams) (gorm.Dialector, error) {
 	var dbDialector gorm.Dialector
-	dsn := getDsn(sqlType, readWrite, dbConf...)
+	dsn := getDsn(sqlType, readWrite, cfg, dbConf...)
 	switch strings.ToLower(sqlType) {
 
 	case "mysql":
@@ -80,13 +75,13 @@ func getDbDialector(sqlType, readWrite string, dbConf ...ConfigParams) (gorm.Dia
 }
 
 // 根据配置参数生成数据库驱动 dsn
-func getDsn(sqlType, readWrite string, dbConf ...ConfigParams) string {
-	Host := Global.Config.GetString("DB." + sqlType + "." + readWrite + ".Host")
-	DataBase := Global.Config.GetString("DB." + sqlType + "." + readWrite + ".DataBase")
-	Port := Global.Config.GetInt("DB." + sqlType + "." + readWrite + ".Port")
-	User := Global.Config.GetString("DB." + sqlType + "." + readWrite + ".User")
-	Pass := Global.Config.GetString("DB." + sqlType + "." + readWrite + ".Password")
-	Charset := Global.Config.GetString("DB." + sqlType + "." + readWrite + ".Charset")
+func getDsn(sqlType, readWrite string, cfg interf.ConfigInterface, dbConf ...ConfigParams) string {
+	Host := cfg.GetString("DB." + sqlType + "." + readWrite + ".Host")
+	DataBase := cfg.GetString("DB." + sqlType + "." + readWrite + ".DataBase")
+	Port := cfg.GetInt("DB." + sqlType + "." + readWrite + ".Port")
+	User := cfg.GetString("DB." + sqlType + "." + readWrite + ".User")
+	Pass := cfg.GetString("DB." + sqlType + "." + readWrite + ".Password")
+	Charset := cfg.GetString("DB." + sqlType + "." + readWrite + ".Charset")
 
 	if len(dbConf) > 0 {
 		if strings.ToLower(readWrite) == "write" {
@@ -140,14 +135,20 @@ func getDsn(sqlType, readWrite string, dbConf ...ConfigParams) string {
 	}
 	return ""
 }
-func redefineLog(sqlType string) gormLog.Interface {
+func redefineLog(cfg interf.ConfigInterface, logger *zap.Logger, sqlType string) gormLog.Interface {
+	return NewDBLogger(
+		cfg,
 
-	return createCustomGormLog(sqlType,
-		SetInfoStrFormat("[info] %s\n"),
-		SetInfoStrFormat("[info] %s\n"),
-		SetWarnStrFormat("[warn] %s\n"),
-		SetErrStrFormat("[error] %s\n"),
-		SetTraceStrFormat("[traceStr] %s [%.3fms] [rows:%v] %s\n"),
-		SetTraceWarnStrFormat("[traceWarn] %s %s [%.3fms] [rows:%v] %s\n"),
-		SetTraceErrStrFormat("[traceErr] %s %s [%.3fms] [rows:%v] %s\n"))
+		logger,
+
+		sqlType,
+
+		WithLogLevel(gormLog.Info),
+
+		// 慢 SQL 阈值，也可以写死，比如 200 * time.Millisecond
+		WithSlowThreshold(cfg.GetDuration("SlowThreshold")),
+
+		// 是否忽略 RecordNotFound（推荐忽略，避免日志被灌爆）
+		WithIgnoreRecordNotFound(true),
+	)
 }

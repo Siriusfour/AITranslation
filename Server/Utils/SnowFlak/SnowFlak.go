@@ -1,6 +1,7 @@
 package SnowFlak
 
 import (
+	"AITranslatio/Config/interf"
 	"AITranslatio/Global/Consts"
 	"go.uber.org/zap"
 	"strconv"
@@ -8,35 +9,35 @@ import (
 	"time"
 )
 
-type SnowFlakManager interface {
-	GetID() int64
-	GetIDString() string
-}
+//type SnowFlakeGenerator interface {
+//	GetID() int64
+//	GetIDString() string
+//}
 
-type SnowFlake struct {
+type SnowFlakeGenerator struct {
 	sync.Mutex
 	timestamp           int64 //上次生成ID是时间戳(毫秒)
 	machineId           int64
 	sequence            int64
 	getTime             func() int64
 	RollbackThresholdMs int64
-	logger              map[string]*zap.Logger
+	logger              *zap.Logger
 }
 
 // 创建一个雪花算法生成器(生成工厂)
-func CreateSnowflakeFactory(RollbackThresholdMs int64, logger map[string]*zap.Logger) *SnowFlake {
-	return &SnowFlake{
+func CreateSnowflakeFactory(cfg interf.ConfigInterface, logger *zap.Logger) *SnowFlakeGenerator {
+	return &SnowFlakeGenerator{
 		timestamp:           0,
 		machineId:           1,
 		sequence:            0,
 		getTime:             func() int64 { return time.Now().UnixNano() / 1e6 }, //依赖注入，默认获取当前时间，测试时注入测试时间
-		RollbackThresholdMs: RollbackThresholdMs,
+		RollbackThresholdMs: cfg.GetInt64("SnowFlakeGenerator.RollbackThresholdMs"),
 		logger:              logger,
 	}
 }
 
 // 生成ID
-func (s *SnowFlake) GetID() int64 {
+func (s *SnowFlakeGenerator) GetID() int64 {
 
 	s.Lock()
 	defer s.Unlock()
@@ -67,7 +68,7 @@ func (s *SnowFlake) GetID() int64 {
 		diff := s.timestamp - now
 		if diff <= threshold {
 			// 小回拨：沿用 lastTs 作为逻辑时间，并推进序列
-			s.logger["Business"].Warn("snowflake 时钟回退，使用逻辑时间", zap.Int64("diff_ms", diff), zap.Int64("last_ts", s.timestamp))
+			s.logger.Warn("snowflake 时钟回退，使用逻辑时间", zap.Int64("diff_ms", diff), zap.Int64("last_ts", s.timestamp))
 			now = s.timestamp
 			s.sequence = (s.sequence + 1) & Consts.SequenceMask
 			if s.sequence == 0 {
@@ -75,7 +76,7 @@ func (s *SnowFlake) GetID() int64 {
 			}
 		} else {
 			// 大回拨：阻塞到 lastTs
-			s.logger["Business"].Error("snowflake clock rollback (major), blocking until last timestamp", zap.Int64("diff_ms", diff), zap.Int64("last_ts", s.timestamp))
+			s.logger.Error("snowflake clock rollback (major), blocking until last timestamp", zap.Int64("diff_ms", diff), zap.Int64("last_ts", s.timestamp))
 			now = waitNextMillis(s.timestamp)
 			s.sequence = 0
 		}
@@ -88,7 +89,7 @@ func (s *SnowFlake) GetID() int64 {
 	return r
 }
 
-func (s *SnowFlake) GetIDString() string {
+func (s *SnowFlakeGenerator) GetIDString() string {
 	return strconv.FormatInt(s.GetID(), 10)
 }
 

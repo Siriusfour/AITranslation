@@ -2,7 +2,6 @@ package AuthController
 
 import (
 	"AITranslatio/Global/Consts"
-	"AITranslatio/app/Service/AuthService"
 	"AITranslatio/app/http/reposen"
 	"AITranslatio/app/types"
 	"fmt"
@@ -19,7 +18,7 @@ func (Controller *AuthController) Register(ctx *gin.Context) {
 		Email:     ctx.GetString(Consts.ValidatorPrefix + "Email"),
 		EamilCode: "0000",
 	}
-	Auth, err := AuthService.NewAuthService().Register(DTO)
+	Auth, err := Controller.Service.Register(DTO)
 	if err != nil {
 		reposen.ErrorSystem(ctx, fmt.Errorf("创建AuthService失败: %w", err))
 		return

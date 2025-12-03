@@ -20,19 +20,16 @@ type CredentialOptions struct {
 func (Service *AuthService) ApplicationWebAuthn(UserID int64) (*WebAuthn.WebAuthn, error) {
 
 	//获取userName和Email
-	var UseName, Email string
-	err := AuthDAO.CreateDAOFactory("mysql").
-		DB_Client.
-		Raw("SELECT NickName, Email FROM User WHERE UserID = ?", UserID).
-		Row().
-		Scan(&UseName, &Email)
+
+	user, err := Service.DAO.FindUserByID(UserID, "UserID")
+
 	if err != nil {
 		return nil, err
 	}
 
 	//生成Challenge，并把其置于redis五分钟
-	w := WebAuthn.CreateWebAuthnConfigFactory(UserID, UseName, Email)
-	err = w.CreateChallenge()
+	w := WebAuthn.CreateWebAuthnConfigFactory(Service.cfg, UserID, user.Nickname, user.Email)
+	err = w.CreateChallenge(Service.RedisClient)
 	if err != nil {
 		return nil, errors.New(MyErrors.ErrorGetChallengeIsFail + err.Error())
 	}
@@ -40,28 +37,14 @@ func (Service *AuthService) ApplicationWebAuthn(UserID int64) (*WebAuthn.WebAuth
 	return w, nil
 }
 
-// 注册时验证WebAuthn密钥
-func (Service *AuthService) VerifyWebAuthnToRegister(WebAuthnCtx *gin.Context) error {
-
-	err := WebAuthn_Verify.ClientDataJsonVerifyForRegister(WebAuthnCtx)
-	if err != nil {
-		return fmt.Errorf("WebAuthn注册,ClientData校验错误:%w", err)
-	}
-	err = WebAuthn_Verify.AttestationObjectVerifyForRegister(WebAuthnCtx)
-	if err != nil {
-		return fmt.Errorf("WebAuthn注册,Attestation校验错误:%w", err)
-	}
-	return nil
-}
-
 // 登录时验证WebAuthn
 func (Service *AuthService) WebAuthnToLogin(WebAuthnCtx *gin.Context) error {
 
-	err := WebAuthn_Verify.ClientDataJsonVerifyForLogin(WebAuthnCtx)
+	err := WebAuthn_Verify.ClientDataJsonVerifyForLogin(Service.cfg, Service.RedisClient, WebAuthnCtx)
 	if err != nil {
 		return fmt.Errorf("WebAuthnd登录,ClientData校验错误:%w", err)
 	}
-	err = WebAuthn_Verify.AttestationObjectVerifyForLogin(WebAuthnCtx)
+	err = WebAuthn_Verify.AttestationObjectVerifyForLogin(Service.cfg, Service.DAO, WebAuthnCtx)
 	if err != nil {
 		return fmt.Errorf("WebAuthn登录,Attestation校验错误:%w", err)
 	}
@@ -72,7 +55,10 @@ func (Service *AuthService) WebAuthnToLogin(WebAuthnCtx *gin.Context) error {
 }
 
 func (Service *AuthService) GetUserAllCredentialDTO(WebAuthnCtx *gin.Context) (*CredentialOptions, error) {
-	allowCreds, err := AuthDAO.CreateDAOFactory("mysql").FindCredentialByUserID(WebAuthnCtx)
+
+	userID := WebAuthnCtx.GetInt64("UserID")
+
+	allowCreds, err := Service.DAO.FindCredentialByUserID(userID)
 	if err != nil {
 		return nil, err
 	}

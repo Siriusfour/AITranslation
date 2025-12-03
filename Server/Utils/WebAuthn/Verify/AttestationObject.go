@@ -1,10 +1,9 @@
 package Verify
 
 import (
-	"AITranslatio/Global"
+	"AITranslatio/Config/interf"
 	"AITranslatio/Global/Consts"
 	"AITranslatio/app/DAO/AuthDAO"
-	"AITranslatio/app/http/reposen"
 	"bytes"
 	"crypto"
 	"crypto/ecdsa"
@@ -15,7 +14,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/fxamacker/cbor/v2"
 	"github.com/gin-gonic/gin"
 	"math/big"
 )
@@ -41,65 +39,65 @@ type AttestedCredentialData struct {
 	CredentialPublicKey []byte
 }
 
-func AttestationObjectVerifyForRegister(WebAuthnCtx *gin.Context) error {
+//func AttestationObjectVerifyForRegister(WebAuthnCtx *gin.Context) error {
+//
+//	AttestationObjectBase64 := WebAuthnCtx.GetString(Consts.ValidatorPrefix + "AttestationObject")
+//
+//	//0.解析Base64
+//	AttestationObjectJSON, err := base64.RawURLEncoding.DecodeString(AttestationObjectBase64) //Base64字符串->json字节数组
+//	if err != nil {
+//		return fmt.Errorf("base64URL解码错误: %v", err)
+//	}
+//
+//	var attestationObject AttestationObject
+//	if err := cbor.Unmarshal(AttestationObjectJSON, &attestationObject); err != nil {
+//		return fmt.Errorf("AttestationObject CBOR解析失败: %w", err)
+//	}
+//
+//	// ===== 0. 提取 authData 各部分 ,RPIDHash,flags,signCount=====
+//	authData := attestationObject.AuthData
+//
+//	if len(authData) < 37 {
+//		return fmt.Errorf("AuthData 太短")
+//	}
+//
+//	// 提取各部分
+//	// =====  验证 RP ID Hash 是否与配置文件的rpID的hash值相同
+//	RPIDHash := authData[0:32]
+//	flags := authData[32]
+//	signCount := binary.BigEndian.Uint32(authData[33:37])
+//	UserID := WebAuthnCtx.GetInt64(Consts.ValidatorPrefix + "UserID")
+//	attestedCredentialData, _, err := extractCredentialData(authData)
+//	if err != nil {
+//		return fmt.Errorf("public解析失败: %w", err)
+//	}
+//
+//	RPID := cfg.GetString("WebAuthn.RPID")
+//	if err := verifyRPID(RPID, RPIDHash); err != nil {
+//		return err
+//	}
+//
+//	if err = verifyFlags(flags); err != nil {
+//		return err
+//	}
+//
+//	if attestationObject.Fmt == "none" {
+//		if len(attestationObject.AttStmt) != 0 {
+//			return errors.New("格式有误！Fmt为none时AttStmt应该为零")
+//		}
+//	}
+//
+//	//数据库插入数据
+//	err = AuthDAO.NewDAOFactory("mysql").CreateCredential(UserID, signCount, attestedCredentialData.CredentialID, attestedCredentialData.CredentialPublicKey)
+//	if err != nil {
+//		return fmt.Errorf("DAO层CreateCredential调用失败: %w", err)
+//	}
+//
+//	reposen.OK(WebAuthnCtx, nil)
+//	return nil
+//}
 
-	AttestationObjectBase64 := WebAuthnCtx.GetString(Consts.ValidatorPrefix + "AttestationObject")
-
-	//0.解析Base64
-	AttestationObjectJSON, err := base64.RawURLEncoding.DecodeString(AttestationObjectBase64) //Base64字符串->json字节数组
-	if err != nil {
-		return fmt.Errorf("base64URL解码错误: %v", err)
-	}
-
-	var attestationObject AttestationObject
-	if err := cbor.Unmarshal(AttestationObjectJSON, &attestationObject); err != nil {
-		return fmt.Errorf("AttestationObject CBOR解析失败: %w", err)
-	}
-
-	// ===== 0. 提取 authData 各部分 ,RPIDHash,flags,signCount=====
-	authData := attestationObject.AuthData
-
-	if len(authData) < 37 {
-		return fmt.Errorf("AuthData 太短")
-	}
-
-	// 提取各部分
-	// =====  验证 RP ID Hash 是否与配置文件的rpID的hash值相同
-	RPIDHash := authData[0:32]
-	flags := authData[32]
-	signCount := binary.BigEndian.Uint32(authData[33:37])
-	UserID := WebAuthnCtx.GetInt64(Consts.ValidatorPrefix + "UserID")
-	attestedCredentialData, _, err := extractCredentialData(authData)
-	if err != nil {
-		return fmt.Errorf("public解析失败: %w", err)
-	}
-
-	RPID := Global.Config.GetString("WebAuthn.RPID")
-	if err := verifyRPID(RPID, RPIDHash); err != nil {
-		return err
-	}
-
-	if err = verifyFlags(flags); err != nil {
-		return err
-	}
-
-	if attestationObject.Fmt == "none" {
-		if len(attestationObject.AttStmt) != 0 {
-			return errors.New("格式有误！Fmt为none时AttStmt应该为零")
-		}
-	}
-
-	//数据库插入数据
-	err = AuthDAO.CreateDAOFactory("mysql").CreateCredential(UserID, signCount, attestedCredentialData.CredentialID, attestedCredentialData.CredentialPublicKey)
-	if err != nil {
-		return fmt.Errorf("DAO层CreateCredential调用失败: %w", err)
-	}
-
-	reposen.OK(WebAuthnCtx, nil)
-	return nil
-}
-
-func AttestationObjectVerifyForLogin(WebAuthnCtx *gin.Context) error {
+func AttestationObjectVerifyForLogin(cfg interf.ConfigInterface, DAO AuthDAO.Inerf, WebAuthnCtx *gin.Context) error {
 
 	//从ctx里面提取出AttestationObject，Signature，ClientDataJSON
 	authData, err := base64.RawURLEncoding.DecodeString(WebAuthnCtx.GetString(Consts.ValidatorPrefix + "AttestationObject")) //Base64字符串->字节数组
@@ -115,18 +113,18 @@ func AttestationObjectVerifyForLogin(WebAuthnCtx *gin.Context) error {
 	signCount := binary.BigEndian.Uint32(authData[33:37]) //把4字节按照大端序转化成一个uint32整数
 
 	//由Credential ID在数据库查询公钥
-	Credential, err := AuthDAO.CreateDAOFactory("mysql").FindCredential(WebAuthnCtx)
+	Credential, err := DAO.FindCredential(WebAuthnCtx)
 	if err != nil {
 		return fmt.Errorf("webAuthn中根据CredentialID查找Credential失败： %w", err)
 	}
 
 	// =====  验证 RP ID Hash 是否与配置文件的rpID的hash值相同
-	if err := verifyRPID(Global.Config.GetString("WebAuthn.RPID"), RPIDHash); err != nil {
+	if err := verifyRPID(cfg.GetString("WebAuthn.RPID"), RPIDHash); err != nil {
 		return err
 	}
 
 	//验证flag位
-	if err = verifyFlags(flags); err != nil {
+	if err = verifyFlags(cfg, flags); err != nil {
 		return err
 	}
 
@@ -193,9 +191,9 @@ func verifyRPID(rpID string, rpIdHash []byte) error {
 // Bit 2 (0x04): UV - User Verified（用户验证/生物识别）
 // Bit 6 (0x40): AT - Attested Credential Data（有凭证数据，仅注册时）
 // Bit 7 (0x80): ED - Extension Data（有扩展数据
-func verifyFlags(flags byte) error {
+func verifyFlags(cfg interf.ConfigInterface, flags byte) error {
 
-	RequireUserVerification := Global.Config.GetBool("WebAuthn.RequireUserVerification")
+	RequireUserVerification := cfg.GetBool("WebAuthn.RequireUserVerification")
 
 	// ===== 1. 验证 User Present (UP) - 必须检查 =====
 	if (flags & 0x01) == 0 {

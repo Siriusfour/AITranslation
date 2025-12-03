@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
+
 	"time"
 )
 
@@ -19,11 +20,11 @@ type TokenProvider interface {
 }
 
 type CreateToken struct {
-	Key             []byte
-	AkExp           time.Duration
-	RkExp           time.Duration
-	SnowFlakManager SnowFlak.SnowFlakManager
-	RedisClient     redis.Cmdable
+	Key                []byte
+	AkExp              time.Duration
+	RkExp              time.Duration
+	SnowFlakeGenerator *SnowFlak.SnowFlakeGenerator
+	RedisClient        redis.Cmdable
 }
 
 // CreateTokenFactory 0-AccessToken  1-RefreshToken
@@ -32,7 +33,7 @@ func CreateTokenFactory(c *CreateToken) *JWTGenerator {
 		c.Key,
 		c.AkExp,
 		c.RkExp,
-		c.SnowFlakManager,
+		c.SnowFlakeGenerator,
 		c.RedisClient,
 	}
 }
@@ -41,7 +42,7 @@ type JWTGenerator struct {
 	encryptKey      []byte        // 密钥
 	accessExpire    time.Duration // AK 过期时间
 	refreshExpire   time.Duration // RK 过期时间
-	SnowFlakManager SnowFlak.SnowFlakManager
+	SnowFlakManager *SnowFlak.SnowFlakeGenerator
 	redisClient     redis.Cmdable
 }
 
@@ -125,7 +126,7 @@ func (t *JWTGenerator) ParseToken(VerifyToken string) error {
 	TokenID := jwtInfo.TokenID
 
 	//从redis获取数据到结构体
-	cmd := Global.RedisClient.HGetAll(context.Background(), fmt.Sprintf("UserID:%d", UserID))
+	cmd := t.redisClient.HGetAll(context.Background(), fmt.Sprintf("UserID:%d", UserID))
 	if err := cmd.Err(); err != nil {
 
 		return err
@@ -156,7 +157,7 @@ func GetDataFormToken[T any](Token string, arg string) (error, T) {
 	var zero T
 
 	token, err := jwt.Parse(Token, func(token *jwt.Token) (interface{}, error) {
-		return Global.EncryptKey, nil
+		return Global.GetInfra().EncryptKey, nil
 	})
 	if err != nil {
 		return err, zero
