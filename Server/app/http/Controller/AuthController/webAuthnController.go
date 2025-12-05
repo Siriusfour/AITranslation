@@ -3,15 +3,25 @@ package AuthController
 import (
 	"AITranslatio/Global/Consts"
 	"AITranslatio/app/http/reposen"
+
 	"fmt"
 	"github.com/gin-gonic/gin"
 )
 
 // 申请凭证，获取webAunth服务器的信息（RPID,TimeOut,Challenge...）
+// ApplicationWebAuthn
+// @Summary      ApplicationWebAuthn-获取server配置项
+// @Description  在注册一个凭证之前，先向服务器获取其WebAuthn的配置如：RPID,Alg ,详见：https://zhuanlan.zhihu.com/p/1966472631474717161
+// @Tags         NotAuth
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}    swagger.WebAuthnInfo             "获取成功"
+// @Failure      400  {string}    string                           "获取失败"
+// @Router       /Auth/ApplicationWebAuthn [GET]
 func (Controller *AuthController) ApplicationWebAuthn(WebAuthnCtx *gin.Context) {
 
 	//从token解析出UserID
-	UserID := WebAuthnCtx.GetInt64(Consts.ValidatorPrefix + "UserID")
+	UserID := WebAuthnCtx.GetInt64("UserID")
 
 	//从config获取webAuthn配置项
 	WebAuthn, err := Controller.Service.ApplicationWebAuthn(UserID)
@@ -44,6 +54,15 @@ func (Controller *AuthController) GetUserAllCredential(WebAuthnCtx *gin.Context)
 	return
 }
 
+// WebAuthnByLogin
+// @Summary      WebAuth登录
+// @Description  使用WebAuth安全密钥登录，详见：https://zhuanlan.zhihu.com/p/1966472631474717161
+// @Tags         NotAuth
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}    types.LoginInfo             "获取成功"
+// @Failure      400  {string}    string                           "获取失败"
+// @Router       /Auth/WebAuthnByLogin [POST]
 func (Controller *AuthController) WebAuthnByLogin(WebAuthnCtx *gin.Context) {
 
 	err := Controller.Service.WebAuthnToLogin(WebAuthnCtx)

@@ -1,0 +1,295 @@
+definitions:
+  Consts.Alg:
+    properties:
+      alg:
+        type: integer
+      type:
+        type: string
+    type: object
+  swagger.Config:
+    properties:
+      attachment:
+        description: 认证器证明方式
+        type: string
+      attestation:
+        description: 认证器类型
+        type: string
+      challengeTTL:
+        format: int64
+        type: integer
+      id:
+        type: string
+      name:
+        description: 网站信息
+        type: string
+      pubKeyCredParams:
+        description: webAuthn服务器配置信息
+        items:
+          $ref: '#/definitions/Consts.Alg'
+        type: array
+      timeOut:
+        $ref: '#/definitions/time.Duration'
+      userID:
+        description: 注册服务的用户信息
+        format: int64
+        type: integer
+      userName:
+        type: string
+    type: object
+  swagger.GetChallengeIsFail:
+    properties:
+      code:
+        example: 400
+        type: integer
+      message:
+        example: 获取随机数失败：....
+        type: string
+    type: object
+  swagger.JwtTokenExpired:
+    properties:
+      code:
+        example: 400100
+        type: integer
+      message:
+        example: Token Expired
+        type: string
+    type: object
+  swagger.JwtTokenInvalid:
+    properties:
+      code:
+        example: 400101
+        type: integer
+      message:
+        example: Token is invalid
+        type: string
+    type: object
+  swagger.PasswordIsFail:
+    properties:
+      code:
+        example: 400
+        type: integer
+      message:
+        example: Password is fail
+        type: string
+    type: object
+  swagger.WebAuthnInfo:
+    properties:
+      challenge:
+        type: string
+      config:
+        $ref: '#/definitions/swagger.Config'
+    type: object
+  time.Duration:
+    enum:
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
+    format: int64
+    type: integer
+    x-enum-varnames:
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
+  types.Auth:
+    properties:
+      AccessToken:
+        type: string
+      RefreshToken:
+        type: string
+    type: object
+  types.Challenge:
+    properties:
+      challenge:
+        type: string
+    type: object
+  types.LoginInfo:
+    properties:
+      auth:
+        allOf:
+        - $ref: '#/definitions/types.Auth'
+        description: 鉴权信息
+      avatar: {}
+      nickname:
+        description: 用户信息
+        example: Suis
+        type: string
+      userid:
+        example: 1162667863010451456
+        type: integer
+    type: object
+host: localhost:3008
+info:
+  contact:
+    email: 2605116008@qq.com
+    name: API Support
+    url: http://www.swagger.io/support
+  description: Suis
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Note
+  version: "1.0"
+paths:
+  /Auth/ApplicationWebAuthn:
+    get:
+      consumes:
+      - application/json
+      description: 在注册一个凭证之前，先向服务器获取其WebAuthn的配置如：RPID,Alg ,详见：https://zhuanlan.zhihu.com/p/1966472631474717161
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/swagger.WebAuthnInfo'
+        "400":
+          description: 获取失败
+          schema:
+            type: string
+      summary: ApplicationWebAuthn-获取server配置项
+      tags:
+      - NotAuth
+  /Auth/GetChallenge:
+    get:
+      consumes:
+      - application/json
+      description: 在 OAuth2.0规范中，首先client端要在server获取一个随机数，server会缓存下来，在第二次正式登录client会附带这个随机数在请求url（state），由server验证这个随机数是否与缓存的一致，用于防重放
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/types.Challenge'
+        "400":
+          description: 获取失败
+          schema:
+            $ref: '#/definitions/swagger.GetChallengeIsFail'
+      summary: OAuth2.0-在服务端获取一个随机数
+      tags:
+      - NotAuth
+  /Auth/Login:
+    post:
+      consumes:
+      - application/json
+      description: 1.Email，password登录  2.Token登录
+      parameters:
+      - description: 邮箱
+        in: formData
+        name: email
+        type: string
+      - description: 密码
+        in: formData
+        name: password
+        type: string
+      - description: jwt
+        in: header
+        name: AccessToken
+        type: string
+      - description: jwt
+        in: header
+        name: RefreshToken
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登录成功
+          schema:
+            $ref: '#/definitions/types.LoginInfo'
+        "400":
+          description: 密码错误
+          schema:
+            $ref: '#/definitions/swagger.PasswordIsFail'
+        "4001":
+          description: token无效
+          schema:
+            $ref: '#/definitions/swagger.JwtTokenInvalid'
+        "4002":
+          description: token过期
+          schema:
+            $ref: '#/definitions/swagger.JwtTokenExpired'
+      summary: 用户登录
+      tags:
+      - NotAuth
+  /Auth/LoginByWebAuthn:
+    get:
+      consumes:
+      - application/json
+      description: 客户端在url传递state，code， 服务端验证state，并用code向OAuth提供方换取AcessToken和RefreshToken，并返回用户信息
+      parameters:
+      - description: 作用：防重放
+        in: query
+        name: state
+        required: true
+        type: string
+      - description: 作用：向OAuth提供商换取token
+        in: query
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/types.LoginInfo'
+        "400":
+          description: 获取失败
+          schema:
+            type: string
+      summary: OAuth2.0-验证并登录
+      tags:
+      - NotAuth
+  /Auth/WebAuthnByLogin:
+    post:
+      consumes:
+      - application/json
+      description: 使用WebAuth安全密钥登录，详见：https://zhuanlan.zhihu.com/p/1966472631474717161
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/types.LoginInfo'
+        "400":
+          description: 获取失败
+          schema:
+            type: string
+      summary: ApplicationWebAuthn-获取server配置项
+      tags:
+      - NotAuth
+swagger: "2.0"

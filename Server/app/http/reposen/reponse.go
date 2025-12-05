@@ -50,16 +50,14 @@ func ErrorSystem(Context *gin.Context, err error) {
 
 // ErrorTokenAuthFail token解析失败、该用户权限不足
 func ErrorTokenAuthFail(Context *gin.Context, err error, Code ...int) {
-
 	if len(Code) == 0 {
 		ReturnResponse(Context, http.StatusUnauthorized, http.StatusUnauthorized, err, nil)
 	} else {
-		ReturnResponse(Context, http.StatusUnauthorized, Code[1], err, nil)
+		ReturnResponse(Context, http.StatusUnauthorized, Code[0], err, nil)
 	}
 }
 
 // ErrorParam 参数校验错误
 func ErrorParam(Context *gin.Context, err error) {
 	ReturnResponse(Context, http.StatusBadRequest, Consts.ValidatorParamsCheckFailCode, err, nil)
-
 }
