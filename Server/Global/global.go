@@ -3,6 +3,8 @@ package Global
 import (
 	"AITranslatio/Config/interf"
 	"AITranslatio/Utils/RabbitMQ"
+	"AITranslatio/Utils/SnowFlak"
+	"AITranslatio/Utils/token"
 
 	"AITranslatio/Utils/zipkin"
 	"os"
@@ -14,20 +16,16 @@ import (
 )
 
 type Infrastructure struct {
-	Logger map[string]*zap.Logger
-
-	Config   interf.ConfigInterface
-	DbConfig interf.ConfigInterface
-
-	DbClient *gorm.DB
-
-	RedisClient    *redis.Client
-	RabbitmqClient *RabbitMQ.Client
-
-	//snowflakeManage *SnowFlak.SnowFlake
-	Tracing *zipkin.Tracing
-
-	EncryptKey []byte
+	Logger           map[string]*zap.Logger
+	Config           interf.ConfigInterface
+	DbConfig         interf.ConfigInterface
+	DbClient         *gorm.DB
+	RedisClient      *redis.Client
+	RabbitmqClient   *RabbitMQ.Client
+	JwtManager       *token.JWTGenerator
+	SnowflakeManager *SnowFlak.SnowFlakeGenerator
+	Tracing          *zipkin.Tracing
+	EncryptKey       []byte
 }
 
 var (
@@ -39,14 +37,29 @@ func InitInfrastructure(cfg interf.ConfigInterface, logger map[string]*zap.Logge
 
 	infraOnce.Do(func() {
 		infra = &Infrastructure{
-			Config:         cfg,
-			Logger:         logger,
-			DbClient:       dbClient,
-			RedisClient:    redisClient,
-			RabbitmqClient: MQClient,
-			Tracing:        tracing,
-			EncryptKey:     []byte(os.Getenv("PATHEXT")),
+			Config:           cfg,
+			Logger:           logger,
+			DbClient:         dbClient,
+			RedisClient:      redisClient,
+			RabbitmqClient:   MQClient,
+			Tracing:          tracing,
+			EncryptKey:       []byte(os.Getenv("PATHEXT")),
+			SnowflakeManager: SnowFlak.CreateSnowflakeFactory(cfg, logger["Business"]),
 		}
+
+		AkOutTime := cfg.GetDuration("Token.AkOutTime")
+		RkOutTime := cfg.GetDuration("Token.RkOutTime")
+
+		c := &token.CreateToken{
+			infra.EncryptKey,
+			AkOutTime,
+			RkOutTime,
+			infra.SnowflakeManager,
+			redisClient,
+		}
+
+		infra.JwtManager = token.CreateTokenFactory(c)
+
 	})
 
 	return infra

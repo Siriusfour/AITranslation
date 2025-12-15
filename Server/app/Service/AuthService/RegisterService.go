@@ -4,12 +4,12 @@ import (
 	"AITranslatio/Global/Consts"
 	"AITranslatio/Global/MyErrors"
 	"AITranslatio/Utils/PasswordSecurity"
+	"AITranslatio/app/types/DTO"
 
-	"AITranslatio/app/types"
 	"errors"
 )
 
-func (Service *AuthService) Register(DTO *types.RegisterDTO) (*types.Auth, error) {
+func (s *AuthService) Register(dto *DTO.RegisterDTO) (*DTO.Auth, error) {
 
 	// TODO 1.验证邮箱验证码是否有效（是否存在于redis）
 
@@ -33,28 +33,28 @@ func (Service *AuthService) Register(DTO *types.RegisterDTO) (*types.Auth, error
 	}
 
 	//password+salt进行bcrypt加密
-	HashPasswordWithSalt, err := p.HashPasswordWithSalt(DTO.Password, salt)
+	HashPasswordWithSalt, err := p.HashPasswordWithSalt(dto.Password, salt)
 	if err != nil {
 		return nil, err
 	}
 
 	//调用雪花算法生成唯一UserID
-	UserID := Service.SnowFlakeGenerator.GetID()
+	UserID := s.SnowFlakeGenerator.GetID()
 
 	//补完DTO
-	DTO.UserID = UserID
-	DTO.Salt = salt
-	DTO.Password = HashPasswordWithSalt
+	dto.UserID = UserID
+	dto.Salt = salt
+	dto.Password = HashPasswordWithSalt
 
 	//调用DAO存储在库中
-	err = Service.DAO.CreateUser(DTO)
+	err = s.DAO.CreateUser(dto)
 	if err != nil {
 		return nil, errors.New(MyErrors.ErrorRegisterIsFail + err.Error())
 	}
 
 	//生成token
-	AccessToken, ErrAK := Service.TokenProvider.GeneratedToken(UserID, Consts.AccessToken)
-	RefreshToken, ErrRK := Service.TokenProvider.GeneratedToken(UserID, Consts.RefreshToken)
+	AccessToken, ErrAK := s.TokenProvider.GeneratedToken(UserID, Consts.AccessToken)
+	RefreshToken, ErrRK := s.TokenProvider.GeneratedToken(UserID, Consts.RefreshToken)
 
 	if ErrRK != nil || ErrAK != nil {
 		return nil, errors.New(ErrAK.Error() + ErrRK.Error())
@@ -62,9 +62,5 @@ func (Service *AuthService) Register(DTO *types.RegisterDTO) (*types.Auth, error
 
 	//----------------业务逻辑
 
-	return &types.Auth{
-		AccessToken:  AccessToken,
-		RefreshToken: RefreshToken,
-	}, nil
-
+	return &DTO.Auth{AccessToken: AccessToken, RefreshToken: RefreshToken}, nil
 }

@@ -4,6 +4,7 @@ import (
 	"AITranslatio/Config/interf"
 	"AITranslatio/Global/Consts"
 	"AITranslatio/Global/MyErrors"
+	"AITranslatio/Utils/WebAuthn"
 	"AITranslatio/Utils/token"
 	"AITranslatio/app/Service/AuthService"
 	"AITranslatio/app/http/reposen"
@@ -21,16 +22,18 @@ type AuthController struct {
 	cfg          interf.ConfigInterface
 	logger       *zap.Logger
 	jwtGenerator *token.JWTGenerator
+	webAuthn     *WebAuthn.WebAuthn
 	Service      *AuthService.AuthService
 	tracer       types.TracerInterf
 	OAuthMap     map[string]OAuthController
 }
 
-func NewController(cfg interf.ConfigInterface, logger *zap.Logger, Service *AuthService.AuthService, tracer *zipkin.Tracer, oauthMap map[string]OAuthController, jwtGenerator *token.JWTGenerator) *AuthController {
+func NewController(cfg interf.ConfigInterface, logger *zap.Logger, Service *AuthService.AuthService, tracer *zipkin.Tracer, oauthMap map[string]OAuthController, jwtGenerator *token.JWTGenerator, webAuthn *WebAuthn.WebAuthn) *AuthController {
 	return &AuthController{
 		cfg:          cfg,
 		logger:       logger,
 		jwtGenerator: jwtGenerator,
+		webAuthn:     webAuthn,
 		Service:      Service,
 		tracer:       tracer,
 		OAuthMap:     oauthMap,
@@ -69,7 +72,7 @@ func (Controller *AuthController) Login(ctx *gin.Context) {
 	}
 
 	//有账号密码优先账号密码，没有就获取token登录
-	if (LoginDTO.Email != "" || LoginDTO.Password != "") && ctx.GetHeader("Authorization") == "" {
+	if LoginDTO.Email != "" || LoginDTO.Password != "" {
 		Controller.LoginByPassword(ctx, LoginDTO)
 	} else {
 		Controller.LoginByToken(ctx)
@@ -112,7 +115,7 @@ func (Controller *AuthController) LoginByToken(ctx *gin.Context) {
 	jwtInfo, err := Controller.jwtGenerator.ParseToken(token)
 	if err != nil {
 		if errors.Is(err, MyErrors.ErrTokenExpired) {
-			reposen.ErrorTokenAuthFail(ctx, fmt.Errorf("登录失败:登录信息已过期%w", err), Consts.JwtTokenExpired)
+			reposen.ErrorTokenAuthFail(ctx, fmt.Errorf("登录失败:登录信息已过期"), Consts.JwtTokenExpired)
 			return
 		}
 	}

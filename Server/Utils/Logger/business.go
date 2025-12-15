@@ -11,7 +11,6 @@ import (
 // 更好的方式是依赖注入，但为了适配你的 Global 写法，我写一个通用的 Helper
 
 // GetLoggerWithTrace 从 map 中获取指定 name 的 logger，并注入 trace_id
-// 使用示例：logger.GetLoggerWithTrace(ctx, Global.LoggerMap, "DB").Info("SQL executed")
 func GetLoggerWithTrace(ctx context.Context, logMap map[string]*zap.Logger, name string) *zap.Logger {
 	// 1. 从 map 获取基础 logger
 	l, ok := logMap[name]

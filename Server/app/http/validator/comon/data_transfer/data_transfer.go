@@ -1,8 +1,6 @@
 package data_transfer
 
 import (
-	"AITranslatio/Utils/SnowFlak"
-	"AITranslatio/Utils/token"
 	"AITranslatio/app/http/validator/interf"
 	"github.com/gin-gonic/gin"
 	"github.com/go-viper/mapstructure/v2"
@@ -54,30 +52,30 @@ func DataAddContext(validatorInterface interf.ValidatorInterface, extraAddDataPr
 	ctx.Set(extraAddDataPrefix+"updated_at", curDateTime)
 
 	// 4. 从 JWT 里取 UserID
-	jwt := ctx.GetHeader("Authorization")
-	SessionID, err := ctx.Cookie("SessionID")
-	if err != nil {
-		// 对于大多数情况，可以直接当成“没有 SessionID”
-		SessionID = ""
-	}
-	if jwt != "" {
-		if err, userID := token.GetDataFormToken[int64](jwt, "UserID"); err == nil {
-			ctx.Set(extraAddDataPrefix+"UserID", userID)
-			ctx.Set(extraAddDataPrefix+"Token", jwt)
-		}
-
-	} else if SessionID != "" { //没有jwt，但是有sessionID ，说明来的是游客临时会话，
-		ctx.Set(extraAddDataPrefix+"SessionID", SessionID)
-
-	} else { //没有jwt，cookie里面也没有sessionID , 说明是该设备的第一个请求， 创建一个sessionID
-
-		SessionID = SnowFlak.CreateSnowflakeFactory().GetIDString()
-
-		ctx.Set(extraAddDataPrefix+"SessionID", SessionID)
-
-		ctx.SetCookie("SessionID", SessionID, 0, "/", "", false, true)
-
-	}
+	//jwt := ctx.GetHeader("Authorization")
+	//SessionID, err := ctx.Cookie("SessionID")
+	//if err != nil {
+	//	// 对于大多数情况，可以直接当成“没有 SessionID”
+	//	SessionID = ""
+	//}
+	//if jwt != "" {
+	//	if err, userID := token.GetDataFormToken[int64](jwt, "UserID"); err == nil {
+	//		ctx.Set(extraAddDataPrefix+"UserID", userID)
+	//		ctx.Set(extraAddDataPrefix+"Token", jwt)
+	//	}
+	//
+	//} else if SessionID != "" { //没有jwt，但是有sessionID ，说明来的是游客临时会话，
+	//	ctx.Set(extraAddDataPrefix+"SessionID", SessionID)
+	//
+	//} else { //没有jwt，cookie里面也没有sessionID , 说明是该设备的第一个请求， 创建一个sessionID
+	//
+	//	SessionID = SnowFlak.CreateSnowflakeFactory().GetIDString()
+	//
+	//	ctx.Set(extraAddDataPrefix+"SessionID", SessionID)
+	//
+	//	ctx.SetCookie("SessionID", SessionID, 0, "/", "", false, true)
+	//
+	//}
 	return ctx
 }
 

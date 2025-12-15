@@ -1,4 +1,4 @@
-package types
+package DTO
 
 type LoginInfo struct {
 
@@ -8,9 +8,5 @@ type LoginInfo struct {
 	//用户信息
 	Nickname string `json:"nickname" example:"Suis"`
 	UserID   int64  `json:"userid" example:"1162667863010451456"`
-	Avatar   interface{}
-}
-
-type Challenge struct {
-	Challenge string
+	Avatar   string `json:"avatar" example:"https://avatars.githubusercontent.com/u/130332662?v=4"`
 }

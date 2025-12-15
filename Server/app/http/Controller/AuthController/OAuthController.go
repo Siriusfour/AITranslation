@@ -3,6 +3,7 @@ package AuthController
 import (
 	"AITranslatio/app/Service/AuthService/OAuthService"
 	"AITranslatio/app/http/reposen"
+	"AITranslatio/app/types/DTO"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -10,8 +11,8 @@ import (
 )
 
 type OAuthController interface {
-	GetChallenge(*gin.Context)    //生成随机挑战
-	VerifyChallenge(*gin.Context) //验证随机挑战
+	GetChallenge(*gin.Context) //生成随机挑战
+	//VerifyChallenge(*gin.Context) //验证随机挑战
 
 	Login(*gin.Context) //登录
 }
@@ -46,14 +47,14 @@ func (c *GithubController) GetChallenge(ctx *gin.Context) {
 	reposen.OK(ctx, challenge)
 }
 
-func (c *GithubController) VerifyChallenge(ctx *gin.Context) {
-	err := c.GithubService.VerifyChallenge(ctx)
-	if err != nil {
-		reposen.ErrorParam(ctx, err)
-	}
-
-	reposen.OK(ctx, struct{}{})
-}
+//func (c *GithubController) VerifyChallenge(ctx *gin.Context) {
+//	err := c.GithubService.VerifyChallenge(ctx)
+//	if err != nil {
+//		reposen.ErrorParam(ctx, err)
+//	}
+//
+//	reposen.OK(ctx, struct{}{})
+//}
 
 // LoginByOAuth
 // @Summary      OAuth2.0-验证并登录
@@ -67,14 +68,24 @@ func (c *GithubController) VerifyChallenge(ctx *gin.Context) {
 // @Failure      400  {string}    string                       "获取失败"
 // @Router       /Auth/LoginByWebAuthn [GET]
 func (c *GithubController) Login(ctx *gin.Context) {
+
+	//获取url的code和state
+	OAuth := &DTO.OAuth{}
+	err := ctx.ShouldBind(&OAuth)
+	if err != nil {
+		//c.logger.Error("非法参数", zap.String("Email:", OAuth.Email), zap.Error(err))
+		reposen.ErrorParam(ctx, errors.New("非法参数"))
+		return
+	}
+
 	//验证challenge
-	err := c.GithubService.VerifyChallenge(ctx)
+	err = c.GithubService.VerifyChallenge(ctx, OAuth)
 	if err != nil {
 		reposen.Fail(ctx, errors.New("请求过期"))
 	}
 
 	//用code换取Github的用户信息
-	loginInfo, err := c.GithubService.GetUserInfo(ctx)
+	loginInfo, err := c.GithubService.GetUserInfo(ctx, OAuth)
 	if err != nil {
 		reposen.ErrorSystem(ctx, fmt.Errorf("code换取Github的用户信息错误：%w", err))
 	}

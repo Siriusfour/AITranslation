@@ -5,19 +5,20 @@ import ApiCode from "./ApiCode.js";
 const baseUrl = '/noteApi';
 
 
-const refreshRequest = async (RefreshToken) => {
+const refreshRequest = async () => {
 
   const url = baseUrl + 'user/refresh_token';
+
+  let RefreshToken = localStorage.getItem("RefreshToken");
 
   try {
     const response = await fetch(url, {
       method: "POST",
-      body: RefreshToken || '',
       mode: "cors",
       credentials: "same-origin",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": AccessToken || ''
+        "Authorization": RefreshToken || ''
       },
     });
 
@@ -32,16 +33,12 @@ const refreshRequest = async (RefreshToken) => {
       return AccessToken;
     }
 
-    return null;
   } catch (error) {
-    console.error('Token refresh failed:', error);
-    return null;
+    throw error;
   }
 };
 
 const request = async (url, method, data) => {
-
-  console.log(url, method, data);
 
   let AccessToken = localStorage.getItem("AccessToken");
   let RefreshToken = localStorage.getItem("RefreshToken");
@@ -75,8 +72,6 @@ const request = async (url, method, data) => {
     }
   }
 
-  console.log(requestConfig);
-
   try {
     const response = await fetch(requestUrl, requestConfig);
     const res = await response.json();
@@ -84,7 +79,7 @@ const request = async (url, method, data) => {
 
     // Token过期处理
     if (code === ApiCode.TOKEN_EXPIRED) {
-      const newAccessToken = await refreshRequest(RefreshToken);
+      const newAccessToken = await refreshRequest();
       if (newAccessToken) {
         // 更新请求配置中的token
         requestConfig.headers["Authorization"] = newAccessToken;
@@ -99,15 +94,17 @@ const request = async (url, method, data) => {
 
     }else if(code !== ApiCode.SUCCESS){
 
-      throw new Error(res.message || '请求失败，服务器返回非成功状态码');
+      throw { code: code, message: res.message || '请求失败,服务器返回非成功吗' };
 
-    }else{      console.log("ok:");
-      console.log(res.data.Auth);
-      if (res.data.Auth!=={}){
-        localStorage.setItem("AccessToken", res.data.Auth.AccessToken)
-        localStorage.setItem("RefreshToken", res.data.Auth.RefreshToken)
+
+    }else{
+      if (res.data?.auth && Object.keys(res.data.auth).length > 0) {
+        const { AccessToken, RefreshToken } = res.data.auth;
+        if (AccessToken && RefreshToken) {
+          localStorage.setItem("AccessToken", AccessToken);
+          localStorage.setItem("RefreshToken", RefreshToken);
+        }
       }
-
     }
     return res.data;
 

@@ -145,7 +145,7 @@ func redefineLog(cfg interf.ConfigInterface, logger *zap.Logger, sqlType string)
 
 		WithLogLevel(gormLog.Info),
 
-		// 慢 SQL 阈值，也可以写死，比如 200 * time.Millisecond
+		// 慢 SQL 阈值
 		WithSlowThreshold(cfg.GetDuration("SlowThreshold")),
 
 		// 是否忽略 RecordNotFound（推荐忽略，避免日志被灌爆）

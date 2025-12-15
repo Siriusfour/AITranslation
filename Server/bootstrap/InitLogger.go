@@ -5,7 +5,6 @@ import (
 
 	"AITranslatio/Global/Consts"
 	"AITranslatio/Utils/Hooks"
-	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -72,19 +71,19 @@ func CreateZapFactory(cfg interf.ConfigInterface, entry func(zapcore.Entry) erro
 
 	// 准备日志文件路径和切割策略
 	logPaths := map[string]string{
-		"business": Consts.BasePath + cfg.GetString("Logs.BusinessPath"),
-		"db":       Consts.BasePath + cfg.GetString("Logs.DbPath"),
-		"mq":       Consts.BasePath + cfg.GetString("Logs.MQPath"),
-		"http":     Consts.BasePath + cfg.GetString("Logs.HttpPath"),
+		"Business": Consts.BasePath + cfg.GetString("Logs.BusinessPath"),
+		"DB":       Consts.BasePath + cfg.GetString("Logs.DbPath"),
+		"MQ":       Consts.BasePath + cfg.GetString("Logs.MQPath"),
+		"HTTP":     Consts.BasePath + cfg.GetString("Logs.HttpPath"),
 	}
 
 	// 定义不同模块的日志文件
-	modules := []string{"Business", "DB", "MQ"}
+	modules := []string{"Business", "DB", "MQ", "HTTP"}
 
 	// 为每个模块创建不同的日志文件和 logger
 	for _, module := range modules {
 		// 创建每个模块的日志文件路径
-		fileName := fmt.Sprintf("%s_%s.log", logPaths[module], module)
+		fileName := logPaths[module]
 		lumberJackLogger := &lumberjack.Logger{
 			Filename:   fileName,                      // 日志文件位置
 			MaxSize:    cfg.GetInt("Logs.MaxSize"),    // 最大大小（MB）
@@ -98,11 +97,13 @@ func CreateZapFactory(cfg interf.ConfigInterface, entry func(zapcore.Entry) erro
 		var level zapcore.Level
 		switch module {
 		case "business":
-			level = zap.InfoLevel // 业务日志可以是 Info 级别
+			level = zap.InfoLevel
 		case "db":
-			level = zap.WarnLevel // 数据库日志可能需要 Warn 级别
+			level = zap.WarnLevel
 		case "mq":
-			level = zap.DebugLevel // MQ 日志可能更偏向调试级别
+			level = zap.DebugLevel
+		case "http":
+			level = zap.DebugLevel
 		default:
 			level = zap.InfoLevel
 		}

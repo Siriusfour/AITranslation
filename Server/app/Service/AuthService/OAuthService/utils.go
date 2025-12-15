@@ -2,12 +2,11 @@ package OAuthService
 
 import (
 	"AITranslatio/Config/interf"
+	"AITranslatio/app/types/DTO"
 
-	"AITranslatio/Global/Consts"
 	"AITranslatio/Utils/SnowFlak"
 	"AITranslatio/Utils/token"
 	"AITranslatio/app/DAO/AuthDAO"
-	"AITranslatio/app/types"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -20,9 +19,9 @@ import (
 )
 
 type OAuthService interface {
-	GetChallenge(*gin.Context) (*types.Challenge, error) //生成随机挑战
-	VerifyChallenge(*gin.Context) error                  //验证随机挑战
-	GetUserInfo(*gin.Context) (*types.LoginInfo, error)  //从OAuth提供方获取token
+	GetChallenge(*gin.Context) (*DTO.Challenge, error)            //生成随机挑战
+	VerifyChallenge(*gin.Context, *DTO.OAuth) error               //验证随机挑战
+	GetUserInfo(*gin.Context, *DTO.OAuth) (*DTO.LoginInfo, error) //从OAuth提供方获取token
 }
 
 func CreateOAuthServiceFactroy(cfg interf.ConfigInterface, logger *zap.Logger, JWTGenerator *token.JWTGenerator, snowFlakManager *SnowFlak.SnowFlakeGenerator, redis *redis.Client, DAO AuthDAO.Inerf, server string) OAuthService {
@@ -48,12 +47,12 @@ func CreateOAuthServiceFactroy(cfg interf.ConfigInterface, logger *zap.Logger, J
 	return nil
 }
 
-func GetToken(cfg interf.ConfigInterface, URL string, ctx *gin.Context) (*GitHubAppTokenResponse, error) {
+func GetToken(cfg interf.ConfigInterface, URL string, ctx *gin.Context, OAuth *DTO.OAuth) (*GitHubAppTokenResponse, error) {
 
 	data := url.Values{}
 	data.Set("client_id", cfg.GetString("OAuth.Github.client_id"))
 	data.Set("client_secret", cfg.GetString("OAuth.Github.client_secret"))
-	data.Set("code", ctx.GetString(Consts.ValidatorPrefix+"code"))
+	data.Set("code", OAuth.Code)
 
 	req, err := http.NewRequest("POST", URL, bytes.NewBufferString(data.Encode()))
 	if err != nil {
@@ -81,7 +80,6 @@ func GetToken(cfg interf.ConfigInterface, URL string, ctx *gin.Context) (*GitHub
 	if err := json.Unmarshal(body, &Resp); err != nil {
 		return nil, fmt.Errorf("unmarshal failed: %w", err)
 	}
-	fmt.Println(string(body))
 
 	if Resp.AccessToken == "" {
 		return nil, fmt.Errorf("empty AccessToken: %s", string(body))

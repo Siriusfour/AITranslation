@@ -6,6 +6,8 @@ import (
 	"AITranslatio/Utils/WebAuthn"
 	WebAuthn_Verify "AITranslatio/Utils/WebAuthn/Verify"
 	"AITranslatio/app/DAO/AuthDAO"
+	"AITranslatio/app/Model/User"
+	"AITranslatio/app/types/DTO"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -16,55 +18,110 @@ type CredentialOptions struct {
 	AllowCreds []AuthDAO.Credential `json:"AllowCreds"`
 }
 
-// 申请一个WebAuthn密钥
-func (Service *AuthService) ApplicationWebAuthn(UserID int64) (*WebAuthn.WebAuthn, error) {
+type RegisterWebAuthn struct {
+	WebAuthn  *WebAuthn.WebAuthn
+	UserName  string
+	Challenge string
+	UserID    int64
+}
 
-	//获取userName和Email
+type LoginWebAuthn struct {
+	Challenge string
+	RPID      string
+	RPName    string
+}
 
-	user, err := Service.DAO.FindUserByID(UserID, "UserID")
+// 获取服务端的webAuthn信息
+func (s *AuthService) RegisterGetWebAuthnInfo(sessionID, userID int64) (*RegisterWebAuthn, error) {
 
+	user, err := s.DAO.FindUserByID(userID, "UserID")
 	if err != nil {
 		return nil, err
 	}
 
-	//生成Challenge，并把其置于redis五分钟
-	w := WebAuthn.CreateWebAuthnConfigFactory(Service.cfg, UserID, user.Nickname, user.Email)
-	err = w.CreateChallenge(Service.RedisClient)
+	challenge, err := s.WebAuthnGenerator.CreateChallenge(s.RedisClient, sessionID)
 	if err != nil {
 		return nil, errors.New(MyErrors.ErrorGetChallengeIsFail + err.Error())
 	}
 
-	return w, nil
+	rw := &RegisterWebAuthn{
+		WebAuthn:  s.WebAuthnGenerator,
+		UserName:  user.Nickname + "(" + user.Email + ")",
+		UserID:    userID,
+		Challenge: challenge,
+	}
+
+	return rw, nil
 }
 
-// 登录时验证WebAuthn
-func (Service *AuthService) WebAuthnToLogin(WebAuthnCtx *gin.Context) error {
+func (s *AuthService) RegisterWebAuthn(ctx *gin.Context, rw *DTO.RegisterWebAuthn) error {
 
-	err := WebAuthn_Verify.ClientDataJsonVerifyForLogin(Service.cfg, Service.RedisClient, WebAuthnCtx)
+	userID := ctx.GetInt64("UserID")
+	sessionID := ctx.GetInt64("SessionID")
+
+	err := WebAuthn_Verify.ClientDataJsonVerifyForRegister(s.cfg, s.RedisClient, rw.Response.ClientDataJSON, sessionID)
 	if err != nil {
-		return fmt.Errorf("WebAuthnd登录,ClientData校验错误:%w", err)
-	}
-	err = WebAuthn_Verify.AttestationObjectVerifyForLogin(Service.cfg, Service.DAO, WebAuthnCtx)
-	if err != nil {
-		return fmt.Errorf("WebAuthn登录,Attestation校验错误:%w", err)
+		return errors.New("ClientDataJson解析失败")
 	}
 
-	//SignCount++
+	CredentialID, PublicKey, err := WebAuthn_Verify.AttestationObjectVerifyForRegister(s.cfg, rw.Response.AttestationObject)
+	if err != nil {
+		return errors.New("AttestationObject解析失败")
+	}
+
+	//公钥入库
+	err = s.DAO.CreateCredential(userID, CredentialID, PublicKey)
+	if err != nil {
+		return errors.New("mysql创建凭证失败")
+	}
 
 	return nil
 }
 
-func (Service *AuthService) GetUserAllCredentialDTO(WebAuthnCtx *gin.Context) (*CredentialOptions, error) {
+// 获取服务端的webAuthn信息
+func (s *AuthService) LoginGetWebAuthnInfo(sessionID int64) (*LoginWebAuthn, error) {
 
-	userID := WebAuthnCtx.GetInt64("UserID")
-
-	allowCreds, err := Service.DAO.FindCredentialByUserID(userID)
+	challenge, err := s.WebAuthnGenerator.CreateChallenge(s.RedisClient, sessionID)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(MyErrors.ErrorGetChallengeIsFail + err.Error())
 	}
-	credentialOptions := &CredentialOptions{
-		Challenge:  WebAuthnCtx.GetString(Consts.ValidatorPrefix + "challenge"),
-		AllowCreds: allowCreds,
+
+	lw := &LoginWebAuthn{
+		Challenge: challenge,
+		RPID:      s.WebAuthnGenerator.RPID,
+		RPName:    s.WebAuthnGenerator.RPName,
 	}
-	return credentialOptions, nil
+
+	return lw, nil
+}
+
+// 登录时验证WebAuthn
+func (s *AuthService) LoginByWebAuthn(clientDataJSON, AttestationObject, Signature, CredentialID string, sessionID, userID int64) (*User.User, string, string, error) {
+
+	err := WebAuthn_Verify.ClientDataJsonVerifyForLogin(s.cfg, s.RedisClient, clientDataJSON, sessionID)
+	if err != nil {
+		return nil, "", "", fmt.Errorf("ClientData校验错误:%w", err)
+	}
+	err = WebAuthn_Verify.AttestationObjectVerifyForLogin(s.cfg, s.DAO, clientDataJSON, AttestationObject, Signature, CredentialID)
+	if err != nil {
+		return nil, "", "", fmt.Errorf("Attestation校验错误:%w", err)
+	}
+
+	//SignCount++
+
+	//获取到userInfo
+	userInfo, err := s.DAO.FindUserByID(userID, "UserID")
+	if err != nil {
+		return nil, "", "", fmt.Errorf("查库失败:%w", err)
+	}
+
+	//验证通过，生成ak，rk ，写入redis，返回请求
+	AccessToken, errAk := s.TokenProvider.GeneratedToken(userID, Consts.AccessToken)
+	RefreshToken, errRk := s.TokenProvider.GeneratedToken(userID, Consts.RefreshToken)
+
+	if errAk != nil || errRk != nil {
+		return nil, "", "", fmt.Errorf("：验证成功但生成token失败：%w,%w", errAk, errRk)
+	}
+
+	return userInfo, AccessToken, RefreshToken, nil
 }

@@ -4,12 +4,12 @@ import (
 	"AITranslatio/Config/interf"
 	"context"
 	"errors"
-	"time"
-
+	"github.com/openzipkin/zipkin-go"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	gormLog "gorm.io/gorm/logger"
 	"gorm.io/gorm/utils"
+	"time"
 )
 
 // DBLogger 实现 gorm.io/gorm/logger.Interface，专门输出到 l.logger["DB"]
@@ -49,13 +49,13 @@ func WithIgnoreRecordNotFound(ignore bool) LogOption {
 // NewDBLogger 创建一个工业级的 GORM Logger
 func NewDBLogger(cfg interf.ConfigInterface, logger *zap.Logger, sqlType string, opts ...LogOption) gormLog.Interface {
 	// 默认配置
+
 	l := &DBLogger{
 		Config: gormLog.Config{
-			SlowThreshold:        cfg.GetDuration("SlowThreshold"),
-			LogLevel:             gormLog.Warn, // 默认只打 Warn 以上的日志
-			Colorful:             false,        // 我们用 zap 的格式，不需要 gorm 加颜色
-			ParameterizedQueries: true,
-			// 默认忽略 record not found，不打成 ERROR（比较接近业务习惯）
+			SlowThreshold:             cfg.GetDuration("SlowThreshold"),
+			LogLevel:                  gormLog.Warn, // 默认只打 Warn 以上的日志
+			Colorful:                  false,
+			ParameterizedQueries:      true,
 			IgnoreRecordNotFoundError: true,
 		},
 		dbType: sqlType,
@@ -80,13 +80,25 @@ func (l *DBLogger) LogMode(level gormLog.LogLevel) gormLog.Interface {
 }
 
 // Info 普通信息日志
-func (l *DBLogger) Info(_ context.Context, msg string, data ...interface{}) {
+func (l *DBLogger) Info(ctx context.Context, msg string, data ...interface{}) {
 	if l.LogLevel < gormLog.Info {
 		return
 	}
 
+	traceID := ""
+	spanID := ""
+	span := zipkin.SpanFromContext(ctx)
+
+	if span != nil {
+		// Zipkin 的 TraceID 获取方式
+		traceID = span.Context().TraceID.String()
+		spanID = span.Context().ID.String()
+	}
+
 	l.logger.Info("gorm-info",
 		zap.String("db", l.dbType),
+		zap.String("traceID", traceID),
+		zap.String("spanID", spanID),
 		zap.String("file", utils.FileWithLineNum()),
 		zap.String("msg", msg),
 		zap.Any("data", data),
@@ -94,7 +106,7 @@ func (l *DBLogger) Info(_ context.Context, msg string, data ...interface{}) {
 }
 
 // Warn 警告日志
-func (l *DBLogger) Warn(_ context.Context, msg string, data ...interface{}) {
+func (l *DBLogger) Warn(ctx context.Context, msg string, data ...interface{}) {
 	if l.LogLevel < gormLog.Warn {
 		return
 	}
@@ -108,21 +120,20 @@ func (l *DBLogger) Warn(_ context.Context, msg string, data ...interface{}) {
 }
 
 // Error 错误日志
-func (l *DBLogger) Error(_ context.Context, msg string, data ...interface{}) {
+func (l *DBLogger) Error(ctx context.Context, msg string, data ...interface{}) {
 	if l.LogLevel < gormLog.Error {
 		return
 	}
 
 	l.logger.Error("gorm-error",
 		zap.String("db", l.dbType),
-		zap.String("file", utils.FileWithLineNum()),
 		zap.String("msg", msg),
 		zap.Any("data", data),
 	)
 }
 
 // Trace SQL 相关日志（核心）
-func (l *DBLogger) Trace(_ context.Context, begin time.Time, fc func() (string, int64), err error) {
+func (l *DBLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
 	if l.LogLevel == gormLog.Silent {
 		return
 	}

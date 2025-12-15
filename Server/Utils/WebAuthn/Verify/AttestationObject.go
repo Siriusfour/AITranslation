@@ -2,7 +2,6 @@ package Verify
 
 import (
 	"AITranslatio/Config/interf"
-	"AITranslatio/Global/Consts"
 	"AITranslatio/app/DAO/AuthDAO"
 	"bytes"
 	"crypto"
@@ -14,8 +13,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"github.com/fxamacker/cbor/v2"
 	"math/big"
+	"strings"
 )
 
 type AttestationObject struct {
@@ -39,70 +39,61 @@ type AttestedCredentialData struct {
 	CredentialPublicKey []byte
 }
 
-//func AttestationObjectVerifyForRegister(WebAuthnCtx *gin.Context) error {
-//
-//	AttestationObjectBase64 := WebAuthnCtx.GetString(Consts.ValidatorPrefix + "AttestationObject")
-//
-//	//0.解析Base64
-//	AttestationObjectJSON, err := base64.RawURLEncoding.DecodeString(AttestationObjectBase64) //Base64字符串->json字节数组
-//	if err != nil {
-//		return fmt.Errorf("base64URL解码错误: %v", err)
-//	}
-//
-//	var attestationObject AttestationObject
-//	if err := cbor.Unmarshal(AttestationObjectJSON, &attestationObject); err != nil {
-//		return fmt.Errorf("AttestationObject CBOR解析失败: %w", err)
-//	}
-//
-//	// ===== 0. 提取 authData 各部分 ,RPIDHash,flags,signCount=====
-//	authData := attestationObject.AuthData
-//
-//	if len(authData) < 37 {
-//		return fmt.Errorf("AuthData 太短")
-//	}
-//
-//	// 提取各部分
-//	// =====  验证 RP ID Hash 是否与配置文件的rpID的hash值相同
-//	RPIDHash := authData[0:32]
-//	flags := authData[32]
-//	signCount := binary.BigEndian.Uint32(authData[33:37])
-//	UserID := WebAuthnCtx.GetInt64(Consts.ValidatorPrefix + "UserID")
-//	attestedCredentialData, _, err := extractCredentialData(authData)
-//	if err != nil {
-//		return fmt.Errorf("public解析失败: %w", err)
-//	}
-//
-//	RPID := cfg.GetString("WebAuthn.RPID")
-//	if err := verifyRPID(RPID, RPIDHash); err != nil {
-//		return err
-//	}
-//
-//	if err = verifyFlags(flags); err != nil {
-//		return err
-//	}
-//
-//	if attestationObject.Fmt == "none" {
-//		if len(attestationObject.AttStmt) != 0 {
-//			return errors.New("格式有误！Fmt为none时AttStmt应该为零")
-//		}
-//	}
-//
-//	//数据库插入数据
-//	err = AuthDAO.NewDAOFactory("mysql").CreateCredential(UserID, signCount, attestedCredentialData.CredentialID, attestedCredentialData.CredentialPublicKey)
-//	if err != nil {
-//		return fmt.Errorf("DAO层CreateCredential调用失败: %w", err)
-//	}
-//
-//	reposen.OK(WebAuthnCtx, nil)
-//	return nil
-//}
+func AttestationObjectVerifyForRegister(cfg interf.ConfigInterface, AttestationObjectBase64 string) ([]byte, []byte, error) {
 
-func AttestationObjectVerifyForLogin(cfg interf.ConfigInterface, DAO AuthDAO.Inerf, WebAuthnCtx *gin.Context) error {
+	//0.解析Base64
+	AttestationObjectJSON, err := base64.RawURLEncoding.DecodeString(AttestationObjectBase64) //Base64字符串->json字节数组
+	if err != nil {
+		return nil, nil, fmt.Errorf("base64URL解码错误: %v", err)
+	}
+
+	var attestationObject AttestationObject
+	if err := cbor.Unmarshal(AttestationObjectJSON, &attestationObject); err != nil {
+		return nil, nil, fmt.Errorf("authenticatorData CBOR解析失败: %w", err)
+	}
+
+	// ===== 0. 提取 authData 各部分 ,RPIDHash,flags,signCount=====
+	authData := attestationObject.AuthData
+
+	if len(authData) < 37 {
+		return nil, nil, fmt.Errorf("AuthData 太短")
+	}
+
+	// 提取各部分
+	// =====  验证 RP ID Hash 是否与配置文件的rpID的hash值相同
+	RPIDHash := authData[0:32]
+	flags := authData[32]
+
+	attestedCredentialData, _, err := extractCredentialData(authData)
+	if err != nil {
+		return nil, nil, fmt.Errorf("public解析失败: %w", err)
+	}
+
+	RPID := cfg.GetString("WebAuthn.RPID")
+	if err := verifyRPID(RPID, RPIDHash); err != nil {
+		return nil, nil, err
+	}
+
+	if err = verifyFlags(cfg, flags); err != nil {
+		return nil, nil, err
+	}
+
+	if attestationObject.Fmt == "none" {
+		if len(attestationObject.AttStmt) != 0 {
+			return nil, nil, errors.New("格式有误！Fmt为none时AttStmt应该为零")
+		}
+	}
+
+	return attestedCredentialData.CredentialID, attestedCredentialData.CredentialPublicKey, nil
+
+}
+
+func AttestationObjectVerifyForLogin(cfg interf.ConfigInterface, DAO AuthDAO.Inerf, clientDataJSON, AttestationObject, Signature, CredentialID string) error {
 
 	//从ctx里面提取出AttestationObject，Signature，ClientDataJSON
-	authData, err := base64.RawURLEncoding.DecodeString(WebAuthnCtx.GetString(Consts.ValidatorPrefix + "AttestationObject")) //Base64字符串->字节数组
-	signature, err := base64.RawURLEncoding.DecodeString(WebAuthnCtx.GetString(Consts.ValidatorPrefix + "Signature"))
-	ClientData, err := base64.RawURLEncoding.DecodeString(WebAuthnCtx.GetString(Consts.ValidatorPrefix + "ClientDataJSON"))
+	authData, err := base64.RawURLEncoding.DecodeString(AttestationObject) //Base64字符串->字节数组
+	signature, err := base64.RawURLEncoding.DecodeString(Signature)
+	ClientData, err := base64.RawURLEncoding.DecodeString(clientDataJSON)
 	if err != nil {
 		return fmt.Errorf("base64解码失败：: %w", err)
 	}
@@ -113,13 +104,13 @@ func AttestationObjectVerifyForLogin(cfg interf.ConfigInterface, DAO AuthDAO.Ine
 	signCount := binary.BigEndian.Uint32(authData[33:37]) //把4字节按照大端序转化成一个uint32整数
 
 	//由Credential ID在数据库查询公钥
-	Credential, err := DAO.FindCredential(WebAuthnCtx)
+	Credential, err := DAO.FindCredential(CredentialID)
 	if err != nil {
-		return fmt.Errorf("webAuthn中根据CredentialID查找Credential失败： %w", err)
+		return fmt.Errorf("根据CredentialID查找Credential失败： %w", err)
 	}
 
 	// =====  验证 RP ID Hash 是否与配置文件的rpID的hash值相同
-	if err := verifyRPID(cfg.GetString("WebAuthn.RPID"), RPIDHash); err != nil {
+	if err := verifyRPID(cfg.GetString("WebAuthn.rp.RPID"), RPIDHash); err != nil {
 		return err
 	}
 
@@ -142,7 +133,6 @@ func AttestationObjectVerifyForLogin(cfg interf.ConfigInterface, DAO AuthDAO.Ine
 		return err
 	}
 
-	// 3) 按算法验证
 	switch k := publicKey.(type) {
 	case *ecdsa.PublicKey: // ES256 (-7)
 		var d = message
@@ -180,8 +170,14 @@ func AttestationObjectVerifyForLogin(cfg interf.ConfigInterface, DAO AuthDAO.Ine
 }
 
 func verifyRPID(rpID string, rpIdHash []byte) error {
-	expectedRPIDHash := sha256.Sum256([]byte(rpID))
-	if !bytes.Equal(expectedRPIDHash[:], rpIdHash) {
+	rpID = strings.TrimSpace(rpID)
+
+	expected := sha256.Sum256([]byte(rpID))
+
+	if len(rpIdHash) != 32 {
+		return fmt.Errorf("rpIdHash长度不对: %d (应为32)", len(rpIdHash))
+	}
+	if !bytes.Equal(expected[:], rpIdHash) {
 		return errors.New("RPIDHash不一致")
 	}
 	return nil

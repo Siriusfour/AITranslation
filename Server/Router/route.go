@@ -5,10 +5,12 @@ import (
 	"AITranslatio/Global/MyErrors"
 	"AITranslatio/Middleware"
 	"AITranslatio/Utils/GinRelease"
+	"AITranslatio/Utils/metrics"
 	"AITranslatio/bootstrap"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"os"
 )
 
 func InitRouter(app *bootstrap.APP) *gin.Engine {
@@ -16,7 +18,6 @@ func InitRouter(app *bootstrap.APP) *gin.Engine {
 	var router *gin.Engine
 	cfg := Global.GetInfra().Config
 	Logger := Global.GetInfra().Logger
-	// zipkin server middleware（关键）
 
 	//【生产模式】
 	// 根据 gin 官方的说明：[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
@@ -44,14 +45,24 @@ func InitRouter(app *bootstrap.APP) *gin.Engine {
 		_ = router.SetTrustedProxies(nil)
 	}
 
-	//路由分组
-	rgBase := router.Group("/Api").Use(Middleware.Auth(Global.GetInfra())).Use(Middleware.Cors()).Use(Middleware.HttpLog(Logger, "http"))  // 基础crud业务的路由组
-	rgAuth := router.Group("/Auth").Use(Middleware.Auth(Global.GetInfra())).Use(Middleware.Cors()).Use(Middleware.HttpLog(Logger, "http")) // 鉴权相关的路由组
+	//service := "Suis_Note"
+	version := os.Getenv("SERVICE_VERSION")
+	if version == "" {
+		version = "dev"
+	}
 
+	metrics.MustRegister()
+
+	//router.Use(Middleware.Prometheus(service, version)).GET("/metrics", gin.WrapH(promhttp.Handler()))
+	//路由分组
+	rgBase := router.Group("/Api").Use(Middleware.Auth(Global.GetInfra())).Use(Middleware.Cors()).Use(Middleware.HttpLog(Logger, "HTTP")).Use(Middleware.SessionID(Global.GetInfra()))  // 基础crud业务的路由组
+	rgAuth := router.Group("/Auth").Use(Middleware.Auth(Global.GetInfra())).Use(Middleware.Cors()).Use(Middleware.HttpLog(Logger, "HTTP")).Use(Middleware.SessionID(Global.GetInfra())) // 鉴权相关的路由组
+	rgNotAuth := router.Group("/NotAuth").Use(Middleware.Cors()).Use(Middleware.HttpLog(Logger, "HTTP")).Use(Middleware.SessionID(Global.GetInfra()))
 	//注册所有组别的路由
 
 	InitAuthRoute(rgAuth, app)
 	InitBaseRoute(rgBase, app)
+	InitNotAuthRoute(rgNotAuth, app)
 
 	return router
 

@@ -32,7 +32,7 @@ func mockDialFail(uri string, cfg amqp.Config) (*amqp.Connection, error) {
 
 // mock 发送消息成功，没有ack
 func mockSendMessageSuccess(c *Client) error {
-	
+
 }
 
 func mockSendMessageFail(c *Client) error {

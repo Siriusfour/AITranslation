@@ -4,6 +4,9 @@ import api from "../../src/Utils/Api/Api.js";
 
 const code = ref("");
 const state = ref("");
+const userName = ref("")
+const avatar = ref("")
+
 
 onMounted(async () => {
 
@@ -13,11 +16,10 @@ onMounted(async () => {
     state: params.get("state") || ""
   }
 
-  api.post("/Auth/LoginByGithub",data).then(res => {
-
-
-
-
+  api.post("/NotAuth/LoginByGithub",data).then(res => {
+    console.log(res);
+    userName.value=res.nickname;
+    avatar.value=res.avatar;
   })
 
 });
@@ -28,7 +30,7 @@ onMounted(async () => {
     <p>code: {{ code }}</p>
     <p>state: {{ state }}</p>
 
-    <p>avatar: {{ avatar }}</p>
+    <img :src="avatar" />
     <p>userName: {{ userName }}</p>
   </div>
 </template>

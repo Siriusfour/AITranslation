@@ -5,19 +5,19 @@ import (
 	"AITranslatio/Utils/PasswordSecurity"
 	"AITranslatio/app/Model/User"
 	"AITranslatio/app/Model/webAuthn"
-	"AITranslatio/app/types"
+	"AITranslatio/app/types/DTO"
 	"errors"
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 type Inerf interface {
-	LoginByPassword(Email string, password string) (*types.LoginInfo, error)
+	LoginByPassword(Email string, password string) (*DTO.LoginInfo, error)
 	FindUserByID(ID int64, IDtype string) (*User.User, error)
-	CreateUser(UserInfo *types.RegisterDTO) error
+	CreateUser(UserInfo *DTO.RegisterDTO) error
 	CreateUserByOAuth(user *User.User) error
 	FindCredentialByUserID(UserID int64) ([]Credential, error)
-	FindCredential(ctx *gin.Context) (*webAuthn.WebAuthnCredential, error)
+	FindCredential(CredentialID string) (*webAuthn.WebAuthnCredential, error)
+	CreateCredential(userID int64, CredentialID, publicKey []byte) error
 }
 
 type AuthDAO struct {
@@ -31,7 +31,7 @@ func NewDAOFactory(db *gorm.DB) *AuthDAO {
 }
 
 // 通过密码登录
-func (DAO *AuthDAO) LoginByPassword(Email string, password string) (*types.LoginInfo, error) {
+func (DAO *AuthDAO) LoginByPassword(Email string, password string) (*DTO.LoginInfo, error) {
 
 	var UserInfo User.User
 
@@ -48,8 +48,8 @@ func (DAO *AuthDAO) LoginByPassword(Email string, password string) (*types.Login
 		return nil, result.Error
 	}
 
-	return &types.LoginInfo{
-		Auth:     types.Auth{},
+	return &DTO.LoginInfo{
+		Auth:     DTO.Auth{},
 		Nickname: UserInfo.Nickname,
 		UserID:   UserInfo.UserID,
 		Avatar:   UserInfo.Avatar,
@@ -77,7 +77,7 @@ func (DAO *AuthDAO) FindUserByID(ID int64, IDtype string) (*User.User, error) {
 	}
 }
 
-func (DAO *AuthDAO) CreateUser(UserInfo *types.RegisterDTO) error {
+func (DAO *AuthDAO) CreateUser(UserInfo *DTO.RegisterDTO) error {
 	return DAO.DB_Client.Create(UserInfo).Error
 }
 

@@ -6,10 +6,10 @@ import (
 )
 
 // WebAuthn 服务器配置信息
-type Config struct {
+type WebAuthnInfo struct {
 	//网站信息
-	Name string
-	ID   string
+	RPName string
+	RPID   string
 
 	//注册服务的用户信息
 	UserID   int64
@@ -23,7 +23,14 @@ type Config struct {
 	ChallengeTTL     int64
 }
 
-type WebAuthnInfo struct {
-	Config    Config
+type LoginWebAuthnInfo struct {
 	Challenge string
+	RPName    string
+	RPID      string
+	TimeOut   time.Duration
+}
+
+type RegisterWebAuthnInfo struct {
+	Challenge string
+	Info      WebAuthnInfo
 }

@@ -10,8 +10,11 @@ import {onMounted} from "vue";
 
 
 
-onMounted(async () => {
-    Login()
+onMounted(() => {
+    if (localStorage.getItem("AccessToken")!==undefined ) {
+        Login()
+    }
+
 });
 
 
@@ -20,7 +23,7 @@ onMounted(async () => {
 export function Login(){
     const formData = getFormData();
     // 调用登录API
-        api.post("/Auth/Login",formData).then((res)=> {
+        api.post("/NotAuth/Login",formData).then((res)=> {
             if (confirm("要为该账号注册一条安全密钥吗")){
                 ApplicationWebAuthn()
             }
@@ -35,16 +38,18 @@ export function LoginByEmail(){}
 
 export function LoginByWebAuthn(){
 
-    api.get("/Auth/GetUserAllCredential").then(res=>{
+    api.get("/NotAuth/LoginGetWebAuthnInfo").then(res=>{
 
-       let PublicKeyOptions = toPublicKeyOptions(res)
+        console.log(res)
+        const PublicKeyOptions = toPublicKeyOptions(res)
+        console.log(PublicKeyOptions)
 
 
-        navigator.credentials.get(PublicKeyOptions).then((PublicKeyCredential )=>{
+        navigator.credentials.get(PublicKeyOptions).then((credential )=>{
 
-            console.log(publicKeyCredentialToJSON(PublicKeyCredential));
+            console.log(publicKeyCredentialToJSON(credential));
 
-            api.post("/Auth/LoginByWebAuthn", publicKeyCredentialToJSON(PublicKeyCredential),).then((result)=>{
+            api.post("/NotAuth/LoginByWebAuthn", publicKeyCredentialToJSON(credential),).then((result)=>{
 
                 alert("webAuthn登录成功！")
                 //跳转到主业务页面
@@ -59,10 +64,8 @@ export function LoginByWebAuthn(){
 
 }
 
-
-
  function getFormData() {
-    debugger
+
         const accountInput = document.getElementById('accountInput');
         const passwordInput = document.getElementById('passwordInput');
 
@@ -85,7 +88,9 @@ function ApplicationWebAuthn(){
                 }
             });
     }
-    api.get("/Auth/ApplicationWebAuthn").then((res)=>{
+    api.get("/Auth/RegisterGetWebAuthnInfo").then((res)=>{
+
+        console.log(res)
 
         const algs = [
 
@@ -94,33 +99,35 @@ function ApplicationWebAuthn(){
             {type:"public-key", alg:-36},
             {type:"public-key", alg: -7},
             {type:"public-key", alg: -8},]
+
         const publicKeyCredentialCreationOptions = {
             challenge:Base64URL_To_arrayBuffer(res.Challenge),
             rp: {
-                name: "Susi",
+                name: "Suis",
                 id: window.location.hostname,
             },
             user: {
-                id: int64ToBytes(res.Config.UserID),
-                name: res.Config.UserName ,
-                displayName:res.Config.UserName,
+                id: int64ToBytes(res.UserID),
+                name: res.UserName,
+                displayName:res.UserName,
             },
             pubKeyCredParams:algs,
             authenticatorSelection: {
                 residentKey: "required",
                 userVerification: "preferred",
-                authenticatorAttachment: res.Config.Attachment,
+                authenticatorAttachment: res.WebAuthn.Attachment,
             },
             timeout: 60000,
-            attestation: res.Config.Attestation
+            attestation: res.WebAuthn.Attestation
         }
 
         navigator.credentials.create({
             publicKey: publicKeyCredentialCreationOptions
         }).then((res)=>{
 
-            //把字节序列通过base64编码
+            //把字节序列通过base64url编码
             const encodedCredential = {
+
                 id: arrayBufferToBase64URL(res.rawId),
                 rawId: arrayBufferToBase64URL(res.rawId),
                 type: res.type,
@@ -128,10 +135,8 @@ function ApplicationWebAuthn(){
                      clientDataJSON: arrayBufferToBase64URL(res.response.clientDataJSON),
                      attestationObject: arrayBufferToBase64URL(res.response.attestationObject),
                 },
-
-                transports: res.response.getTransports?.()
             };
-            console.log(encodedCredential);
+
             api.post("/Auth/RegisterWebAuthn", encodedCredential).then((res)=>{
                 console.log(res)
             })
@@ -142,7 +147,8 @@ function ApplicationWebAuthn(){
 }
 export function LoginByGithub(){
 
-api.get("/Auth/GetChallenge?OAuth_provider=Github").then((res)=>{
+
+api.get("/NotAuth/GetChallenge?OAuth_provider=Github").then((res)=>{
 
     window.location.href =
         "https://github.com/login/oauth/authorize" +

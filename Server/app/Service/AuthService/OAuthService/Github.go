@@ -8,7 +8,7 @@ import (
 	"AITranslatio/Utils/token"
 	"AITranslatio/app/DAO/AuthDAO"
 	"AITranslatio/app/Model/User"
-	"AITranslatio/app/types"
+	"AITranslatio/app/types/DTO"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
@@ -53,7 +53,7 @@ type GitHubUser struct {
 }
 
 // GetChallenge 生成随机数，存入redis
-func (s *GithubService) GetChallenge(ctx *gin.Context) (*types.Challenge, error) {
+func (s *GithubService) GetChallenge(ctx *gin.Context) (*DTO.Challenge, error) {
 	// 生成随机部分
 	randomPart := make([]byte, 24)
 	_, err := rand.Read(randomPart)
@@ -71,7 +71,7 @@ func (s *GithubService) GetChallenge(ctx *gin.Context) (*types.Challenge, error)
 
 	challenge := base64.RawURLEncoding.EncodeToString(randomBytes)
 	//以事务存入redis
-	Key := fmt.Sprintf("SessionID:%s", ctx.GetString(Consts.ValidatorPrefix+"SessionID"))
+	Key := fmt.Sprintf("SessionID:%s", ctx.GetString("SessionID"))
 
 	pipe := s.Redis.TxPipeline()
 	pipe.HSet(context.Background(), Key, map[string]interface{}{
@@ -85,16 +85,16 @@ func (s *GithubService) GetChallenge(ctx *gin.Context) (*types.Challenge, error)
 		return nil, fmt.Errorf("存储会话失败: %w", err)
 	}
 
-	repsData := &types.Challenge{
+	repsData := &DTO.Challenge{
 		challenge,
 	}
 
 	return repsData, nil
 }
 
-func (s *GithubService) VerifyChallenge(ctx *gin.Context) error {
+func (s *GithubService) VerifyChallenge(ctx *gin.Context, OAuth *DTO.OAuth) error {
 
-	Key := fmt.Sprintf("SessionID:%s", ctx.GetString(Consts.ValidatorPrefix+"SessionID"))
+	Key := fmt.Sprintf("SessionID:%s", ctx.GetString("SessionID"))
 
 	challenge, err := s.Redis.HGet(ctx, Key, "OAuth_Github_challenge").Result()
 	if err != nil {
@@ -102,17 +102,17 @@ func (s *GithubService) VerifyChallenge(ctx *gin.Context) error {
 	}
 
 	//验证传入的challenge和redis的challenge是否一致
-	if ctx.GetString(Consts.ValidatorPrefix+"state") != challenge {
+	if OAuth.State != challenge {
 		return fmt.Errorf("两次challenge不一致，redis_challenge:%s,参数challenge为：%s", challenge, ctx.GetString(Consts.ValidatorPrefix+"state"))
 	}
 
 	return nil
 }
 
-func (s *GithubService) GetUserInfo(ctx *gin.Context) (*types.LoginInfo, error) {
+func (s *GithubService) GetUserInfo(ctx *gin.Context, OAuth *DTO.OAuth) (*DTO.LoginInfo, error) {
 
 	//获取githubToken（存储到redis）
-	Resp, err := GetToken(s.cfg, "https://github.com/login/oauth/access_token", ctx)
+	Resp, err := GetToken(s.cfg, "https://github.com/login/oauth/access_token", ctx, OAuth)
 	if err != nil {
 		return nil, err
 	}
@@ -143,8 +143,8 @@ func (s *GithubService) GetUserInfo(ctx *gin.Context) (*types.LoginInfo, error) 
 	}
 
 	//存在，直接返回在数据库找到用户
-	return &types.LoginInfo{
-		Auth: types.Auth{
+	return &DTO.LoginInfo{
+		Auth: DTO.Auth{
 			AccessToken:  auth.AccessToken,
 			RefreshToken: auth.RefreshToken,
 		},
@@ -154,7 +154,7 @@ func (s *GithubService) GetUserInfo(ctx *gin.Context) (*types.LoginInfo, error) 
 	}, nil
 }
 
-func (s *GithubService) CreateUser(GithubUserInfo *GitHubUser, UserID int64) (*types.LoginInfo, error) {
+func (s *GithubService) CreateUser(GithubUserInfo *GitHubUser, UserID int64) (*DTO.LoginInfo, error) {
 
 	UserInfo := &User.User{
 		GithubID: GithubUserInfo.ID,
@@ -169,8 +169,8 @@ func (s *GithubService) CreateUser(GithubUserInfo *GitHubUser, UserID int64) (*t
 		return nil, err
 	}
 
-	return &types.LoginInfo{
-		Auth:     types.Auth{},
+	return &DTO.LoginInfo{
+		Auth:     DTO.Auth{},
 		Nickname: UserInfo.Nickname,
 		UserID:   UserInfo.UserID,
 		Avatar:   UserInfo.Avatar,
@@ -178,7 +178,7 @@ func (s *GithubService) CreateUser(GithubUserInfo *GitHubUser, UserID int64) (*t
 
 }
 
-func (s *GithubService) CreateToken(ID int64) (*types.Auth, error) {
+func (s *GithubService) CreateToken(ID int64) (*DTO.Auth, error) {
 
 	//创建APP的token
 	AccessToken, errAk := s.JWTGenerator.GeneratedToken(ID, Consts.AccessToken)
@@ -190,7 +190,7 @@ func (s *GithubService) CreateToken(ID int64) (*types.Auth, error) {
 		return nil, fmt.Errorf("生成token失败: %w", errAk)
 	}
 
-	return &types.Auth{
+	return &DTO.Auth{
 		AccessToken:  AccessToken,
 		RefreshToken: RefreshToken,
 	}, nil

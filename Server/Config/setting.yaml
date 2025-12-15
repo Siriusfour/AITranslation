@@ -15,10 +15,10 @@ HttpServer:
 
 
 Logs:
-  MQ: "./Storage/Logs/MQ.log"
-  Db: "./Storage/Logs/DB.log"
-  Business: "./Storage/Logs/Business.log"
-  Http : "./Storage/Logs/Http.log"
+  MQPath: "./Storage/Logs/MQ.log"
+  DbPath: "./Storage/Logs/DB.log"
+  BusinessPath: "./Storage/Logs/Business.log"
+  HttpPath : "./Storage/Logs/Http.log"
   TextFormat: "json"                                  #记录日志的格式，参数选项：console、json ， console 表示一般的文本格式
   TimePrecision: "millisecond"                         #记录日志时，相关的时间精度，该参数选项：second  、 millisecond ， 分别表示 秒 和 毫秒 ,默认为毫秒级别
   MaxSize: 10                                           #每个日志的最大尺寸(以MB为单位）， 超过该值，系统将会自动进行切割
@@ -29,18 +29,19 @@ Logs:
 
 WebAuthn :
   rp :
-    name: "Suis笔记小说共享网"
-    ID : "http://localhost:5173"
+    RPName: "SuisNote"
+    RPID : "localhost"
+    origin: "http://localhost:5173"
   Attestation : "none"  #认证器证明类型
   CryptoType : -7          #服务器支持的加密类型
   AuthenticatorAttachment: "platform "  #用户端向认证器验证身份的类型
   TimeOut : 30000
   fmt : "none"
-  Challenge_TTL : 1  #1分钟
+  Challenge_TTL : 5  #1分钟
   RPID : "localhost"
 
 OAuth :
-  Challenge_TTL : 6000 #1分钟
+  Challenge_TTL : 600 #1分钟
 
   Github :
     client_secret: "c64eb1c9135dfcc90fca529317adc158a748b22b"
@@ -57,8 +58,8 @@ grpc:
   DNS: "127.0.0.1:5001"        #192.168.3.205
 
 Token:
-  AkOutTime: 3     #3小时
-  RkOutTime: 72   #3天
+  AkOutTime: 3h     #3小时
+  RkOutTime: 72h   #3天
 
 
 SnowFlake:

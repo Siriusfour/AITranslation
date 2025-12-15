@@ -1,4 +1,4 @@
-package types
+package DTO
 
 type RegisterDTO struct {
 	UserID    int64

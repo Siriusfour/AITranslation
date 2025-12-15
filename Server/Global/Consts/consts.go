@@ -11,17 +11,17 @@ const (
 	ProcessKilled string = "收到信号，进程被结束"
 
 	//校验器相关
-	ValidatorParamsCheckFailCode int = -400300
+	ValidatorParamsCheckFailCode int = 400300
 
 	//服务器代码发生错误
 	ServerOccurredErrorCode int = -500100
 
 	// token相关
-	JwtTokenOK            int = 200100  //token有效
-	JwtTokenInvalid       int = -400100 //无效的token
-	JwtTokenExpired       int = -400101 //过期的token
-	JwtTokenFormatErrCode int = -400102 //提交的 token 格式错误
-	LoginInfoInavlid      int = -400103 //没有提交登录信息
+	LoginSuccess          int = 200100 //token有效
+	JwtTokenInvalid       int = 400100 //无效的token
+	JwtTokenExpired       int = 400101 //过期的token
+	JwtTokenFormatErrCode int = 400102 //提交的 token 格式错误
+	LoginInfoInavlid      int = 400103 //没有提交登录信息
 	// CURD 常用业务状态码
 	CurdStatusOkCode         int    = 200
 	CurdStatusOkMsg          string = "Success"

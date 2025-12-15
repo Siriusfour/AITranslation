@@ -40,7 +40,7 @@ const (
 	crvEd25519 = 6 // OKP Ed25519
 )
 
-// 解析注册阶段 authData 中的 ACData（须保证这是 attestation 的 authData）
+// 解析注册阶段 authData 中的 （须保证这是 attestation 的 authData）
 func extractCredentialData(authData []byte) (*AttestedCredentialData, int, error) {
 	// 固定头：rpIdHash(32) + flags(1) + signCount(4)
 	if len(authData) < 37 {

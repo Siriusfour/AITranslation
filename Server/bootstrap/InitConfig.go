@@ -12,6 +12,8 @@ func InitConfig(FileName string) interf.ConfigInterface {
 	//读取后缀
 	FileType := path.Ext(FileName)
 
-	return interf.CreateConfigFactory(FileName, FileType[1:])
+	cfg := interf.CreateConfigFactory(FileName, FileType[1:])
+
+	return cfg
 
 }

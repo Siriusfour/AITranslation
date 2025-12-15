@@ -20,4 +20,3 @@ func ZapLogHandler(entry zapcore.Entry) error {
 	}(entry)
 	return nil
 }
-

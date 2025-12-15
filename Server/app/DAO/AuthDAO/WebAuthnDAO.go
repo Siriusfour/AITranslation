@@ -1,11 +1,9 @@
 package AuthDAO
 
 import (
-	"AITranslatio/Global/Consts"
 	"AITranslatio/app/Model/webAuthn"
 	"encoding/base64"
 	"fmt"
-	"github.com/gin-gonic/gin"
 )
 
 type Credential struct {
@@ -14,15 +12,15 @@ type Credential struct {
 }
 
 // 查找某一条凭证
-func (DAO *AuthDAO) FindCredential(ctx *gin.Context) (*webAuthn.WebAuthnCredential, error) {
+func (DAO *AuthDAO) FindCredential(CredentialID string) (*webAuthn.WebAuthnCredential, error) {
 
 	var webAuthnCredential *webAuthn.WebAuthnCredential
 
-	CredentialID, err := base64.RawURLEncoding.DecodeString(ctx.GetString(Consts.ValidatorPrefix + "RawID"))
+	CredentialID_ByteArray, err := base64.RawURLEncoding.DecodeString(CredentialID)
 	if err != nil {
 		return nil, fmt.Errorf("base64解码失败: %w", err)
 	}
-	result := DAO.DB_Client.Table("webauthncredential").Where("credential_id = ?", CredentialID).First(&webAuthnCredential)
+	result := DAO.DB_Client.Table("webauthncredential").Where("credential_id = ?", CredentialID_ByteArray).First(&webAuthnCredential)
 	if result.Error != nil {
 		return nil, fmt.Errorf("FindCredential失败: %w", result.Error)
 	}
@@ -32,11 +30,11 @@ func (DAO *AuthDAO) FindCredential(ctx *gin.Context) (*webAuthn.WebAuthnCredenti
 }
 
 // 创建凭证
-func (DAO *AuthDAO) CreateCredential(userID int64, signCount uint32, CredentialID, publicKey []byte) error {
+func (DAO *AuthDAO) CreateCredential(userID int64, CredentialID, publicKey []byte) error {
 
 	webAuthnCredential := &webAuthn.WebAuthnCredential{
 		UserID:       userID,
-		SignCount:    signCount,
+		SignCount:    1,
 		PublicKey:    publicKey,
 		CredentialID: CredentialID,
 	}
@@ -65,5 +63,3 @@ func (DAO *AuthDAO) FindCredentialByUserID(UserID int64) ([]Credential, error) {
 
 	return credentials, nil
 }
-
-// 根据credential_id查找credential
