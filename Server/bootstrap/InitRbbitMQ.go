@@ -50,11 +50,11 @@ func InitMQClient(cfg interf.ConfigInterface, logger *zap.Logger) *RabbitMQ.Clie
 		DialMQ: DialMQ,
 	}
 
-	return client
+	err := client.Connect()
+	if err != nil {
+		panic(err)
+	}
 
-	//err := client.Connect()
-	//if err != nil {
-	//	panic(err)
-	//}
+	return client
 
 }

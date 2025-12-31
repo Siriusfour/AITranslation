@@ -2,6 +2,7 @@ package RabbitMQ
 
 import (
 	"AITranslatio/Config/interf"
+	"context"
 	"errors"
 	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -11,7 +12,7 @@ import (
 	"time"
 )
 
-type Handler func(body []byte) error
+type Handler func(ctx context.Context, body []byte) error
 type DialMQ func(string, amqp.Config) (*amqp.Connection, error)
 
 type Config struct {
@@ -85,8 +86,6 @@ func (c *Client) Connect() error {
 	tries := 0
 
 	for {
-
-		fmt.Printf("%s, %s\n", maxWait, RetryBaseTime)
 
 		if c.Closed.Load() {
 			return errors.New("client closed")
@@ -244,40 +243,6 @@ func (c *Client) EnsureDLX() error {
 
 	return nil
 }
-
-// 由配置文件声明业务队列，并挂上 DLX 参数
-//func (c *Client) EnsureQueue() error {
-//
-//	exchanges := cfg.Get("RabbitMq.WorkQueue.exchanges").([]interface{})
-//	fmt.Println(exchanges)
-//	for _, queueName := range exchanges {
-//		fmt.Println(queueName)
-//		ch, err := c.Conn.Channel()
-//		if err != nil {
-//			return err
-//		}
-//		defer ch.Close()
-//
-//		args := amqp.Table{}
-//		if c.Config.DLXExchange != "" {
-//			args["x-dead-letter-exchange"] = c.Config.DLXExchange
-//		}
-//		if c.Config.DLXRoutingKey != "" {
-//			args["x-dead-letter-routing-key"] = c.Config.DLXRoutingKey
-//		}
-//
-//		_, err = ch.QueueDeclare(
-//			"",
-//			c.Config.Durable,
-//			false, // autoDelete
-//			false, // exclusive
-//			false, // noWait
-//			args,
-//		)
-//	}
-//
-//	return nil
-//}
 
 // EnsureRetryTopology 为某个业务队列声明“只有一个 5 分钟延迟的重试队列”
 // 延迟队列名：retry.<queue>.5m

@@ -7,80 +7,98 @@ import (
 	"time"
 )
 
-// 使用n个worker持续监听某个队列，并把消费失败的err写入ch中
-func (c *Client) consumer(ctx context.Context, queueName string, handleFunc Handler, errChan chan error) {
+func (c *Client) Consumer(ctx context.Context, queueName string, handleFunc Handler, errChan chan error) {
 
-	//监听调用者是否关闭consumer的持续监听
-
+	// 启动 N 个 Worker
 	for i := 1; i <= c.Config.Workers; i++ {
 
-		go func(workerID int, ctx context.Context) {
+		go func(workerID int) {
 
-			//创建ch,失败则重连
+			// 外部循环：负责断线重连
 			for {
-				//conn断开，尝试重连
-				if c.Conn == nil || c.Conn.IsClosed() {
-					time.Sleep(10 * time.Second)
+				// 0. 检查上下文是否已取消
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+
+				// 1. 获取连接 (如果连接断了，这里应该阻塞等待或者报错)
+				// 建议把 Conn 的获取封装成一个阻塞直到可用的方法，或者在这里简单的 Sleep
+				c.mu.RLock()
+				conn := c.Conn
+				c.mu.RUnlock()
+
+				if conn == nil || conn.IsClosed() {
+					time.Sleep(2 * time.Second) // 等待主重连协程恢复连接
 					continue
 				}
 
-				ch, err := c.Conn.Channel()
+				// 2. 创建 Channel
+				ch, err := conn.Channel()
 				if err != nil {
-					errChan <- fmt.Errorf("Channel创建失败: %w", err)
-					return
+					errChan <- fmt.Errorf("[Worker-%d] Channel创建失败: %v", workerID, err)
+					time.Sleep(5 * time.Second) // 避退
+					continue
 				}
-				notifyClose := ch.NotifyClose(make(chan *amqp.Error))
+
+				// 3. 配置
 				ch.Qos(c.Config.prefetch, 0, false)
+				notifyClose := ch.NotifyClose(make(chan *amqp.Error, 1)) // 缓冲设为1更安全
 
 				msgs, err := ch.Consume(
-					queueName, // 队列名称
-					"",        //  消费者标记，请确保在一个消息频道唯一
-					false,     //是否自动确认，这里设置为 true，自动确认
-					false,     //是否私有队列，false标识允许多个 consumer 向该队列投递消息，true 表示独占
-					false,     //RabbitMQ不支持noLocal标志。
-					false,     // 队列如果已经在服务器声明，设置为 true ，否则设置为 false；
+					queueName,
+					fmt.Sprintf("worker-%d", workerID), // 唯一的 Tag
+					false,                              // autoAck: false
+					false,
+					false,
+					false,
 					nil,
 				)
 
-				if err == nil {
-
-				consumeLoop:
-					for {
-						select {
-						//持续监听信息
-						case msg := <-msgs:
-							err := handleFunc(msg.Body)
-							if err != nil {
-								c.MessageFailHandler(msg, queueName)
-								continue
-							} else {
-								msg.Ack(false)
-							}
-						//调用者主动关闭
-						case <-ctx.Done():
-							ch.Close()
-							return
-						//通道被broker关闭
-						case err := <-notifyClose:
-							if err != nil {
-								errChan <- fmt.Errorf("WorkerID:%v Channel 异常关闭：%v", workerID, err)
-							}
-							ch.Close()
-							time.Sleep(5 * time.Second)
-							break consumeLoop
-						}
-					}
-				} else {
-					errChan <- fmt.Errorf("consume调用失败：%w", err)
+				if err != nil {
+					errChan <- fmt.Errorf("[Worker-%d] Consume失败: %v", workerID, err)
+					ch.Close()
+					time.Sleep(5 * time.Second)
+					continue
 				}
 
+				// 4. 消费循环
+				c.Logger.Info(fmt.Sprintf("[Worker-%d] 开始监听队列: %s", workerID, queueName))
+
+			consumeLoop:
+				for {
+					select {
+					case msg, ok := <-msgs:
+						// ⚠️【关键修复】检查通道是否关闭
+						if !ok {
+							c.Logger.Warn(fmt.Sprintf("[Worker-%d] msgs通道已关闭，准备重连", workerID))
+							break consumeLoop
+						}
+
+						// 执行业务逻辑
+						err := handleFunc(ctx, msg.Body)
+						if err != nil {
+							// 失败处理：建议 Nack(false, true) 让消息重回队列，或者发死信
+							c.MessageFailHandler(msg, queueName)
+							// 注意：MessageFailHandler 内部必须做 Ack/Nack，否则消息会死锁
+						} else {
+							// 成功确认
+							msg.Ack(false)
+						}
+
+					case <-ctx.Done():
+						ch.Close()
+						return // 退出 Worker
+
+					case err := <-notifyClose:
+						c.Logger.Error(fmt.Sprintf("[Worker-%d] Channel异常关闭: %v", workerID, err))
+						break consumeLoop
+					}
+				}
 			}
-
-		}(i, ctx)
-
+		}(i)
 	}
-
-	return
 }
 
 func (c *Client) MessageFailHandler(msg amqp.Delivery, queueName string) {

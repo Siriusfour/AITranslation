@@ -6,6 +6,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -198,4 +199,31 @@ func (Config *ConfigFile) Cache(keyName string, value interface{}) bool {
 
 func (Config *ConfigFile) clearCache() {
 	configContainer.FuzzyDelete(Consts.ConfigKeyPrefix)
+}
+
+func toInt(v any) (int, bool) {
+	switch t := v.(type) {
+	case int:
+		return t, true
+	case int64:
+		return int(t), true
+	case int32:
+		return int(t), true
+	case uint:
+		return int(t), true
+	case uint64:
+		return int(t), true
+	case float64:
+		return int(t), true // YAML/JSON 常见
+	case float32:
+		return int(t), true
+	case string:
+		i, err := strconv.Atoi(t)
+		if err != nil {
+			return 0, false
+		}
+		return i, true
+	default:
+		return 0, false
+	}
 }

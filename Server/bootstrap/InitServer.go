@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"AITranslatio/Config/interf"
+	"AITranslatio/Utils/RabbitMQ"
 	"AITranslatio/Utils/SnowFlak"
 	"AITranslatio/Utils/WebAuthn"
 	"AITranslatio/Utils/token"
@@ -27,7 +28,7 @@ type APP struct {
 	Controller *Controller
 }
 
-func InitApp(EncryptKey []byte, cfg interf.ConfigInterface, db *gorm.DB, redisClient *redis.Client, logger *zap.Logger, tracing *zipkin.Tracing, jwtGenerator *token.JWTGenerator) *APP {
+func InitApp(EncryptKey []byte, cfg interf.ConfigInterface, db *gorm.DB, redisClient *redis.Client, rabbit *RabbitMQ.Client, scripts map[string]*redis.Script, logger *zap.Logger, tracing *zipkin.Tracing, jwtGenerator *token.JWTGenerator) *APP {
 
 	t := token.CreateTokenFactory(&token.CreateToken{
 		EncryptKey,
@@ -49,6 +50,7 @@ func InitApp(EncryptKey []byte, cfg interf.ConfigInterface, db *gorm.DB, redisCl
 	}
 
 	w := WebAuthn.CreateWebAuthnConfigFactory(cfg)
+
 	//AuthController的创建
 	authDAO := AuthDAO.NewDAOFactory(db)
 	authService := AuthService.NewService(cfg, logger, t, s, w, redisClient, authDAO)
@@ -56,7 +58,7 @@ func InitApp(EncryptKey []byte, cfg interf.ConfigInterface, db *gorm.DB, redisCl
 
 	//ApiController的创建
 	apiDAO := ApiDAO.NewDAOFactory(db)
-	apiService := ApiServer.NewService(cfg, logger, apiDAO)
+	apiService := ApiServer.NewService(cfg, logger, redisClient, rabbit, s, scripts, apiDAO)
 	apiController := ApiController.NewController(cfg, logger, apiService)
 
 	App := &APP{

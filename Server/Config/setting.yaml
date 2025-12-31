@@ -128,7 +128,7 @@ DB:
 
 RabbitMq:
   WorkQueue:
-    Addr: "amqp://@127.0.0.1:5672/"
+    Addr: "amqp://guest:guest@127.0.0.1:5672/"
     Durable: false    #消息是否持久化
     Workers: 10       #最大线程数量
     RetryMaxTries: 10 #重连的最大次数
@@ -163,3 +163,12 @@ Zipkin:
   URL: "http://localhost:9411"
   ServerName: "note"
   Port: "localhost:9411"
+
+
+limit:
+  QPS : 8000
+  burst : 1000
+
+#redis限流  ,同个ip，windows秒内只能访问limit次
+  windows: 1
+  limit: 5

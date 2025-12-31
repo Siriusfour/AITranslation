@@ -7,6 +7,7 @@ import (
 	"AITranslatio/Global/MyErrors"
 	"AITranslatio/app/Model/Team"
 	"AITranslatio/app/Model/User"
+	"AITranslatio/app/Model/goods"
 	"AITranslatio/app/Model/webAuthn"
 	"log"
 
@@ -51,7 +52,7 @@ func GetSqlDriver(cfg interf.ConfigInterface, logger *zap.Logger, sqlType string
 		return nil, err
 	}
 
-	err = gormDb.AutoMigrate(&Team.Team{}, &User.User{}, &Team.JoinTeamApplication{}, &webAuthn.WebAuthnCredential{})
+	err = gormDb.AutoMigrate(&Team.Team{}, &User.User{}, &Team.JoinTeamApplication{}, &webAuthn.WebAuthnCredential{}, &goods.Goods{}, &goods.SeckillGoods{}, &goods.SeckillOrder{})
 	if err != nil {
 		return nil, fmt.Errorf("gorm自动建表失败:%w", err)
 	}

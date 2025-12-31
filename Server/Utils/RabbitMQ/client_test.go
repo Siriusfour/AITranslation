@@ -44,7 +44,7 @@ func initTestClient(DialMQFunc DialMQ) *Client {
 	if Global.Logger == nil {
 		Global.Logger = make(map[string]*zap.Logger)
 	}
-	Global.Logger["MQ"] = zap.NewNop() // ✅ 这个 Logger 不打印，也不会 panic
+	Global.Logger["MQ"] = zap.NewNop() //
 
 	config := &Config{
 		URI:           "amqp://@127.0.0.1:5672/",

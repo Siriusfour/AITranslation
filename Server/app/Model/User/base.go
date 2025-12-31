@@ -13,8 +13,8 @@ type User struct {
 	Salt       string `gorm:"type:varchar(255);column:Salt"`
 	Email      string `gorm:"type:varchar(255);not null;column:Email"`
 	Credential bool   `gorm:"type:boolean;not null;column:credential"`
-
-	GithubID int64 `gorm:"type:int;column:GithubId"`
+	Admin      bool   `gorm:"type:boolean;not null;column:Admin"`
+	GithubID   int64  `gorm:"type:int;column:GithubId"`
 }
 
 func (u *User) TableName() string {

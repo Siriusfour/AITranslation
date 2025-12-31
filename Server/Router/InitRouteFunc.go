@@ -26,13 +26,7 @@ func InitAuthRoute(rg gin.IRoutes, app *bootstrap.APP) {
 	rg.GET("/RegisterGetWebAuthnInfo", app.Controller.AuthController.RegisterGetWebAuthnInfo)
 	rg.POST("/RegisterWebAuthn", app.Controller.AuthController.RegisterWebAuthn)
 
+	rg.GET("/StartSeckill", app.Controller.ApiController.StartSeckill)
+	rg.POST("/SeckillBuy", app.Controller.ApiController.SeckillBuy)
+
 }
-
-func InitBaseRoute(rg gin.IRoutes, app *bootstrap.APP) {
-	rg.POST("/Team/Create", app.Controller.ApiController.CreateTeam)
-	rg.POST("/Team/Join", app.Controller.ApiController.JoinTeam)
-}
-
-func InitFilesRoute(rgBase *gin.RouterGroup) {}
-
-func InitCaptchaRoute(rgBase *gin.RouterGroup) {}

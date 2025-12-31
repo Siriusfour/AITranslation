@@ -9,6 +9,7 @@ import (
 	"AITranslatio/bootstrap"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"os"
 )
@@ -45,7 +46,7 @@ func InitRouter(app *bootstrap.APP) *gin.Engine {
 		_ = router.SetTrustedProxies(nil)
 	}
 
-	//service := "Suis_Note"
+	service := "Suis_Note"
 	version := os.Getenv("SERVICE_VERSION")
 	if version == "" {
 		version = "dev"
@@ -53,15 +54,26 @@ func InitRouter(app *bootstrap.APP) *gin.Engine {
 
 	metrics.MustRegister()
 
-	//router.Use(Middleware.Prometheus(service, version)).GET("/metrics", gin.WrapH(promhttp.Handler()))
+	router.Use(Middleware.Prometheus(service, version)).GET("/metrics", gin.WrapH(promhttp.Handler()))
 	//路由分组
-	rgBase := router.Group("/Api").Use(Middleware.Auth(Global.GetInfra())).Use(Middleware.Cors()).Use(Middleware.HttpLog(Logger, "HTTP")).Use(Middleware.SessionID(Global.GetInfra()))  // 基础crud业务的路由组
-	rgAuth := router.Group("/Auth").Use(Middleware.Auth(Global.GetInfra())).Use(Middleware.Cors()).Use(Middleware.HttpLog(Logger, "HTTP")).Use(Middleware.SessionID(Global.GetInfra())) // 鉴权相关的路由组
-	rgNotAuth := router.Group("/NotAuth").Use(Middleware.Cors()).Use(Middleware.HttpLog(Logger, "HTTP")).Use(Middleware.SessionID(Global.GetInfra()))
-	//注册所有组别的路由
+
+	// 鉴权相关的路由组
+	rgAuth := router.Group("/Auth").
+		Use(Middleware.Auth(Global.GetInfra())).
+		Use(Middleware.Cors()).
+		Use(Middleware.HttpLog(Logger, "HTTP")).
+		Use(Middleware.SessionID(Global.GetInfra())).
+		Use(Middleware.LocalLimitMiddleware(Global.GetInfra().Limiter)).
+		Use(Middleware.LimitByID(Global.GetInfra().Config, Global.GetInfra().RedisClient, Global.GetInfra().Scripts["rate"]))
+
+	rgNotAuth := router.Group("/NotAuth").
+		Use(Middleware.Cors()).
+		Use(Middleware.HttpLog(Logger, "HTTP")).
+		Use(Middleware.SessionID(Global.GetInfra())).
+		Use(Middleware.LocalLimitMiddleware(Global.GetInfra().Limiter)).
+		Use(Middleware.LimitByID(Global.GetInfra().Config, Global.GetInfra().RedisClient, Global.GetInfra().Scripts["rate"]))
 
 	InitAuthRoute(rgAuth, app)
-	InitBaseRoute(rgBase, app)
 	InitNotAuthRoute(rgNotAuth, app)
 
 	return router
