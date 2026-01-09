@@ -8,7 +8,6 @@ export default defineConfig({
   server: {
     host:"0.0.0.0",
     proxy: {   //代理信息
-
       '/noteApi': {  //当你在前端请求 /kapi/xxx 时，Vite 会把请求 转发 到http://localhost:3008/xxx
         target: 'http://localhost:3008',
         rewrite: (path) => path.replace(/^\/noteApi/, ''),
@@ -22,6 +21,7 @@ export default defineConfig({
                 '| from', req.url
             );
           });
+
           proxy.on('proxyRes', (proxyRes, req) => {
             console.log('[VITE PROXY RES]', proxyRes.statusCode, req.url);
           });

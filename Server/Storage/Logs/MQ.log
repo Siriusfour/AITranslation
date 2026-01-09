@@ -98,3 +98,26 @@
 {"level":"ERROR","created_at":"2025-12-30 17:28:10.627","caller":"RabbitMQ/consumer.go:95","msg":"[Worker-1] Channel异常关闭: Exception (501) Reason: \"read tcp 127.0.0.1:59726->127.0.0.1:5672: wsarecv: An existing connection was forcibly closed by the remote host.\"","stacktrace":"AITranslatio/Utils/RabbitMQ.(*Client).Consumer.func1\n\tD:/Documents/Tencent Files/2605116008/FileRecv/MobileFile/note/Server/Utils/RabbitMQ/consumer.go:95"}
 {"level":"ERROR","created_at":"2025-12-30 17:28:10.627","caller":"RabbitMQ/consumer.go:95","msg":"[Worker-4] Channel异常关闭: Exception (501) Reason: \"read tcp 127.0.0.1:59726->127.0.0.1:5672: wsarecv: An existing connection was forcibly closed by the remote host.\"","stacktrace":"AITranslatio/Utils/RabbitMQ.(*Client).Consumer.func1\n\tD:/Documents/Tencent Files/2605116008/FileRecv/MobileFile/note/Server/Utils/RabbitMQ/consumer.go:95"}
 {"level":"ERROR","created_at":"2025-12-30 17:28:10.627","caller":"RabbitMQ/consumer.go:95","msg":"[Worker-10] Channel异常关闭: Exception (501) Reason: \"read tcp 127.0.0.1:59726->127.0.0.1:5672: wsarecv: An existing connection was forcibly closed by the remote host.\"","stacktrace":"AITranslatio/Utils/RabbitMQ.(*Client).Consumer.func1\n\tD:/Documents/Tencent Files/2605116008/FileRecv/MobileFile/note/Server/Utils/RabbitMQ/consumer.go:95"}
+{"level":"ERROR","created_at":"2026-01-05 14:05:10.081","caller":"RabbitMQ/clinet.go:120","msg":"MQ 建立连接失败，超过最大重试次数","error":"dial tcp 127.0.0.1:5672: connectex: No connection could be made because the target machine actively refused it.","tries":10,"stacktrace":"AITranslatio/Utils/RabbitMQ.(*Client).Connect\n\tD:/Documents/Tencent Files/2605116008/FileRecv/MobileFile/note/Server/Utils/RabbitMQ/clinet.go:120\nAITranslatio/bootstrap.InitMQClient\n\tD:/Documents/Tencent Files/2605116008/FileRecv/MobileFile/note/Server/bootstrap/InitRbbitMQ.go:53\nmain.main\n\tD:/Documents/Tencent Files/2605116008/FileRecv/MobileFile/note/Server/cmd/web/main.go:43\nruntime.main\n\tC:/Users/Administrator/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.24.5.windows-amd64/src/runtime/proc.go:283"}
+{"level":"INFO","created_at":"2026-01-05 14:06:13.254","caller":"RabbitMQ/clinet.go:113","msg":"[MQ] ✅ connected","uri":"amqp://guest:guest@127.0.0.1:5672/"}
+{"level":"INFO","created_at":"2026-01-05 14:06:13.330","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-3] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 14:06:13.330","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-8] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 14:06:13.330","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-2] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 14:06:13.330","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-4] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 14:06:13.330","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-10] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 14:06:13.330","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-7] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 14:06:13.330","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-1] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 14:06:13.330","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-6] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 14:06:13.330","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-5] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 14:06:13.331","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-9] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 16:45:43.607","caller":"RabbitMQ/clinet.go:113","msg":"[MQ] ✅ connected","uri":"amqp://guest:guest@127.0.0.1:5672/"}
+{"level":"INFO","created_at":"2026-01-05 16:45:43.656","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-3] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 16:45:43.656","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-2] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 16:45:43.656","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-1] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 16:45:43.657","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-4] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 16:45:43.657","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-7] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 16:45:43.657","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-10] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 16:45:43.657","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-6] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 16:45:43.657","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-5] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 16:45:43.657","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-8] 开始监听队列: seckill_order_queue"}
+{"level":"INFO","created_at":"2026-01-05 16:45:43.657","caller":"RabbitMQ/consumer.go:67","msg":"[Worker-9] 开始监听队列: seckill_order_queue"}
