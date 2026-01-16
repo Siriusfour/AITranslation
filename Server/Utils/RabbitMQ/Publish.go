@@ -29,7 +29,6 @@ func (c *Client) Publish(exchange, routingKey string, body []byte) error {
 	}
 	acks := ch.NotifyPublish(make(chan amqp.Confirmation, 1))
 
-	// Publish ... (你的原有代码)
 	if err := ch.Publish(exchange, routingKey, false, false, amqp.Publishing{
 		DeliveryMode: amqp.Persistent,
 		ContentType:  "application/octet-stream",

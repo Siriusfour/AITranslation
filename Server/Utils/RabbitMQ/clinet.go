@@ -38,7 +38,7 @@ type Config struct {
 	ConfirmTimeout time.Duration // e.g. 5s
 	MaxPubRetries  int           // e.g. 3
 
-	// 演出重发队列配置项
+	// 重发队列配置项
 	RetryExchange string // e.g. "重发交换机"
 	RetryTime     time.Duration
 }

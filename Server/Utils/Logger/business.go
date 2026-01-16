@@ -6,10 +6,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// GlobalLogMap 假设你有一个地方存这个 map，或者你通过依赖注入传递 map
-// 这里为了演示，假设它是通过某种方式可访问的，或者封装在 struct 里
-// 更好的方式是依赖注入，但为了适配你的 Global 写法，我写一个通用的 Helper
-
 // GetLoggerWithTrace 从 map 中获取指定 name 的 logger，并注入 trace_id
 func GetLoggerWithTrace(ctx context.Context, logMap map[string]*zap.Logger, name string) *zap.Logger {
 	// 1. 从 map 获取基础 logger
