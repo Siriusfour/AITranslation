@@ -28,7 +28,6 @@ import (
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @host      localhost:3008
-
 func main() {
 
 	fileName := *(flag.String("File", "setting.yaml", "path to Config file"))

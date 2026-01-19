@@ -148,9 +148,7 @@ func PreHeatData(ctx *gin.Context, redisClient *redis.Client, seckillGoods *good
 	if err != nil {
 		return fmt.Errorf("redis pipeline 失败: %w", err)
 	}
-
 	return nil
-
 }
 
 // RollbackStock 回滚逻辑
