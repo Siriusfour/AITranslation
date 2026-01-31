@@ -1,0 +1,170 @@
+groups:
+- name: deps-mysql
+  rules:
+  # MySQL exporter 常见：mysql_up (1=正常)
+  - alert: MySQLExporterDown
+    expr: up{job="mysql"} == 0
+    for: 2m
+    labels: { severity: page }
+    annotations:
+      summary: "MySQL exporter 抓取失败"
+      description: "job=mysql 的 target 不可达或抓取失败（up=0）"
+
+  # 连接数过高：用 Threads_connected / max_connections
+  - alert: MySQLConnectionsHigh
+    expr: |
+      (
+        max(mysql_global_status_threads_connected{job="mysql"})
+        /
+        max(mysql_global_variables_max_connections{job="mysql"})
+      ) > 0.8
+    for: 5m
+    labels: { severity: ticket }
+    annotations:
+      summary: "MySQL 连接数接近上限"
+      description: "Threads_connected / max_connections > 80% 持续 5 分钟"
+
+  # running 线程过高（阈值需要结合你实例规模调整）
+  - alert: MySQLThreadsRunningHigh
+    expr: max(mysql_global_status_threads_running{job="mysql"}) > 50
+    for: 5m
+    labels: { severity: ticket }
+    annotations:
+      summary: "MySQL Threads_running 偏高"
+      description: "Threads_running > 50 持续 5 分钟，可能存在查询堆积/慢查询/锁等待"
+
+  # 慢查询增速异常（slow_queries 是累计值，用 rate）
+  - alert: MySQLSlowQueriesIncreasing
+    expr: rate(mysql_global_status_slow_queries{job="mysql"}[5m]) > 1
+    for: 5m
+    labels: { severity: ticket }
+    annotations:
+      summary: "MySQL 慢查询增速异常"
+      description: "slow_queries 每秒增长 > 1（按实际流量调整阈值）"
+
+  # InnoDB buffer pool 命中率下降（用 reads / read_requests）
+  - alert: MySQLBufferPoolHitRateLow
+    expr: |
+      (
+        1 -
+        (
+          rate(mysql_global_status_innodb_buffer_pool_reads{job="mysql"}[5m])
+          /
+          rate(mysql_global_status_innodb_buffer_pool_read_requests{job="mysql"}[5m])
+        )
+      ) < 0.95
+    for: 10m
+    labels: { severity: ticket }
+    annotations:
+      summary: "MySQL Buffer Pool 命中率偏低"
+      description: "buffer pool hit rate < 95% 持续 10 分钟，可能导致磁盘 IO 上升、延迟变差"
+
+- name: deps-redis
+  rules:
+  - alert: RedisExporterDown
+    expr: up{job="redis"} == 0
+    for: 2m
+    labels: { severity: page }
+    annotations:
+      summary: "Redis exporter 抓取失败"
+      description: "job=redis 的 target 不可达或抓取失败（up=0）"
+
+  # Redis 实例是否可用（redis_up 常见：1=up）
+  - alert: RedisDown
+    expr: redis_up{job="redis"} == 0
+    for: 2m
+    labels: { severity: page }
+    annotations:
+      summary: "Redis 不可用"
+      description: "redis_up=0 持续 2 分钟"
+
+  # 连接数过高（阈值要按你实例规模调整）
+  - alert: RedisConnectedClientsHigh
+    expr: redis_connected_clients{job="redis"} > 5000
+    for: 5m
+    labels: { severity: ticket }
+    annotations:
+      summary: "Redis 连接数过高"
+      description: "connected_clients > 5000 持续 5 分钟（请按实例能力调整阈值）"
+
+  # 阻塞客户端（通常 >0 就值得看）
+  - alert: RedisBlockedClients
+    expr: redis_blocked_clients{job="redis"} > 0
+    for: 2m
+    labels: { severity: ticket }
+    annotations:
+      summary: "Redis 存在阻塞客户端"
+      description: "blocked_clients > 0 持续 2 分钟，可能有慢命令/Lua/big key/阻塞队列"
+
+  # 发生 key 淘汰（出现即值得关注）
+  - alert: RedisEvictedKeysIncreasing
+    expr: increase(redis_evicted_keys_total{job="redis"}[5m]) > 0
+    for: 0m
+    labels: { severity: ticket }
+    annotations:
+      summary: "Redis 发生 key 淘汰（evicted）"
+      description: "5 分钟内 evicted_keys_total 增加，表示内存压力/策略导致驱逐"
+
+  # 命中率过低（用 hits / (hits+misses)）
+  - alert: RedisHitRateLow
+    expr: |
+      (
+        rate(redis_keyspace_hits_total{job="redis"}[5m])
+        /
+        (rate(redis_keyspace_hits_total{job="redis"}[5m]) + rate(redis_keyspace_misses_total{job="redis"}[5m]))
+      ) < 0.8
+    for: 10m
+    labels: { severity: ticket }
+    annotations:
+      summary: "Redis 命中率偏低"
+      description: "hit rate < 80% 持续 10 分钟，可能导致后端 DB 压力放大"
+
+- name: deps-rabbitmq
+  rules:
+  - alert: RabbitMQExporterDown
+    expr: up{job="rabbitmq"} == 0
+    for: 2m
+    labels: { severity: page }
+    annotations:
+      summary: "RabbitMQ exporter 抓取失败"
+      description: "job=rabbitmq 的 target 不可达或抓取失败（up=0）"
+
+  # RabbitMQ 队列堆积（ready）
+  # 注意：不同 exporter 指标名可能不同。常见名：rabbitmq_queue_messages_ready
+  - alert: RabbitMQQueueBacklogHigh
+    expr: rabbitmq_queue_messages_ready{job="rabbitmq"} > 10000
+    for: 10m
+    labels: { severity: ticket }
+    annotations:
+      summary: "RabbitMQ 队列 ready 堆积过高"
+      description: "messages_ready > 10000 持续 10 分钟（按队列与业务调整阈值）"
+
+  # 堆积持续增长（比单点阈值更“工业”）
+  - alert: RabbitMQQueueBacklogGrowing
+    expr: |
+      rabbitmq_queue_messages_ready{job="rabbitmq"} > 1000
+      and rate(rabbitmq_queue_messages_ready{job="rabbitmq"}[10m]) > 0
+    for: 10m
+    labels: { severity: page }
+    annotations:
+      summary: "RabbitMQ 队列堆积持续增长"
+      description: "ready 已经 > 1000 且 10 分钟窗口仍在增长，可能消费者不足/挂了/下游慢"
+
+  # unacked 过高：消费者处理慢或 ack 不及时
+  - alert: RabbitMQUnackedHigh
+    expr: rabbitmq_queue_messages_unacked{job="rabbitmq"} > 5000
+    for: 10m
+    labels: { severity: ticket }
+    annotations:
+      summary: "RabbitMQ unacked 过高"
+      description: "messages_unacked > 5000 持续 10 分钟，消费者可能卡住/处理慢"
+
+  # 重投递增速（消费失败/重试风暴信号）
+  # 指标名可能是 rabbitmq_queue_messages_redelivered_total 或类似
+  - alert: RabbitMQRedeliveriesIncreasing
+    expr: rate(rabbitmq_queue_messages_redelivered_total{job="rabbitmq"}[5m]) > 1
+    for: 5m
+    labels: { severity: ticket }
+    annotations:
+      summary: "RabbitMQ 重投递增速异常"
+      description: "redelivered 每秒 > 1 持续 5 分钟，可能消费失败/重试放大（按实际调整）"

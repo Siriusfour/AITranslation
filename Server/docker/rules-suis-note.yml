@@ -1,0 +1,31 @@
+groups:
+- name: suis-note-red
+  rules:
+  - alert: High5xxErrorRate
+    expr: |
+      (
+        sum(rate(http_requests_total{service="Suis_Note", status=~"5.."}[5m]))
+        /
+        sum(rate(http_requests_total{service="Suis_Note"}[5m]))
+      ) > 0.02
+    for: 5m
+    labels:
+      severity: page
+    annotations:
+      summary: "Suis_Note 5xx 错误率过高"
+      description: "过去 5 分钟 5xx 错误率 > 2% 且持续 5 分钟"
+
+  - alert: HighP95LatencyByRoute
+    expr: |
+      histogram_quantile(
+        0.95,
+        sum by (le, route) (
+          rate(http_request_duration_seconds_bucket{service="Suis_Note"}[5m])
+        )
+      ) > 0.5
+    for: 10m
+    labels:
+      severity: ticket
+    annotations:
+      summary: "Suis_Note P95 延迟过高"
+      description: "某些 route 的 P95 延迟 > 500ms 且持续 10 分钟"
