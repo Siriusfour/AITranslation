@@ -1,0 +1,7 @@
+github Action .yml
+
+CI: cherry到dev分支，就会触发CI流程，CI会做那么几件事情：编译，运行单元测试，格式排版（go-fmt）， 静态检查（golangClient-lint），全都通过之后编译成docker镜像，推送到docker仓库，最后执行cherry
+
+
+CD: cherry到realse分支就会触发CD流程，构筑docker镜像，根据docker-compose部署环境，运行环境测试
+
