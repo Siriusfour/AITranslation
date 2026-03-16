@@ -29,7 +29,7 @@ func Auth(app *Global.Infrastructure) gin.HandlerFunc {
 			}
 			c.Set("UserID", jwtInfo.UserID)
 		} else {
-			reposen.ErrorTokenAuthFail(c, fmt.Errorf("缺失登录相关信息!"), Consts.JwtTokenInvalid)
+			reposen.ErrorTokenAuthFail(c, fmt.Errorf("缺失登录相关信息!"), Consts.LoginInfoInavlid)
 			return
 		}
 

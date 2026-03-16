@@ -167,59 +167,6 @@ func (t *JWTGenerator) ParseToken(VerifyToken string) (*JwtInfo, error) {
 	return tokenCurrent, nil
 }
 
-//// GetDataFormToken 从token里面解析出某个值
-//func GetDataFormToken[T any](Token string, arg string) (error, T) {
-//
-//	var zero T
-//
-//	token, err := jwt.Parse(Token, func(token *jwt.Token) (interface{}, error) {
-//		return Global.GetInfra().EncryptKey, nil
-//	})
-//	if err != nil {
-//		return err, zero
-//	}
-//
-//	claims, ok := token.Claims.(jwt.MapClaims)
-//	if !ok {
-//		return MyErrors.ErrorAssert, zero
-//	}
-//
-//	if arg == "UserID" {
-//		value, ok := claims[arg].(float64)
-//		if !ok {
-//			return MyErrors.ErrorAssert, zero
-//		}
-//		return nil, any(int64(value)).(T)
-//	}
-//	if arg == "TokenID" {
-//		value, ok := claims[arg].(float64)
-//		if !ok {
-//			return MyErrors.ErrorAssert, zero
-//		}
-//		return nil, any(int64(value)).(T)
-//	}
-//
-//	value, ok := claims[arg].(T)
-//	if !ok {
-//		return MyErrors.ErrorAssert, zero
-//	}
-//
-//	return nil, value
-//}
-
-// Verify 验证token
-//func (t *JWTGenerator) Verify(Token string) error {
-//
-//	//解析并校验
-//	jwtInfo,err := t.ParseToken(Token)
-//	if err != nil {
-//		return err
-//	}
-//	return nil
-//
-//	//TODO ak=""且rk！=“”時刷新ak
-//}
-
 //func (t *JWTGenerator) Refresh(ctx *gin.Context) (error, string) {
 //
 //	if tokens.RefreshToken != "" {

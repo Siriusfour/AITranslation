@@ -16,7 +16,7 @@ func Cors() gin.HandlerFunc {
 		//允许访问的站点列表
 		AllowOrigins: []string{"*"},
 		//允许使用的方法
-		AllowMethods:        []string{"PUT", "POST", "GET"},
+		AllowMethods:        []string{"PUT", "POST", "GET", "DELETE", "OPTIONS"},
 		AllowPrivateNetwork: false,
 		//允许客户端设置的HTTP头部信息
 		AllowHeaders: []string{"*"},

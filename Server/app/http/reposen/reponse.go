@@ -2,6 +2,7 @@ package reposen
 
 import (
 	"AITranslatio/Global/Consts"
+	"AITranslatio/Global/MyErrors"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -60,4 +61,29 @@ func ErrorTokenAuthFail(Context *gin.Context, err error, Code ...int) {
 // ErrorParam 参数校验错误
 func ErrorParam(Context *gin.Context, err error) {
 	ReturnResponse(Context, http.StatusBadRequest, Consts.ValidatorParamsCheckFailCode, err, nil)
+}
+
+func Reposen(C *gin.Context, err error, data ...interface{}) {
+
+	//success
+	if err == nil {
+		ReturnResponse(C, http.StatusOK, http.StatusOK, errors.New("success"), data)
+	}
+
+	if errors.Is(MyErrors.ErrTokenMalformed, err) {
+		ReturnResponse(C, http.StatusInternalServerError, Consts.ServerOccurredErrorCode, err, nil)
+	}
+
+}
+
+func SumInt(a, b int) int {
+	return a + b
+}
+
+func SumFloat(a, b float32) float32 {
+	return a + b
+}
+
+func Sum[T int | float64](a T, b T) T {
+	return a + b
 }

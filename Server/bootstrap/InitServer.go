@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"AITranslatio/Config/interf"
+	"AITranslatio/SDK/RAG"
 	"AITranslatio/Utils/RabbitMQ"
 	"AITranslatio/Utils/SnowFlak"
 	"AITranslatio/Utils/WebAuthn"
@@ -17,6 +18,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"time"
 )
 
 type Controller struct {
@@ -51,6 +53,14 @@ func InitApp(EncryptKey []byte, cfg interf.ConfigInterface, db *gorm.DB, redisCl
 
 	w := WebAuthn.CreateWebAuthnConfigFactory(cfg)
 
+	RAGclient, err := RAG.NewClient(
+		RAG.WithAddress(cfg.GetString("RAG.DNS")),
+		RAG.WithTimeout(time.Duration(cfg.GetInt("RAG.DNSTimeout"))*time.Second),
+	)
+	if err != nil {
+		println("RAG.Client启动失败：" + err.Error())
+	}
+
 	//AuthController的创建
 	authDAO := AuthDAO.NewDAOFactory(db)
 	authService := AuthService.NewService(cfg, logger, t, s, w, redisClient, authDAO)
@@ -58,7 +68,7 @@ func InitApp(EncryptKey []byte, cfg interf.ConfigInterface, db *gorm.DB, redisCl
 
 	//ApiController的创建
 	apiDAO := ApiDAO.NewDAOFactory(db)
-	apiService := ApiServer.NewService(cfg, logger, redisClient, rabbit, s, scripts, apiDAO)
+	apiService := ApiServer.NewService(cfg, logger, redisClient, rabbit, s, scripts, apiDAO, RAGclient)
 	apiController := ApiController.NewController(cfg, logger, apiService)
 
 	App := &APP{

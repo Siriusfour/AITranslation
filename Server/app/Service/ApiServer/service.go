@@ -2,6 +2,7 @@ package ApiServer
 
 import (
 	"AITranslatio/Config/interf"
+	"AITranslatio/SDK/RAG"
 	"AITranslatio/Utils/RabbitMQ"
 	"AITranslatio/Utils/SnowFlak"
 	"AITranslatio/app/DAO/ApiDAO"
@@ -17,9 +18,10 @@ type ApiServer struct {
 	scripts            map[string]*redis.Script
 	snowFlakeGenerator *SnowFlak.SnowFlakeGenerator
 	DAO                *ApiDAO.ApiDAO
+	RAGClient          *RAG.Client
 }
 
-func NewService(cfg interf.ConfigInterface, logger *zap.Logger, redisClient *redis.Client, rabbit *RabbitMQ.Client, SnowFlakeGenerator *SnowFlak.SnowFlakeGenerator, scripts map[string]*redis.Script, DAO *ApiDAO.ApiDAO) *ApiServer {
+func NewService(cfg interf.ConfigInterface, logger *zap.Logger, redisClient *redis.Client, rabbit *RabbitMQ.Client, SnowFlakeGenerator *SnowFlak.SnowFlakeGenerator, scripts map[string]*redis.Script, DAO *ApiDAO.ApiDAO, RAGClient *RAG.Client) *ApiServer {
 	return &ApiServer{
 		logger:             logger,
 		cfg:                cfg,
@@ -28,5 +30,6 @@ func NewService(cfg interf.ConfigInterface, logger *zap.Logger, redisClient *red
 		scripts:            scripts,
 		snowFlakeGenerator: SnowFlakeGenerator,
 		DAO:                DAO,
+		RAGClient:          RAGClient,
 	}
 }

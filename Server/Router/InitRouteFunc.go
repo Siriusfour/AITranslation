@@ -29,4 +29,8 @@ func InitAuthRoute(rg gin.IRoutes, app *bootstrap.APP) {
 	rg.GET("/StartSeckill", app.Controller.ApiController.StartSeckill)
 	rg.POST("/SeckillBuy", app.Controller.ApiController.SeckillBuy)
 
+	rg.GET("/AddSession", app.Controller.ApiController.AddSession)
+	rg.POST("/GetSessionContext", app.Controller.ApiController.GetSessionContext)
+	//rg.POST("UpdateContext" , app.Controller.ApiController.)
+	rg.POST("Ask", app.Controller.ApiController.Ask)
 }

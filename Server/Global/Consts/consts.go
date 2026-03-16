@@ -89,6 +89,7 @@ const (
 
 	//redis相关
 	Redis_UserID_seesion string = ""
+	RAGKeyPrefix         string = "RAG_Session:"
 )
 
 // 变量

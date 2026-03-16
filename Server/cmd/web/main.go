@@ -33,7 +33,7 @@ func main() {
 	fileName := *(flag.String("File", "setting.yaml", "path to Config file"))
 	flag.Parse()
 
-	var one *sync.Once = &sync.Once{}
+	var one = &sync.Once{}
 
 	cfg := bootstrap.InitConfig(fileName)
 	logger := bootstrap.InitLogger(cfg)

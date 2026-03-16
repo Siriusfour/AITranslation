@@ -18,5 +18,4 @@ func NewController(Cfg interf.ConfigInterface, Logger *zap.Logger, service *ApiS
 		Logger:  Logger,
 		Service: service,
 	}
-
 }

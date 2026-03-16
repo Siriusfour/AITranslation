@@ -49,13 +49,10 @@ OAuth :
 
 
 Redis:
-  DNS: "localhost:6379"
+  DNS: "redis:latest:6379"
   DB: 0
   Password: ""
 
-
-grpc:
-  DNS: "127.0.0.1:5001"        #192.168.3.205
 
 Token:
   AkOutTime: 3h     #3小时
@@ -172,3 +169,8 @@ limit:
 #redis限流  ,同个ip，windows秒内只能访问limit次
   windows: 1
   limit: 5
+
+
+RAG:
+  DNS: "127.0.0.1:7071"
+  TimeOut:  30

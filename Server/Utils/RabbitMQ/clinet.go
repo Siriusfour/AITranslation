@@ -107,7 +107,7 @@ func (c *Client) Connect() error {
 
 			c.Conn.NotifyClose(c.notifychannel)
 			c.Conn = conn
-			go c.watchReconnect()
+			//go c.watchReconnect()
 			c.mu.Unlock()
 
 			c.Logger.Info("[MQ] ✅ connected", zap.String("uri", c.Config.URI))
@@ -143,53 +143,53 @@ func (c *Client) Connect() error {
 // 1. 监听当前连接的关闭事件
 // 2. 触发重连（带重试、sleep）
 // 3. 重连成功后重新注册 NotifyClose，然后再起一个新的 watcher
-func (c *Client) watchReconnect() {
-	for {
-		select {
-		case err := <-c.notifychannel:
-			c.Logger.Error("MQ 连接关闭", zap.Error(err))
-
-			// 清空当前连接（加锁保护）
-			c.mu.Lock()
-
-			c.Conn = nil
-			if c.notifychannel != nil {
-				close(c.notifychannel)
-			}
-			c.mu.Unlock()
-
-			// 开始重连，带简单的重试+sleep
-			for {
-				if c.Closed.Load() {
-					return
-				}
-
-				connErr := c.Connect()
-				if connErr == nil {
-					// 重连成功：给新连接注册 NotifyClose，并break,重新监听
-					c.mu.RLock()
-					newConn := c.Conn
-					c.mu.RUnlock()
-
-					notify := make(chan *amqp.Error, 1)
-					newConn.NotifyClose(notify)
-
-					c.mu.Lock()
-					c.notifychannel = notify
-					c.mu.Unlock()
-
-					// 返回外层循环，重新监听
-					break
-
-				}
-
-				c.Logger.Error("MQ 重连失败，将在 5s 后重试", zap.Error(connErr))
-				time.Sleep(5 * time.Second)
-			}
-
-		}
-	}
-}
+//func (c *Client) watchReconnect() {
+//	for {
+//		select {
+//		case err := <-c.notifychannel:
+//			c.Logger.Error("MQ 连接关闭", zap.Error(err))
+//
+//			// 清空当前连接（加锁保护）
+//			c.mu.Lock()
+//
+//			c.Conn = nil
+//			if c.notifychannel != nil {
+//				close(c.notifychannel)
+//			}
+//			c.mu.Unlock()
+//
+//			// 开始重连，带简单的重试+sleep
+//			for {
+//				if c.Closed.Load() {
+//					return
+//				}
+//
+//				connErr := c.Connect()
+//				if connErr == nil {
+//					// 重连成功：给新连接注册 NotifyClose，并break,重新监听
+//					c.mu.RLock()
+//					newConn := c.Conn
+//					c.mu.RUnlock()
+//
+//					notify := make(chan *amqp.Error, 1)
+//					newConn.NotifyClose(notify)
+//
+//					c.mu.Lock()
+//					c.notifychannel = notify
+//					c.mu.Unlock()
+//
+//					// 返回外层循环，重新监听
+//					break
+//
+//				}
+//
+//				c.Logger.Error("MQ 重连失败，将在 5s 后重试", zap.Error(connErr))
+//				time.Sleep(5 * time.Second)
+//			}
+//
+//		}
+//	}
+//}
 
 func (c *Client) Close() {
 	c.Closed.Store(true)
