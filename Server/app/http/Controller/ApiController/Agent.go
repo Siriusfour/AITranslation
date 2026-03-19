@@ -27,7 +27,6 @@ func (c *ApiController) GetSessionContext(ctx *gin.Context) {
 
 	err := ctx.ShouldBind(&contextID)
 	if err != nil {
-
 		reposen.ErrorParam(ctx, err)
 		return
 	}

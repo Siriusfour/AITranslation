@@ -83,7 +83,7 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) Ask(ctx context.Context, question string, contextID string) (string, error) {
+func (c *Client) Ask(ctx context.Context, question string, contextID string, UserID string) (string, error) {
 
 	if c == nil || c.client == nil {
 		return "", errors.New("client is nil")
@@ -94,6 +94,7 @@ func (c *Client) Ask(ctx context.Context, question string, contextID string) (st
 	req := &PB.AskRequest{
 		Question:  question,
 		SessionId: contextID,
+		UserId:    UserID,
 	}
 	resp, err := c.client.Ask(ctx, req)
 	if err != nil {

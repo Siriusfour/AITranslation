@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package rag.ask.v1;
+option go_package = "rag/sdk/rpc/pb;pb";
 
 service AskService {
   rpc Ask(AskRequest) returns (AskResponse);
@@ -9,6 +10,7 @@ service AskService {
 message AskRequest {
   string question = 1;
   string sessionId = 2;
+  string userId = 3;
 }
 
 message AskResponse {

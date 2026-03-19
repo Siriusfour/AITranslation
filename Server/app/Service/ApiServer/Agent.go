@@ -75,32 +75,47 @@ func (s *ApiServer) GetSessionContext(UserID, ContextID string) ([]Agent.Context
 
 func (s *ApiServer) Ask(Question, ContextID, UserID string) (string, error) {
 
-	answer, err := s.RAGClient.Ask(context.Background(), Question, ContextID)
+	answer, err := s.RAGClient.Ask(context.Background(), Question, ContextID, UserID)
 	if err != nil {
 		return "", fmt.Errorf("调用RAG服务失败%w", err)
 	}
 
 	//更新redis
 	key := Consts.RAGKeyPrefix + UserID + ":" + ContextID
-	Ask := Agent.ContextItem{
+	Ask, err := json.Marshal(Agent.ContextItem{
 		s.snowFlakeGenerator.GetID(),
 		"right",
 		"filled",
-		Question,
-		"MateChat",
-		time.Now().String(),
-	}
-	Answer := Agent.ContextItem{
+		time.Now().Format("2006-01-02"),
+		"human",
+		Agent.ContextData{
+			Content:          Question,
+			AdditionalKwargs: nil,
+			ResponseMetadata: nil,
+		},
+	})
+	Answer, err := json.Marshal(Agent.ContextItem{
 		s.snowFlakeGenerator.GetID(),
 		"left",
 		"filled",
-		answer,
-		"human",
-		time.Now().String(),
+		time.Now().Format("2006-01-02"),
+		"MateChat",
+		Agent.ContextData{
+			Content:          answer,
+			AdditionalKwargs: nil,
+			ResponseMetadata: nil,
+		},
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("JSON序列化失败：%w", err)
 	}
 
 	//更新redis的contextID对应的内容
-	s.redis.RPush(context.Background(), key, Ask, Answer)
+	err = s.redis.RPush(context.Background(), key, Ask, Answer).Err()
+	if err != nil {
+		return "", err
+	}
 
 	return answer, nil
 }
