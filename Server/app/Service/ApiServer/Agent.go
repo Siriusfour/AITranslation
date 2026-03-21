@@ -99,7 +99,7 @@ func (s *ApiServer) Ask(Question, ContextID, UserID string) (string, error) {
 		"left",
 		"filled",
 		time.Now().Format("2006-01-02"),
-		"MateChat",
+		"ai",
 		Agent.ContextData{
 			Content:          answer,
 			AdditionalKwargs: nil,
